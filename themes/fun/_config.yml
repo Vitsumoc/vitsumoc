@@ -1,0 +1,35 @@
+
+menu:
+  - title: 首页
+    url: /
+  - title: 时间轴
+    url: /time.html
+
+
+favicon: /images/favicon.png
+
+recommend:
+  size: 8
+
+prefile:
+  excerpt: |
+    <p>Vitsumoc</p>
+    <p>Gopher</p>
+    <p>vanchun032@gmail.com</p>
+  zhaocai: /images/gopher.png
+copyright: |
+  <a href='https://hexo.io/' target='_blank'>建站工具</a>
+  <a href='https://tianhui.xin' target='_blank'>建站主题</a>
+comment:
+  gitalk:
+    enable: false
+    owner: you github repository owner
+    repo: you github repository
+    clientID: you github Client ID
+    clientSecret: you github Client Secret
+  gitment:
+    enable: false
+    owner: you github repository owner
+    repo: you github repository
+    clientID: you github Client ID
+    clientSecret: you github Client Secret
