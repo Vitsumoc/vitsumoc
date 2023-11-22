@@ -1,20 +1,27 @@
 ---
-title: SSH过程
+title: SSH握手过程
 date: 2023-11-20 09:20:06
 categories: 
 - 网络编程
 tags:
+- 网络编程
+- SSH
 ---
+
 # RFC
+
 https://datatracker.ietf.org/doc/html/rfc4253
 
 # SSH简介
+
 安全外壳协议（Secure Shell Protocol，简称SSH）是一种加密的网络传输协议，可在不安全的网络中为网络服务提供安全的传输环境。SSH通过在网络中建立安全隧道来实现SSH客户端与服务器之间的连接。SSH最常见的用途是远程登录系统，人们通常利用SSH来传输命令行界面和远程执行命令。
 
 <!--more-->
 
 # SSH数据包基本格式
+
 SSH的数据包加密后分块传输，每次传输的实际包长度都应为密码块大小的整数倍或8
+
 每个加密后的数据包都由如下结构构成
 
 ``` C C
@@ -36,6 +43,7 @@ byte[m]   mac(Message_Authentication_Code - MAC); // m = mac_length
 + mac：信息认证码，用作信息完整性校验
 
 # SSH过程
+
 以下采用一个SSH抓包结果为例，描述SSH链接建立过程：
 
 |=======|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|=======|
@@ -75,11 +83,13 @@ byte[m]   mac(Message_Authentication_Code - MAC); // m = mac_length
 |=======================加密通讯=======================|
 
 ## 链接建立
+
 （1）（2）（3）三次握手报文
 
 [TCP三次握手](https://zh.wikipedia.org/zh-hans/%E4%BC%A0%E8%BE%93%E6%8E%A7%E5%88%B6%E5%8D%8F%E8%AE%AE)
 
 ## 协议协商
+
 （4）服务端协议报文
 
 Hex内容
@@ -103,6 +113,7 @@ Hex内容
 > SSH-2.0-nsssh2_7.0.0033 NetSarang Computer, Inc.&lt;CR>&lt;LF>
 
 ## 算法协商
+
 在算法协商的过程中，双方会各自发送自己支持的算法列表，最终对以下几个算法达成共识：
 + kex_algorithms：密钥交换算法
 + server_host_key_algorithms：公钥算法
@@ -149,6 +160,7 @@ Hex内容
 与服务端算法表格式相同
 
 ## 密钥交换
+
 通过双方协商，决定采用Elliptic Curve Diffie-Hellman方式进行密钥交换
 
 （8）客户端Diffie-Hellman Init

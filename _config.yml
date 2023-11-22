@@ -3,9 +3,9 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Vitsumoc
-subtitle: ''
-description: ''
+title: "小站"
+subtitle: "探索编程乐趣"
+description: "探索编程乐趣"
 keywords:
 author: vc
 language: zh-CN
