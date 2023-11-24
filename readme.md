@@ -7,3 +7,4 @@
 - 🎼 或者在吹口琴
 - 🔭 打算做的事情
   - https://github.com/microsoft/AI-For-Beginners
+  - https://github.com/microsoft/generative-ai-for-beginners
