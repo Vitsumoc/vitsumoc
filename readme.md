@@ -1,6 +1,6 @@
 ### 👋👋👋👋
 
-[![vitusmoc's GitHub stats](https://github-readme-stats.vercel.app/api?username=vitusmoc)](https://github.com/anuraghazra/github-readme-stats)
+[![vitusmoc's GitHub stats](https://github-readme-stats.vercel.app/api?username=vitsumoc)](https://github.com/anuraghazra/github-readme-stats)
 
 
 - 💼 在上班
