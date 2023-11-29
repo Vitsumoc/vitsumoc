@@ -10,7 +10,7 @@ tags:
 
 # subSocks简介
 
-[subSocks](https://github.com/luyuhuang/subsocks)是[Luyu Hang](https://luyuhuang.tech/)制作的纯golang网络代理软件。
+[subSocks](https://github.com/luyuhuang/subsocks)是[Luyu Huang](https://luyuhuang.tech/)制作的纯golang网络代理软件。
 
 这里是作者本人对此项目的介绍[文档](https://luyuhuang.tech/2020/12/02/subsocks.html)。
 
@@ -24,7 +24,7 @@ subSocks项目的代码结构非常漂亮，添加SSH包装非常便捷。
 
 # 实现过程
 
-首先需要了解subSocks的代码结构，Luyu Hang的[文档](https://luyuhuang.tech/2020/12/02/subsocks.html)中描述的非常详细，我只需要实现SSHWarpper和SSHStripper。
+首先需要了解subSocks的代码结构，Luyu Huang的[文档](https://luyuhuang.tech/2020/12/02/subsocks.html)中描述的非常详细，我只需要实现SSHWarpper和SSHStripper。
 
 golang已经提供了SSH的官方实现，参考[文档](https://pkg.go.dev/golang.org/x/crypto/ssh)。并且提供了使用SSH进行远程Shell的示例。
 
