@@ -1,12 +1,13 @@
 ---
 title: Numpy入门笔记
 date: 2023-11-28 09:13:53
-categories: 
+categories:
 - python
 tags:
 - python
 - 库
 - 笔记
+- 豆知识
 ---
 
 # 前言

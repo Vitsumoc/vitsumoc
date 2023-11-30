@@ -1,7 +1,7 @@
 ---
 title: golang与串口设备在项目中的运用
 date: 2023-11-22 11:06:28
-categories: 
+categories:
 - 项目实践
 tags:
 - 项目实践

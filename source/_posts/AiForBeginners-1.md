@@ -1,7 +1,7 @@
 ---
 title: AI入门笔记（1）——简介与历史
 date: 2023-11-24 09:42:38
-categories: 
+categories:
 - AI学习
 tags:
 - AI

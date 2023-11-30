@@ -1,7 +1,7 @@
 ---
 title: AI入门笔记（2）——知识表示与专家系统
 date: 2023-11-24 15:33:38
-categories: 
+categories:
 - AI学习
 tags:
 - AI
