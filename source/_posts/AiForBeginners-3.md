@@ -48,7 +48,7 @@ https://github.com/vitsumoc/exercise-AI-Beginner/blob/main/3-Perceptron/xor.ipyn
 
 感知器只能解决线性分类问题，对于无法使用一条直线分类的问题，往往就无法很好的收敛。
 
-例子中的异或问题就是一个完全无法收敛的例子。
+作业中的异或问题就是一个完全无法收敛的例子。
 
 ## 使用感知器 + MNIST 数据识别手写数字
 
@@ -57,3 +57,13 @@ https://github.com/vitsumoc/exercise-AI-Beginner/blob/main/3-Perceptron/mnist.ip
 在这个作业中使用感知器区分手写数字图像。
 
 使用PCA降低特征的维度，分析感知器训练结果差异的原因。
+
+## 训练感知器识别任何手写数字
+
+这个作业中需要拓展上一个作业的功能，训练10个不同的感知器，用来识别0-9全部的数字。
+
+https://github.com/vitsumoc/exercise-AI-Beginner/blob/main/3-Perceptron/anyNum.ipynb
+
+参考上一个作业的方式，训练了10组weights，来判断一个数字是或不是特定的数字。
+
+每个感知器训练10000次，最终正确率 74.7%。
