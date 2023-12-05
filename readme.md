@@ -5,6 +5,8 @@
 
 - 在上班 🐂🐎
 - 或者在吹口琴 😃🎺
-- 打算做的事情 📅📝
-  - https://github.com/microsoft/AI-For-Beginners
+- 正在做的事情 📅📝
+  - https://github.com/saminiir/level-ip 0️⃣/4️⃣
+  - https://github.com/krahets/hello-algo
+  - https://github.com/microsoft/AI-For-Beginners 3️⃣/2️⃣4️⃣
   - https://github.com/microsoft/generative-ai-for-beginners
