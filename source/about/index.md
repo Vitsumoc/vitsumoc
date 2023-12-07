@@ -1,4 +1,6 @@
 ---
 title: about
-date: 2023-11-20 16:16:50
+layout: about
 ---
+
+兴趣是网络、编程、网络编程

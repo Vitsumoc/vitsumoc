@@ -13,7 +13,7 @@ tags:
 
 启动服务
 
-``` shell shell
+```shell shell
 systemctl start service-name
 ```
 
@@ -21,25 +21,25 @@ systemctl start service-name
 
 停止服务
 
-``` shell shell
+```shell shell
 systemctl stop service-name
 ```
 
 查看服务状态
 
-``` shell shell
+```shell shell
 systemctl status service-name
 ```
 
 设置开机自启动
 
-``` shell shell
+```shell shell
 systemctl enable service-name
 ```
 
 停止开机自启动
 
-``` shell shell
+```shell shell
 systemctl disable service-name
 ```
 
@@ -47,7 +47,7 @@ systemctl disable service-name
 
 在 ```/etc/systemd/system``` 路径下，创建 ```service-name.service``` 文件，格式如下：
 
-``` shell shell
+```ini service-name.service
 [Unit]
 # 服务名称
 Description = xxxx server

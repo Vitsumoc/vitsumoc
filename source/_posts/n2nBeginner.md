@@ -82,11 +82,11 @@ msj2701 # community名称
 
 复制 ```supernode.conf.sample``` 文件，并修改配置内容
 
-``` shell shell
+```shell shell
 cp /etc/n2n/supernode.conf.sample /etc/n2n/supernode.conf
 ```
 
-``` shell shell
+```shell shell
 vi /etc/n2n/supernode.conf  
 ```
 
@@ -97,7 +97,7 @@ vi /etc/n2n/supernode.conf
 
 启动supernode
 
-``` shell shell
+```shell shell
 systemctl enable supernode
 systemctl start supernode
 ```
@@ -112,11 +112,11 @@ systemctl start supernode
 
 复制 ```edge.conf.sample``` 文件，并修改配置内容
 
-``` shell shell
+```shell shell
 cp /etc/n2n/edge.conf.sample /etc/n2n/edge.conf
 ```
 
-``` shell shell
+```shell shell
 vi /etc/n2n/edge.conf  
 ```
 
@@ -131,7 +131,7 @@ vi /etc/n2n/edge.conf
 
 启动edge
 
-``` shell shell
+```shell shell
 systemctl enable edge
 systemctl start edge
 ```
@@ -146,7 +146,7 @@ systemctl start edge
 
 需要将 ```/etc/sysctl.conf``` 文件中的 ```net.ipv4.ip_forward``` 修改为 1
 
-``` shell shell
+```shell shell
 vi /etc/sysctl.conf
 ```
 

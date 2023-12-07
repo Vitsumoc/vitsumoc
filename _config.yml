@@ -4,8 +4,8 @@
 
 # Site
 title: "Thinking..."
-subtitle: "想想"
-description: "想想"
+subtitle: "想想..."
+description: ""
 keywords:
 author: vc
 language: zh-CN
@@ -110,7 +110,8 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: BlueLake
+## theme: BlueLake
+theme: fluid
 
 # json local search
 jsonContent:

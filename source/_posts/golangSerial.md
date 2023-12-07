@@ -32,7 +32,7 @@ tags:
 
 后续可将Raw结构封装至更高层的业务结构，用来实现业务数据的表示、嵌套能其他功能
 
-``` golang golang
+```go go
 type StructMcuRaw struct {
 	Ver               [4]uint8 `json:"ver"`                                                                               // 软件版本[4]char
 	Id                uint16   `json:"id"`                                                                                // 通信箱id
@@ -46,7 +46,7 @@ type StructMcuRaw struct {
 
 通过```binary```包，可以实现从buffer中读取数据向```struct```赋值
 
-``` golang golang
+```go go
 func (p *StructMcuRaw) MCUFromByte(res *bytes.Buffer) {
 	// 软件版本[4]char
 	for x := 0; x < 4; x++ {
@@ -69,7 +69,7 @@ func (p *StructMcuRaw) MCUFromByte(res *bytes.Buffer) {
 
 将数据读取封装成query方法，包括TCP采集过程、日志记录、包格式处理等
 
-``` golang golang
+```go go
 func MCUQuery(conn *net.Conn, reader *bufio.Reader, buffer *[]byte, cb *rs.StructCommBox, mcu *rs.StructMcu) error {
 	// 查询地址
 	addInt, err := strconv.Atoi(mcu.Addr)
@@ -126,7 +126,7 @@ func MCUQuery(conn *net.Conn, reader *bufio.Reader, buffer *[]byte, cb *rs.Struc
 
 在一次采集过程中，创建一条TCP链接，完成所有采集动作，最后断开链接
 
-``` golang golang
+```go go
 func Collect(cb *rs.StructCommBox) {
 	// 记录网络占用
 	NetCh <- true

@@ -22,7 +22,7 @@ Matplotlib 是一个用于创建静态、动画和交互式可视化的综合库
 
 # 1. 入门示例
 
-``` python python
+```python python
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -41,7 +41,7 @@ e1()
 
 # 2. 窗口、图像和绘制
 
-``` python python
+```python python
 def e2():
   # 创建一个只有一个 axes 的 figure
   fig, ax = plt.subplots()
@@ -54,7 +54,7 @@ e2()
 
 # 3. figure 的构成部分
 
-``` python python
+```python python
 # figure 是一个绘图窗口
 # axes 是一副数据图像
 # axis 是坐标轴
@@ -74,7 +74,7 @@ e3()
 
 # 4. 输入数据类型
 
-``` python python
+```python python
 def e4():
   # plot 接受 np.array np.ma.masked_array np.asarray 三种类型的输入
   # 如果不是此类数据，需要先进行处理
@@ -104,7 +104,7 @@ e4()
 
 # 5. 接口风格
 
-``` python python
+```python python
 # mplib提供了两种接口风格 一是显示的获取各层对象并调用 二是直接使用plt搞定一切
 # 显示风格的例子
 def e5_1():
@@ -143,7 +143,7 @@ e5_2()
 
 # 6. 制作辅助函数
 
-``` python python
+```python python
 # 制作工具函数, 避免代码重复
 def e6_plotter(ax, data1, data2, param_dict):
     """
@@ -164,7 +164,7 @@ e6()
 
 # 7. 样式
 
-``` python python
+```python python
 def e7():
   data1, data2 = np.random.randn(2, 100)
   fig, ax = plt.subplots(figsize=(5, 2.7))
@@ -183,7 +183,7 @@ e7()
 
 ## 基础标记
 
-``` python python
+```python python
 def e8_1():
   mu, sigma = 115, 15
   # x 是一万个值的列表 randn 会给出一组正态分布的随机数结果
@@ -210,7 +210,7 @@ e8_1()
 
 ## 标记图上的点
 
-``` python python
+```python python
 def e8_2():
   fig, ax = plt.subplots(figsize=(5, 2.7))
 
@@ -229,7 +229,7 @@ e8_2()
 
 ## 添加 Legend用以区分数据
 
-``` python python
+```python python
 def e8_3():
   data1, data2, data3 = np.random.randn(3, 100)
   fig, ax = plt.subplots(figsize=(5, 2.7))
@@ -246,7 +246,7 @@ e8_3()
 
 ## 轴的比例定义
 
-``` python python
+```python python
 def e9_1():
   # 100 个随机数
   data1 = np.random.randn(100)
@@ -268,7 +268,7 @@ e9_1()
 
 ## 手动操作 axis 上的 ticks
 
-``` python python
+```python python
 def e9_2():
   data1 = np.random.randn(100)
   xdata = np.arange(len(data1))
@@ -289,7 +289,7 @@ e9_2()
 
 ## 使用时间做轴
 
-``` python python
+```python python
 def e9_3():
   fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
   # 通过时间范围和间隔构建时间戳数组
@@ -309,7 +309,7 @@ e9_3()
 
 ## 使用字符串做轴
 
-``` python python
+```python python
 def e9_4():
   fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
   categories = ['turnips', 'rutabaga', 'cucumber', 'pumpkins']
@@ -322,7 +322,7 @@ e9_4()
 
 ## 添加更多的轴
 
-``` python python
+```python python
 def e9_5():
   t = np.arange(0.0, 5.0, 0.01)
   s = np.cos(2 * np.pi * t)
@@ -346,7 +346,7 @@ e9_5()
 
 # 10. 色块图
 
-``` python python
+```python python
 def e10():
   data1, data2, data3 = np.random.randn(3, 100)
   X, Y = np.meshgrid(np.linspace(-3, 3, 128), np.linspace(-3, 3, 128))
@@ -376,7 +376,7 @@ e10()
 
 # 11. 多 axes 使用 dict 操作
 
-``` python python
+```python python
 def e11():
   fig, axd = plt.subplot_mosaic([['upleft', 'right'],
                                ['lowleft', 'right']], layout='constrained')

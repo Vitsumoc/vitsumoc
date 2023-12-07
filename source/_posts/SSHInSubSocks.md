@@ -38,7 +38,7 @@ golang已经提供了SSH的官方实现，参考[文档](https://pkg.go.dev/gola
 
 服务端必须配置密钥，可使用自己生成的密钥：
 
-``` toml toml
+```toml toml
 [server] # server configuration
 
 protocol = "ssh"
@@ -50,7 +50,7 @@ ssh.key = "./id_rsa"
 
 客户端只需将协议设置为ssh，其他与subsocks相同:
 
-``` toml toml
+```toml toml
 [client] # client configuration
 
 listen = "127.0.0.1:1080"

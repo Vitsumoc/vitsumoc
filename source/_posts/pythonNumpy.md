@@ -22,7 +22,7 @@ NumPy（Numerical Python）是Python中数字处理的事实标准，也是学�
 
 # 1. 普通数组和np数组的区别
 
-``` python python
+```python python
 import numpy as np
 
 # 普通数组
@@ -35,7 +35,7 @@ print(b)
 
 # 2. 创建np数组的方法
 
-``` python python
+```python python
 np.zeros(2) # 全0填充
 np.ones(2) # 全1填充
 np.empty(2) # 空数组
@@ -48,7 +48,7 @@ np.ones(2, dtype=np.int64) # [1, 1]
 
 # 3. 排序和拼接
 
-``` python python
+```python python
 arr = np.array([2, 1, 5, 3, 7, 4, 6, 8])
 np.sort(arr) # 排序
 a = np.array([1, 2, 3, 4])
@@ -61,7 +61,7 @@ np.concatenate((x, y), axis=0) # 拼接
 
 # 4. 形状和大小
 
-``` python python
+```python python
 array_example = np.array([
   [[0, 1, 2, 3], [4, 5, 6, 7]],
   [[0, 1, 2, 3], [4, 5, 6, 7]],
@@ -74,7 +74,7 @@ array_example.shape # 形状 (3, 2, 4)
 
 # 5. 改变数组的形状
 
-``` python python
+```python python
 a = np.arange(6)
 b = a.reshape(3, 2)
 # [[0 1]
@@ -85,7 +85,7 @@ np.reshape(a, newshape=(1, 6), order='C') # 更多参数
 
 # 6. 添加维度
 
-``` python python
+```python python
 a = np.array([1, 2, 3, 4, 5, 6])
 a.shape # 一维 (6, )
 a2 = a[np.newaxis, :]
@@ -101,7 +101,7 @@ c.shape # (1, 6)
 
 # 7. 索引和切片
 
-``` python python
+```python python
 data = np.array([1, 2, 3])
 data[1] # 正常索引方式 2
 data[0:2] # 正常切片 array([1, 2])
@@ -131,7 +131,7 @@ not_there = np.nonzero(a == 42) # (array([], dtype=int64), array([], dtype=int64
 
 # 8. 现有数据转数组
 
-``` python python
+```python python
 a = np.array([1,  2,  3,  4,  5,  6,  7,  8,  9, 10])
 arr1 = a[3:8] # 通过切片创建新数组 array([4, 5, 6, 7, 8])
 a1 = np.array([[1, 1], [2, 2]])
@@ -165,7 +165,7 @@ b2 = a.copy()
 
 # 9. 基础数组操作
 
-``` python python
+```python python
 # 加减乘除
 data = np.array([1, 2]) # [1 2]
 ones = np.ones(2, dtype=int) # [1 1]
@@ -191,7 +191,7 @@ a.min(axis=0) # 维度极小值 [0.12697628, 0.05093587, 0.26590556, 0.5510652 ]
 
 # 10. 矩阵
 
-``` python python
+```python python
 data = np.array([[1, 2], [3, 4], [5, 6]])
 # array([[1, 2],
 #        [3, 4],
@@ -221,7 +221,7 @@ data + ones_row
 
 # 11. 生成随机数
 
-``` python python
+```python python
 rng = np.random.default_rng()
 rng.integers(5, size=(2, 4)) # 两行四列, 随机整数, 小于5
 rng.random((3, 2)) # 三行两列 0-1之间 float
@@ -229,7 +229,7 @@ rng.random((3, 2)) # 三行两列 0-1之间 float
 
 # 12. 去重和计数
 
-``` python python
+```python python
 a = np.array([11, 11, 12, 13, 14, 15, 16, 17, 12, 13, 11, 14, 18, 19, 20])
 unique_values = np.unique(a) # 去重 [11 12 13 14 15 16 17 18 19 20]
 unique_values, indices_list = np.unique(a, return_index=True) # 序号 [ 0  2  3  4  5  6  7 12 13 14]
@@ -248,7 +248,7 @@ occurrence_count # 所得行的数量 [2 1 1]
 
 # 13. 矩阵转置和变形
 
-``` python python
+```python python
 data = np.array([1, 2, 3, 4, 5, 6])
 # 变形
 data.reshape(2, 3)
@@ -275,7 +275,7 @@ data.T
 
 # 14. 数组逆序
 
-``` python python
+```python python
 arr = np.array([1, 2, 3, 4, 5, 6, 7, 8])
 reversed_arr = np.flip(arr) # [8 7 6 5 4 3 2 1]
 # 二维数组逆序
@@ -298,7 +298,7 @@ arr_2d[:,1] = np.flip(arr_2d[:,1])
 
 # 15. 多维数组展开
 
-``` python python
+```python python
 x = np.array([[1 , 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
 x.flatten() # 拷贝展开 array([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12])
 a2 = x.ravel() # 引用展开 array([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12])
@@ -306,7 +306,7 @@ a2 = x.ravel() # 引用展开 array([ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,
 
 # 16. 内置文档
 
-``` python python
+```python python
 # help(max) 输出说明
 # max? 同名所有函数说明
 a = np.array([1, 2, 3, 4, 5, 6])
@@ -315,7 +315,7 @@ a = np.array([1, 2, 3, 4, 5, 6])
 
 # 17. 实现数学公式
 
-``` python python
+```python python
 predictions = np.array([1, 2, 3])
 labels = np.array([1, 1, 1])
 # 例如均方误差公式
@@ -324,7 +324,7 @@ error = (1 / 3) * np.sum(np.square(predictions - labels))
 
 # 18. np对象导入导出
 
-``` python python
+```python python
 a = np.array([1, 2, 3, 4, 5, 6])
 # np.save('filename', a) 存成文件
 # b = np.load('filename.npy') 从文件读取
@@ -335,7 +335,7 @@ a = np.array([1, 2, 3, 4, 5, 6])
 
 # 19. 使用 Pandas 库进行csv导入导出操作
 
-``` python python
+```python python
 import pandas as pd
 
 # # If all of your columns are the same type:
@@ -357,7 +357,7 @@ import pandas as pd
 
 # 20. 使用 Matplotlib 绘制数据图像
 
-``` python python
+```python python
 import matplotlib.pyplot as plt
 # 显示数组
 a = np.array([2, 1, 5, 7, 4, 6, 8, 14, 10, 9, 18, 20, 22])

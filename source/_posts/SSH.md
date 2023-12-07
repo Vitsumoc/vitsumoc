@@ -24,7 +24,7 @@ SSH的数据包加密后分块传输，每次传输的实际包长度都应为�
 
 每个加密后的数据包都由如下结构构成
 
-``` C C
+```c c
 uint32    packet_length;
 byte      padding_length;
 byte[n1]  payload; // n1 = packet_length - padding_length - 1
