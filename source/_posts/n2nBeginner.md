@@ -76,7 +76,7 @@ https://github.com/ntop/n2n/releases
 
 配置 ```/etc/n2n/community.list``` 文件，指定community名称
 
-``` shell community.list
+```text community.list
 msj2701 # community名称
 ```
 
@@ -90,7 +90,7 @@ cp /etc/n2n/supernode.conf.sample /etc/n2n/supernode.conf
 vi /etc/n2n/supernode.conf  
 ```
 
-``` shell supernode.conf
+```conf supernode.conf
 -p=7777 # 指定supernode服务端口
 -c=/etc/n2n/community.list # 指定引用的community文件
 ```
@@ -120,7 +120,7 @@ cp /etc/n2n/edge.conf.sample /etc/n2n/edge.conf
 vi /etc/n2n/edge.conf  
 ```
 
-``` shell edge.conf
+```conf edge.conf
 -d=n2n0 # 指定虚拟网卡名称
 -c=msj2701 # community名称
 -k=888888 # 通讯加密密钥
@@ -150,7 +150,7 @@ systemctl start edge
 vi /etc/sysctl.conf
 ```
 
-``` conf sysctl.conf
+```conf sysctl.conf
 ...
 net.ipv4.ip_forward=1
 ...
@@ -175,7 +175,7 @@ net.ipv4.ip_forward=1
 1. 无需添加```-r```参数，因为家庭服务器不需要将来自其他设备的包转发到```n2n```网络
 2. 需要添加```-n```参数，这样```edge```启动时会自动产生一条通过```n2n```网络到达办公室网络的路由
 
-``` shell edge.conf
+```conf edge.conf
 -d=n2n0 # 指定虚拟网卡名称
 -c=msj2701 # community名称
 -k=888888 # 通讯加密密钥
