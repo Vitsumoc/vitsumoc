@@ -6,6 +6,7 @@ categories:
 tags:
 - 网络工具
 - 网络编程
+- 翻译
 ---
 
 > 原文 [n2n Frequently Asked Questions](https://github.com/ntop/n2n/blob/dev/doc/Faq.md)
@@ -25,7 +26,7 @@ tags:
 
 ## Supernode
 
-### 我想部署一个私有的supernode，需要怎么设置？
+### 我想部署一个私有的，有密码保护的supernode，需要怎么设置？
 
 你可以直接配置 `community.list` 文件，在其中设置一个 `<community name>` (输入单行文本即可) ，然后把这个 `<community name>` 当作您的密码。
 
