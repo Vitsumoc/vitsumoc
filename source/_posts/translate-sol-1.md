@@ -471,8 +471,6 @@ void pack_bytes(uint8_t **buf, uint8_t *str) {
 
 这样我们就完成了字节流和数据类型的双向转换工作。
 
-<!-- read -->
-
 ## Remaining Length编解码实现
 
 完成了 `pack` 部分后，我们需要把他们运用在我们的MQTT包里，首先当然是：
@@ -483,13 +481,13 @@ void pack_bytes(uint8_t **buf, uint8_t *str) {
 
 第一步我们可以实现对 Fixed Header 中的 Remaining Length 字段的操作。MQTT文档中提供了这一段实现的伪代码，我们可以仿写一下。
 
-让我们来看看在 Fixed Header 的固定一个byte之后，如何用1-4个变长的Byte来表示剩余包的长度。
+让我们来看看 Remaining Length 如何用1-4个变长的Byte来表示剩余包的长度。
 
 > Remaining Length 表示的是数据包剩余部分的长度，包括 variable header 和 payload。Remaining Length 中表示的长度不包括 Remaining Length 字段本身所占用的长度。
 >
 > Remaining Length 的编码使用了一种可变长度编码方案，该方案对 127 以下的值使用单个字节。较大的值则按以下方式处理：每个字节的低 7 位编码数据，高位用于指示是否存在后续字节。因此，每个字节编码 128 个值和一个 "延续位"。Remaining Length 字段的最大字节数为 4。
 
-MQTT的文档已经描述的非常清晰了，我们只需要实现就可以了。
+MQTT的文档已经描述的非常清晰，我们只需要实现。
 
 ```c src/mqtt.c
 /*
@@ -520,6 +518,7 @@ int mqtt_encode_length(unsigned char *buf, size_t len) {
 }
 
 /*
+ * 解析数据流中的 Remaing Length 并将指针移动到下一个位置
  * return Remaining Length 的值
  * buf Remaining Length 的数据流
  *
@@ -545,19 +544,20 @@ unsigned long long mqtt_decode_length(const unsigned char **buf) {
 
 ## CONNECT 解码实现
 
-好了，现在我们可以解析第一个Byte和后续的长度字段了，接下来我们试着解码 CONNECT 包。
+好了，现在我们可以完整的解析 Fixed Header 了，接下来我们试着解码 CONNECT 包。
 
 CONNECT 是一个有很多flags的包，而且长度仅次于 PUBLISH 包。
 
 CONNECT 包的内容包括：
 
-- Fixed Header，前 4 个最高有效位（称为**MSB**）的值是`1`，表示`Connect type`，4 个最低有效位 (**LSB**) 未使用（保留）
-- 变长的 Remaining Length 字段，表示剩余部分的长度
-- Variable Header 部分由四个字段组成：
+- Fixed Header 中的 MQTT type + Flags，高4位（MQTT type）（称为**MSB**）的值是`1`，表示`Connect type`，低4位（Flags）（**LSB**）保留
+- Fixed Header 中的变长 Remaining Length，表示剩余部分的长度
+- Variable Header，由四个字段组成：
     - Protocol Name
     - Protocol Level
     - Connect Flags
     - Keep Alive
+- 可能存在或者不存在的 payload（基于 Connect Flags 的设置）
 
 > Protocol Name 是 UTF-8 编码的大写字符串 "MQTT"，这个字段的长度和内容在未来版本的MQTT协议中都不会再改变。
 
@@ -565,14 +565,16 @@ CONNECT 包的内容包括：
 
 Connect flags 为一个byte，包含了一些关于客户端行为以及是否有 payload 段存在的标识：
 
-- Username flag     1bit
-- Password flag     1bit
-- Will retain       1bit
-- Will QoS          2bit
-- Will flag         1bit
-- Clean Session     1bit
+|  Connect flags 中的字段   | 大小  | 含义 |
+| :----: | :----: | :----: |
+| Username flag | 1bit | 表示用户名存在与否 |
+| Password flag | 1bit | 表示密码存在与否 |
+| Will retain | 1bit | 表示遗嘱是否保留 |
+| Will QoS | 2bit | 表示遗嘱的QOS等级 |
+| Will flag | 1bit | 表示遗嘱存在与否 |
+| Clean Session | 1bit | 表示是否为新链接 |
 
-Connect flags的最高位保留，其他所有位都被当作bool值初始化，这些bool值在 payload 部分也有相应的字段。比如我们的 Username 和 Password 的值为1，那么在 payload 中会有 2byte 的 username length，紧随其后的就是 username 字符串，Password也是相同的道理。
+Connect flags的最高位保留，其他所有位都被当作bool值初始化（除了Will QoS），这些bool值在 payload 部分也有相应的字段。比如当 Username 和 Password 的值为1，那么在 payload 中会有 2byte 的 username length，紧随其后的就是 username 字符串，Password也是相同的道理。
 
 为了说明这件事，假设我们收到了这样一个 CONNECT 包：
 
@@ -583,27 +585,27 @@ Connect flags的最高位保留，其他所有位都被当作bool值初始化，
 
 那么这个数据包应该长这样：
 
-| Field  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;              | size (bytes) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| offset (byte position) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  | Description                   |
-|----------------------|:-----------:|:-----------------------:|---------------------------------------------------------------------|
-| Packet type          |  1 (4 bits) |   0                     | 类型为`Connect type`                                                        |
-| Length               |    1        |   1                     | 后续总长度32Byte，因为小于127，所以可以用1Byte表示      |
-| Protocol name length |    2        |   2                     | 协议名长度，值固定为4                                                      |
-| Protocol name (MQTT) |    4        |   4                     | 'M' 'Q' 'T' 'T'                                                     |
-| Protocol level       |    1        |   8                     | 对于MQTT 3.1.1 此字段值为4                                    |
-| Connect flags        |    1        |   9                     | Username, password, will retain, will QoS, will flag, clean session |
-| Keepalive            |    2        |   10                    | ushort，保活时间，单位秒，最大值65536（18小时12分15秒）               |
-| Client ID length     |    2        |   12                    | ushort, 值为6 (danzan)                  |
-| Client ID            |    6        |   14                    | 'd' 'a' 'n' 'z' 'a' 'n'                                             |
-| Username length      |    2        |   20                    | ushort, 值为5 (hello)                    |
-| Username             |    5        |   22                    | 'h' 'e' 'l' 'l' 'o'                                                 |
-| Password length      |    2        |   27                    | ushort,  值为5 (nacho)                    |
-| Password             |    5        |   29                    | 'n' 'a' 'c' 'h' 'o'                                                 |
+| 字段 | 大小 | 偏移量 | 描述 |
+| ---- | :----: | :----: | ---- |
+| Packet type + Falgs | 1 | 0 | 类型为`Connect type` `0x01`，Flags为空 |
+| Length | 1 | 1 | 后续总长度32Byte，小于127，所以可以用1Byte表示 |
+| Protocol name length | 2 | 2 | 协议名长度，值固定为 `0x04` |
+| Protocol name | 4 | 4 | 'M' 'Q' 'T' 'T' |
+| Protocol level | 1 | 8 | 对于MQTT 3.1.1 此字段值为 `0x04` |
+| Connect flags | 1 | 9 | 包括 `Username`, `password`, `will retain`, `will QoS`, `will flag`, `clean session` |
+| Keepalive | 2 | 10 | ushort，保活时间，单位秒，最大值65536（18小时12分15秒） |
+| Client ID length | 2 | 12 | ushort, 此例中值为`0x06` (danzan) |
+| Client ID | 6 | 14 | 'd' 'a' 'n' 'z' 'a' 'n' |
+| Username length | 2 | 20 | ushort, 此例中值为`0x05` (hello) |
+| Username | 5 | 22 | 'h' 'e' 'l' 'l' 'o' |
+| Password length | 2 | 27 | ushort,  此例中值为`0x05` (nacho) |
+| Password | 5 | 29 | 'n' 'a' 'c' 'h' 'o' |
 
-例如因为 Will Flags 被置为0，所以我们不需要去解析这个字段（也压根没有），上例中我们要解析的内容总共就是包括 Fixed Header 在内的 34个byte。
+例如因为 Will Flags 被置为0，所以我们不需要在 `payload` 中解析这个字段（也压根没有），上例中我们要解析的内容总共就是包括 Fixed Header 在内的 34个byte。
 
 ```c src/mqtt.c
 /*
- * MQTT 解码函数
+ * CONNECT解码函数
  * return 
  * buf 数据流，从变长长度开始
  * hdr 已经解码好的头部
@@ -613,8 +615,9 @@ static size_t unpack_mqtt_connect(const unsigned char *buf,
                                   union mqtt_header *hdr,
                                   union mqtt_packet *pkt) {
     // 制作一个connect结构体，并且用已经解码好的头部赋值
+    // 此处有一个已经解码好的头部，是因为数据作为二进制流进来的时候，肯定是要先解码出头部，然后再根据包类型分到不同的函数里做进一步解码的
     struct mqtt_connect connect = { .header = *hdr };
-    // 将这个结构体赋值到pkt，作为最终的返回
+    // 将这个结构体赋值到pkt
     pkt->connect = connect;
     // 初始指针指向buf的首部
     const unsigned char *init = buf;
@@ -651,3 +654,5 @@ static size_t unpack_mqtt_connect(const unsigned char *buf,
     return len;
 }
 ```
+
+<!-- read -->
