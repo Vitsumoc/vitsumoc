@@ -332,7 +332,7 @@ void mqtt_packet_release(union mqtt_packet *, unsigned);
 
 # 函数实现
 
-## 针对具体包的编解码
+## MQTT包编解码接口
 
 好了，我们现在有一个不错的头文件了，定义了我们通讯协议中的所有内容，现在我们需要实现这些函数了。为了能够实现这些功能，首先我们要定义几个**私有**的帮助函数，用来进行编码和解码的动作。这些函数会被**公有**函数`unpack_mqtt_packet` 和 `pack_mqtt_packet` 调用。
 
@@ -364,7 +364,7 @@ static unsigned char *pack_mqtt_suback(const union mqtt_packet *);
 static unsigned char *pack_mqtt_publish(const union mqtt_packet *);
 ```
 
-## 编解码实现
+## 二进制流编解码实现
 
 在继续实现 `src/mqtt.h` 上所有定义的函数之前，我们需要实现一些辅助函数，以简化每个接收到的数据包的编码解码过程。
 
@@ -605,8 +605,8 @@ Connect flags的最高位保留，其他所有位都被当作bool值初始化（
 
 ```c src/mqtt.c
 /*
- * CONNECT解码函数
- * return 
+ * CONNECT 解码函数
+ * return Remaing Length 的值
  * buf 数据流，从变长长度开始
  * hdr 已经解码好的头部
  * pkt 返回的解码后数据包
@@ -656,3 +656,273 @@ static size_t unpack_mqtt_connect(const unsigned char *buf,
 ```
 
 <!-- read -->
+
+## PUBLISH 解码实现
+
+以下是 PUBLISH 包的结构：
+
+```
+ |   Bit    |  7  |  6  |  5  |  4  |  3  |  2  |  1  |   0    |  <-- Fixed Header
+ |----------|-----------------------|--------------------------|
+ | Byte 1   |      MQTT type 3      | dup |    QoS    | retain |
+ |----------|--------------------------------------------------|
+ | Byte 2   |                                                  |
+ |  .       |               Remaining Length                   |
+ |  .       |                                                  |
+ | Byte 5   |                                                  |
+ |----------|--------------------------------------------------|  <-- Variable Header
+ | Byte 6   |                Topic len MSB                     |
+ | Byte 7   |                Topic len LSB                     |
+ |-------------------------------------------------------------|
+ | Byte 8   |                                                  |
+ |   .      |                Topic name                        |
+ | Byte N   |                                                  |
+ |----------|--------------------------------------------------|
+ | Byte N+1 |            Packet Identifier MSB                 |
+ | Byte N+2 |            Packet Identifier LSB                 |
+ |----------|--------------------------------------------------|  <-- Payload
+ | Byte N+3 |                   Payload                        |
+ | Byte N+M |                                                  |
+```
+
+仅当 QoS level > 0 时，存在 Packet identifier MSB 和 LSB。当 QoS 被设置为 *at most once* （值为0）时，没有必要存在 packet ID。
+
+Payload部分的长度通过 Remaining Length 减去其他所有内容计算得来。
+
+```c src/mqtt.c
+/*
+ * PUBLISH 解码函数
+ * return Remaing Length 的值
+ * buf 数据流，从变长长度开始
+ * hdr 已经解码好的头部
+ * pkt 返回的解码后数据包
+ */
+static size_t unpack_mqtt_publish(const unsigned char *buf,
+                                  union mqtt_header *hdr,
+                                  union mqtt_packet *pkt) {
+    // 创建 PUBLISH 包并且使用已经解码好的 header 赋值
+    struct mqtt_publish publish = { .header = *hdr };
+    // 准备给返回值提供这个 PUBLISH 包
+    pkt->publish = publish;
+    // 通过变长的 Remaing Length 字段获取剩余部分的长度
+    size_t len = mqtt_decode_length(&buf);
+    // 获得 topiclen 和 topic 内容
+    pkt->publish.topiclen = unpack_string16(&buf, &pkt->publish.topic);
+    // 将 len 赋值, 并视为 payload 长度
+    uint16_t message_len = len;
+    // 如果 QoS > 0, 需要读取pkt_id
+    if (publish.header.bits.qos > AT_MOST_ONCE) {
+        pkt->publish.pkt_id = unpack_u16((const uint8_t **) &buf);
+        // 此时payload长度需要减去pkt_id
+        message_len -= sizeof(uint16_t);
+    }
+    // payload 长度需要减去 topic_len 字段长度和 topic 字段实际长度
+    message_len -= (sizeof(uint16_t) + topic_len);
+    // 这里是正确的 payloadlen
+    pkt->publish.payloadlen = message_len;
+    // 读取 payload
+    pkt->publish.payload = malloc(message_len + 1);
+    unpack_bytes((const uint8_t **) &buf, message_len, pkt->publish.payload);
+    return len;
+}
+```
+
+## SUBSCRIBE 和 UNSUBSCRIBE 解码实现
+
+SUBSCRIBE 包和 UNSUBSCRIBE 包的结构非常相似。他们的 payload 部分都是一个 topic 相关的元组列表，其中 SUBSCRIBE 的元组是 (topic_len, topic_filter, qos)，而 UNSUBSCRIBE 是 (topic_len, topic_filter)。
+
+```c src/mqtt.c
+/*
+ * SUBSCRIBE 解码函数
+ * return Remaing Length 的值
+ * buf 数据流，从变长长度开始
+ * hdr 已经解码好的头部
+ * pkt 返回的解码后数据包
+ */
+static size_t unpack_mqtt_subscribe(const unsigned char *buf,
+                                    union mqtt_header *hdr,
+                                    union mqtt_packet *pkt) {
+    // 创建 SUBSCRIBE 包并且使用已经解码好的 header 赋值
+    struct mqtt_subscribe subscribe = { .header = *hdr };
+    // 通过变长的 Remaing Length 字段获取剩余部分的长度
+    size_t len = mqtt_decode_length(&buf);
+    size_t remaining_bytes = len;
+    // 读取pkt_id
+    subscribe.pkt_id = unpack_u16((const uint8_t **) &buf);
+    remaining_bytes -= sizeof(uint16_t);
+    /*
+     * 订阅频道列表, 由一系列三元组构成
+     *  - topic length 主题字符串长度
+     *  - topic filter (string) 主题filter
+     *  - qos
+     */
+    int i = 0;
+    while (remaining_bytes > 0) {
+        // 减去2byte, 是topic length的空间
+        remaining_bytes -= sizeof(uint16_t);
+        // 给这个主题字符串分配内存
+        subscribe.tuples = realloc(subscribe.tuples,
+                                   (i+1) * sizeof(*subscribe.tuples));
+        // 获得主题字符串长度, 获得主题字符串内容
+        subscribe.tuples[i].topic_len =
+            unpack_string16(&buf, &subscribe.tuples[i].topic);
+        // 减去主题字符串实际占用的空间
+        remaining_bytes -= subscribe.tuples[i].topic_len;
+        // 获得主题qos
+        subscribe.tuples[i].qos = unpack_u8((const uint8_t **) &buf);
+        // 减去主题 qos 的空间
+        len -= sizeof(uint8_t);
+        // 操作下一个主题
+        i++;
+    }
+    // 记录订阅主题数
+    subscribe.tuples_len = i;
+    // 记录到 mqtt_packet
+    pkt->subscribe = subscribe;
+    return len;
+}
+
+/*
+ * UNSUBSCRIBE 解码函数
+ * return Remaing Length 的值
+ * buf 数据流，从变长长度开始
+ * hdr 已经解码好的头部
+ * pkt 返回的解码后数据包
+ */
+static size_t unpack_mqtt_unsubscribe(const unsigned char *buf,
+                                      union mqtt_header *hdr,
+                                      union mqtt_packet *pkt) {
+    struct mqtt_unsubscribe unsubscribe = { .header = *hdr };
+    /*
+     * Second byte of the fixed header, contains the length of remaining bytes
+     * of the connect packet
+     */
+    size_t len = mqtt_decode_length(&buf);
+    size_t remaining_bytes = len;
+    /* Read packet id */
+    unsubscribe.pkt_id = unpack_u16((const uint8_t **) &buf);
+    remaining_bytes -= sizeof(uint16_t);
+    /*
+     * Read in a loop all remaining bytes specified by len of the Fixed Header.
+     * From now on the payload consists of 2-tuples formed by:
+     *  - topic length
+     *  - topic filter (string)
+     */
+    int i = 0;
+    while (remaining_bytes > 0) {
+        /* Read length bytes of the first topic filter */
+        remaining_bytes -= sizeof(uint16_t);
+        /* We have to make room for additional incoming tuples */
+        unsubscribe.tuples = realloc(unsubscribe.tuples,
+                                     (i+1) * sizeof(*unsubscribe.tuples));
+        unsubscribe.tuples[i].topic_len =
+            unpack_string16(&buf, &unsubscribe.tuples[i].topic);
+        remaining_bytes -= unsubscribe.tuples[i].topic_len;
+        i++;
+    }
+    unsubscribe.tuples_len = i;
+    pkt->unsubscribe = unsubscribe;
+    return len;
+}
+```
+
+## ACK 解码实现
+
+最终到了 ACK 包，MQTT 协议中没有设计通用 ACK，但是实际上每个 ACK 包的数据结构都是一样的，有一个 Fixed Header 和一个 packet_id组成。
+
+MQTT 协议中有如下几种类型的ACK:
+
+- PUBACK
+- PUBREC
+- PUBREL
+- PUBCOMP
+- UNSUBACK
+
+```c src/mqtt.c
+/*
+ * ACK 解码函数
+ * return Remaing Length 的值
+ * buf 数据流，从变长长度开始
+ * hdr 已经解码好的头部
+ * pkt 返回的解码后数据包
+ */
+static size_t unpack_mqtt_ack(const unsigned char *buf,
+                              union mqtt_header *hdr,
+                              union mqtt_packet *pkt) {
+    // 创建 ACK 包并且使用已经解码好的 header 赋值
+    struct mqtt_ack ack = { .header = *hdr };
+    // 通过变长的 Remaing Length 字段获取剩余部分的长度
+    size_t len = mqtt_decode_length(&buf);
+    // pkt_id
+    ack.pkt_id = unpack_u16((const uint8_t **) &buf);
+    pkt->ack = ack;
+    return len;
+}
+```
+
+## MQTT包解码实现
+
+现在我们已经实现了 `unpack_mqtt_packet` 需要的所有工具函数，接下来我们先定义一个解码函数的接口，然后使用一个静态数组来索引所有的解码函数，这里我们直接使用 `Control Packet type` 的值来作为数组中的索引。
+
+需要注意的是，`DISCONNECT` `PINGREQ` `PINGRESP` 这三种包只有一个byte，所以我们不需要编写解码工具函数。
+
+```c src/mqtt.c
+// 解码函数接口
+typedef size_t mqtt_unpack_handler(const unsigned char *,
+                                   union mqtt_header *,
+                                   union mqtt_packet *);
+
+// 所有解码函数的列表, 索引值和包类型对应
+static mqtt_unpack_handler *unpack_handlers[11] = {
+    NULL,
+    unpack_mqtt_connect,
+    NULL,
+    unpack_mqtt_publish,
+    unpack_mqtt_ack,
+    unpack_mqtt_ack,
+    unpack_mqtt_ack,
+    unpack_mqtt_ack,
+    unpack_mqtt_subscribe,
+    NULL,
+    unpack_mqtt_unsubscribe
+};
+
+// MQTT 包解码入口
+int unpack_mqtt_packet(const unsigned char *buf, union mqtt_packet *pkt) {
+    int rc = 0;
+    // 第一个 byte 是 fiexd header 中的 mqttType + flags
+    unsigned char type = *buf;
+    // 第一个byte可以被作为header
+    union mqtt_header header = {
+        .byte = type
+    };
+    // 对于这些包暂时无需解码
+    if (header.bits.type == DISCONNECT
+        || header.bits.type == PINGREQ
+        || header.bits.type == PINGRESP)
+        pkt->header = header;
+    else
+        // 通过包类型找到解码函数, 执行解码操作后返回rc, 此时rc等于具体解码函数的返回值
+        rc = unpack_handlers[header.bits.type](++buf, &header, pkt);
+    return rc;
+}
+```
+
+# 结尾
+
+从零开始MQTT broker的第一部分就这样结束了，我们做了两个模块，一个根据 OASIS 定义的标准描述MQTT协议结构，另一个则用来处理编解码操作。
+
+此时我们的文件结构是这样的：
+
+```
+sol/
+ ├── src/
+ │    ├── mqtt.h
+ │    ├── mqtt.c
+ │    ├── pack.h
+ │    └── pack.c
+ ├── CHANGELOG
+ ├── CMakeLists.txt
+ ├── COPYING
+ └── README.md
+```
