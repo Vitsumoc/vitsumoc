@@ -5,6 +5,7 @@ categories:
 - 网络编程
 tags:
 - 网络编程
+- 物联网
 - 翻译
 ---
 
@@ -94,9 +95,6 @@ Flags并不是强制填写的，只是一些控制类数据，内容如下：
 所以，打开 Vim （或者其他任何你喜欢的IDE），创建名为 `mqtt.h` 的头文件，开始写关于 Fixed Header 的数据结构吧：
 
 ```c src/mqtt.h
-#ifndef MQTT_H
-#define MQTT_H
-
 #include <stdio.h>
 
 #define MQTT_HEADER_LEN 2
@@ -371,9 +369,6 @@ static unsigned char *pack_mqtt_publish(const union mqtt_packet *);
 让我们快速搞定这部分，这一块只是简单的序列化和反序列化操作而已（记得用Big-endian就行）。
 
 ```c src/pack.h
-#ifndef PACK_H
-#define PACK_H
-
 #include <stdio.h>
 #include <stdint.h>
 
