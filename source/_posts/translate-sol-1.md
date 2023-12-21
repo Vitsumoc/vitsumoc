@@ -25,7 +25,7 @@ tags:
 
 一步一步来，我一般会创建一个这样的文件结构来初始化我的C项目：
 
-```
+```text
 sol/
  ├── src/
  ├── CHANGELOG
@@ -909,7 +909,7 @@ int unpack_mqtt_packet(const unsigned char *buf, union mqtt_packet *pkt) {
 
 此时我们的文件结构是这样的：
 
-```
+```text
 sol/
  ├── src/
  │    ├── mqtt.h

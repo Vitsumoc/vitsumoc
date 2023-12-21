@@ -138,7 +138,7 @@ void mqtt_packet_release(union mqtt_packet *pkt, unsigned type) {
 
 现在我们有一些函数返回指向 `static struct` 的指针（例如上方代码中的 `mqtt_packet_header` ），在单线程的情况下这是没什么问题的。 **在多线程环境下，一定会出问题**，每次这种函数的返回都会指向同一片内存区域，可能导致各种冲突。因此为了将来的改进，需要重构这些部分，使用 `malloc` 来为每次返回分配地址。
 
-我们采用和之前解码函数一样的方式来映射编码函数。做一个静态数组，其中的序号恰好等于包类型。为了让源代码更加简洁，我们可以将打包和解包处理程序分组到一个结构中，因此可以使用单个数组，因为它们共享相同的位置。
+我们采用和之前解码函数一样的方式来映射编码函数。做一个静态数组，其中的序号恰好等于包类型。
 
 ```c src/mqtt.c
 
@@ -265,7 +265,7 @@ unsigned char *pack_mqtt_packet(const union mqtt_packet *pkt, unsigned type) {
 }
 ```
 
-# 服务器
+# socket 封装
 
 我们计划创建一个单线程 TCP 服务器，使用 **epoll** 接口实现多路 I/O。Epoll 是继 **select** 和 **poll** 之后内核 2.5.44 添加的最新的多路复用机制，也是性能最高、连接数最多的多路复用机制，它在 BSD 和 BSD-like (Mac OSX) 系统中的对应机制是 **kqueue**。
 
@@ -281,16 +281,13 @@ unsigned char *pack_mqtt_packet(const union mqtt_packet *pkt, unsigned type) {
 #define UNIX    0
 #define INET    1
 
-/* Set non-blocking socket */
+// 设置为 non-blocking 模式
 int set_nonblocking(int);
 
-/*
- * Set TCP_NODELAY flag to true, disabling Nagle's algorithm, no more waiting
- * for incoming packets on the buffer
- */
+// 将 TCP_NODELAY 设置为 true, 用来关闭 Nagle's algorithm, 关闭收包时的缓冲等待
 int set_tcp_nodelay(int);
 
-// 创建 epoll 服务器的辅助函数
+// 创建 socket 服务的辅助函数
 int create_and_bind(const char *, const char *, int);
 
 // 创建一个 non-blocking socket 并监听指定的地址和端口
@@ -300,27 +297,23 @@ int make_listen(const char *, const char *, int);
 int accept_connection(int);
 ```
 
-定义了一些简单的辅助函数，用来创建和绑定 `socket` 端口，处理新链接并把 `socket` 设置为 `non-blocking` 模式（这样才能发挥 **epoll** 的复用能力）。
+我们定义了一些简单的辅助函数，用来创建和绑定 `socket` 端口，处理新链接并把 `socket` 设置为 `non-blocking` 模式（这样才能发挥 **epoll** 的复用能力）。
 
-我不喜欢必须处理所有进出服务器的字节流，在我写的涉及到TCP通信的程序中，我都会定义这两个函数：
+我不喜欢必须处理每个进出服务器的字节，在我写的涉及到TCP通信的程序中，我都会定义这两个函数：
 - `ssize_t send_bytes(int, const unsigned char *, size_t)` 用于在while循环中持续发送数据，直到把数据全部发送完。正确捕获 `EAGAIN` 或 `EWOUDLBLOCK` 异常。
 - `ssize_t recv_bytes(int, unsigned char *, size_t)` 在while循环中获得任意长度的数据。正确捕获 `EAGAIN` 或 `EWOUDLBLOCK` 异常。
 
 ```c src/network.h
-/* I/O management functions */
+// I/O 管理函数
 
-/*
- * Send all data in a loop, avoiding interruption based on the kernel buffer
- * availability
- */
+// 在循环中发出所有数据, 避免内核buffer可用性造成的中断(EAGAIN EWOUDLBLOCK)
 ssize_t send_bytes(int, const unsigned char *, size_t);
 
-/*
- * Receive (read) an arbitrary number of bytes from a file descriptor and
- * store them in a buffer
- */
+// 从 fd 中读取指定长度的数据进入 buffer
 ssize_t recv_bytes(int, unsigned char *, size_t);
 ```
+
+## socket 封装实现
 
 接下来是 `network.c` 的实现。
 
@@ -443,7 +436,7 @@ int create_and_bind(const char *host, const char *port, int socket_family) {
 }
 
 // 创建一个 non-blocking socket, 监听指定的地址端口
-// return sfd
+// return server file descriptor
 // host 地址或UNIX path
 // port 端口
 // socket_family 地址族 AF_UNIX 或 AF_INET
@@ -552,11 +545,11 @@ err:
 }
 ```
 
-# 基本封装
+# epoll 封装
 
-为了让 **epoll** 的使用更加简单和舒适，而且这个项目不需要那么复杂的操作。我在epoll基础上构建了一个简单的抽象，这样可以在事件点上注册回调函数。
+为了让 **epoll** API能够更加简单易用。我对 epoll 进行了一些的封装，让我们就可以通过注册回调函数的方式来响应事件。
 
-网络上有很多使用 epoll 的示例，大部分都是描述基本用法：注册一个 socket 并启动一个循环来监听事件，每当 socket 需要被读写时，调用一个函数来使用它们。这些例子当然简单好用，但是也有一些局限性。我决定使用 `epoll_data`：
+网络上有很多使用 epoll 的示例，大部分都是描述基本用法：注册一个 socket 并启动一个循环来监听事件，每当 socket 需要被读写时，调用一个函数来使用它们。这些例子当然简单好用，但是并没有告诉我们如何通过回调的方式使用 epoll。经过思考后，我发现可以使用 `epoll_event` 自带的 `epoll_data` 来解决这个问题：
 
 ```c
 typedef union epoll_data {
@@ -567,59 +560,40 @@ typedef union epoll_data {
 } epoll_data_t;
 ```
 
-正如你看到的，
+正如你看到的，`epoll_data` 中有一个 `void *`，一个常常用来保存fd的 `int`，还有两个大小不同的 `uint`。我计划做一个自定义事件结构体，其中包括了fd、一些自定义数据和最关键的回调函数指针。然后我们可以把自定义事件结构体绑定到 `epoll_data` 的 `void *` 中，如此一来，每当事件发生时，我们都可以通过 `epoll_data` 获得所有我们需要的东西。
 
-如图所示，有一个“void *”，一个常用于存储我们正在讨论的描述符的int和两个不同大小的整数。 我更喜欢使用带有描述符和其他一些上下文字段的自定义结构，特别是函数指针及其可选参数。 我们将注册一个指向该结构的指针，并将其传递给指针“void *ptr”。 这样，每次发生事件时，我们都可以访问我们注册的相同结构指针，包括关联的文件描述符。
+我想要定义两种类型的回调，一种是事件触发的回调，另一种是间隔触发的周期性回调。我们需要把 epoll 封装到一个自定义结构里，来实现这两种回调。对于这两种回调的处理，我们则会采用完全相同的方式：获得 `epoll_data`，在其中获得所有我们所需的数据和需要执行的回调函数。
 
-As shown, there is a `void *`, an int commonly used to store the descriptor we were talking about and two integer of different size. I prefered to use a custom structure with the descriptor inside and some other context fields, specifically a function pointer and its optional arguments. We’ll register a pointer to this structure passing it to the pointer `void *ptr`. This way, every time an event occur, we’ll have access to the very same structure pointer we registered, including the file descriptor associated.
-
-可以定义两种类型的回调，常见的回调将由事件触发，而周期性的回调将在定义的每个时间间隔自动执行。 因此，让我们将 epoll 循环包装到一个专用结构中，我们将对回调函数执行相同的操作，定义一个结构，其中包含一些对执行回调有用的字段。
-
-There’s two types of callback which can be defined, the common ones, that will be triggered with events and the periodic ones, that will be executed automatically every tick of time interval defined. So let’s wrap the epoll loop into a dedicated structure, we’ll do the same for the callback functions, defining a structure with some fields useful for the execution of the callback.
-
-**Sequential diagram, for each cycle of epoll_wait on incoming events**
+**接收数据包并使用 epoll_wait 处理的顺序图**
 ![Epoll sequential diagram](epoll-sequential.png)
 
-我们需要定义两个结构体和一个函数指针
+我们需要定义两种结构体和一种函数指针
 
-We're going to declare two structures and a function pointer:
+- **struct evloop** 封装 epoll 实例的结构体，添加了各种参数用来实现我们的业务设计
+- **struct closure** 上文中提到的自定义事件结构体，封装了各种事件参数和回调函数的指针
+- **void callback(struct evloop *, void *)** 回调函数的接口，在 **closure** 里真正被执行的函数的接口
 
-- **struct evloop** epoll 实例的封装，包括所有需要的参数
-- **struct closure** 它抽象了一个回调和一种带有参数的上下文以及结果的序列化有效负载
-- **void callback(struct evloop *, void *)** **closure**的内容，后续我们需要传递的回调函数接口
-
-- **struct evloop**, a wrapper around the epoll instance, encapsulating all
-  needed properties
-- **struct closure** which abstract a callback and a sort of context with
-  arguments and a serialized payload of the results
-- **void callback(struct evloop *, void *)**, the heart of the **closure**, it's
-  the prototype of the function we're gonna pass as callback.
-
-另外，我们需要在 .c 文件中实现一些创建、删除和管理功能。
-
-Plus, we'll declare and implement on the .c file some creation, delete and managing functions.
+另外，我们需要在 .c 文件中实现一些对 `evloop` 的创建、删除和管理功能。
 
 ```c src/network.h
-// 
-/* Event loop wrapper structure, define an EPOLL loop and his status. The
- * EPOLL instance use EPOLLONESHOT for each event and must be re-armed
- * manually, in order to allow future uses on a multithreaded architecture.
- */
+// epoll 的业务包装，包括 epoll 实例本身和其他参数
+// 使用 EPOLLONESHOT 处理事件，并且每次都需要手动重置，这样可以保证未来适应多线程架构
 struct evloop {
-    int epollfd;
-    int max_events;
-    int timeout;
-    int status;
-    struct epoll_event *events;
-    /* Dynamic array of periodic tasks, a pair descriptor - closure */
-    int periodic_maxsize;
-    int periodic_nr;
+    int epollfd;                // epoll 实例fd
+    int max_events;             // 单次处理事件最大数量
+    int timeout;                // 事件等待超时事件
+    int status;                 // 运行状态(是否运行中)
+    struct epoll_event *events; // 事件数组, 用来接收 epoll_wait 获得的一组并发事件
+    // 周期性任务控制相关
+    int periodic_maxsize;       // 周期性任务数组初始大小
+    int periodic_nr;            // 当前周期性任务数量
     struct {
         int timerfd;
         struct closure *closure;
-    } **periodic_tasks;
+    } **periodic_tasks;         // 周期性任务列表 timerfd <-> closure
 } evloop;
 
+// 回调函数接口
 typedef void callback(struct evloop *, void *);
 
 /*
@@ -631,71 +605,304 @@ typedef void callback(struct evloop *, void *);
  * a callback, ready to be sent through wire and a function pointer to the
  * callback function to execute.
  */
+// 自定义事件结构体
 struct closure {
-    int fd;
-    void *obj;
-    void *args;
-    char closure_id[UUID_LEN];
-    struct bytestring *payload;
-    callback *call;
+    int fd;                     // 监听的 fd
+    void *obj;                  // 存放一些需要的自定义数据
+    void *args;                 // 可以被callback使用的参数, 指向用户自定义结构, 实际调用时就是 call 的第二个参数
+    char closure_id[UUID_LEN];  // closure 的 UUID
+    struct bytestring *payload; // callback 的结果, 可以被网络发送的数据流
+    callback *call;             // 会被执行的回调函数
 };
 
+// evloop 的创建、初始化、销毁函数
 struct evloop *evloop_create(int, int);
 void evloop_init(struct evloop *, int, int);
 void evloop_free(struct evloop *);
 
-/*
- * Blocks in a while(1) loop awaiting for events to be raised on monitored
- * file descriptors and executing the paired callback previously registered
- */
+// 一个阻塞的循环, 监听各种触发并执行对应的回调
 int evloop_wait(struct evloop *);
 
-/*
- * Register a closure with a function to be executed every time the
- * paired descriptor is re-armed.
- */
+// 添加一个 closure, 其中包含一个回调函数
+// 回调函数是单次触发的(边沿触发), 但是每次触发后都会被重置, 这样下次依然可以触发
 void evloop_add_callback(struct evloop *, struct closure *);
 
-/*
- * Register a periodic closure with a function to be executed every
- * defined interval of time.
- */
+// 添加一个周期性的 closure, 间隔指定事件触发
 void evloop_add_periodic_task(struct evloop *,
                               int,
                               unsigned long long,
                               struct closure *);
 
-/*
- * Unregister a closure by removing the associated descriptor from the
- * EPOLL loop
- */
+// 注销一个 closure, 删除对其 fd 的监听
 int evloop_del_callback(struct evloop *, struct closure *);
 
-/*
- * Rearm the file descriptor associated with a closure for read action,
- * making the event loop to monitor the callback for reading events
- */
+// 重置该 closure 对 read 事件的监听
 int evloop_rearm_callback_read(struct evloop *, struct closure *);
 
-/*
- * Rearm the file descriptor associated with a closure for write action,
- * making the event loop to monitor the callback for writing events
- */
+// 重置该 closure 对 write 事件的监听
 int evloop_rearm_callback_write(struct evloop *, struct closure *);
 
-/* Epoll management functions */
+// 以下三个函数是对 epoll 原始API的封装, 供上方的函数调用
+// EPOLL_CTL_ADD 的封装, 向 epoll 添加监听
 int epoll_add(int, int, int, void *);
 
-/*
- * Modify an epoll-monitored descriptor, automatically set EPOLLONESHOT in
- * addition to the other flags, which can be EPOLLIN for read and EPOLLOUT for
- * write
- */
+// EPOLL_CTL_MOD 的封装, 可以重置 EPOLLONESHOT, 让 closure 下次仍被触发
 int epoll_mod(int, int, int, void *);
 
-/*
- * Remove a descriptor from an epoll descriptor, making it no-longer monitored
- * for events
- */
+// EPOLL_CTL_DEL 的封装, 删除对某个 fd 的监听
 int epoll_del(int, int);
+```
+
+## epoll 封装实现
+
+在头文件中定义了我们网络所需的各种工具函数后，接下来我们开始进行函数实现。
+
+让我们先从最简单的开始，`evloop` 实例的创建、初始化和删除。他包括了这些内容：
+- `epoll` 的 `fd` 即 `epollfd`
+- 单次处理的最大事件数量
+- 一个毫秒单位的超时时间
+- loop是否正在运行的状态标识
+- 动态大小的周期性任务数组
+
+```c src/network.c
+/******************************
+ *         EPOLL APIS         *
+ ******************************/
+#define EVLOOP_INITIAL_SIZE 4 // 默认周期任务数组大小
+
+// 创建并初始化 evloop
+struct evloop *evloop_create(int max_events, int timeout) {
+    struct evloop *loop = malloc(sizeof(*loop));
+    evloop_init(loop, max_events, timeout);
+    return loop;
+}
+
+void evloop_init(struct evloop *loop, int max_events, int timeout) {
+    loop->max_events = max_events;
+    loop->events = malloc(sizeof(struct epoll_event) * max_events);
+    loop->epollfd = epoll_create1(0);  // 这里创建 epoll 实例
+    loop->timeout = timeout;
+    loop->periodic_maxsize = EVLOOP_INITIAL_SIZE;
+    loop->periodic_nr = 0;
+    loop->periodic_tasks = malloc(EVLOOP_INITIAL_SIZE * sizeof(*loop->periodic_tasks));
+    loop->status = 0;
+}
+
+// 释放 evloop
+void evloop_free(struct evloop *loop) {
+    free(loop->events);
+    for (int i = 0; i < loop->periodic_nr; i++)
+        free(loop->periodic_tasks[i]);
+    free(loop->periodic_tasks);
+    free(loop);
+}
+```
+
+接着，我们需要实现三个包装 `epoll` API的函数，用来创建、修改和删除 `epoll` 对 `fd` 的监听。我们封装函数的目的是为所有的 `epoll` 监听都添加 `EPOLLET` 和 `EPOLLONESHOT` 标识。`EPOLLET` 标识可以让 `epoll` 工作在`边沿触发`模式，`EPOLLONESHOT` 标识则可以确保 `epoll` 对某个事件触发仅产生一次（然后我们通过手动重置的方式让其可以继续响应）。
+
+这样的设置可以避免未来我们在使用多线程架构时，一次事件的传入会唤醒所有等待中的线程，这被称为`惊群效应`(thundering herd problem)，不过这些都是后话，暂时可以不用深究。
+
+```c src/network.c
+// 添加监听
+// return 添加结果
+// efd file descriptor
+// fd 被监听的 fd
+// evs 被监听的事件(可以是一个或一组)
+// data 传入自定义结构体
+int epoll_add(int efd, int fd, int evs, void *data) {
+    struct epoll_event ev;
+    // 在 epoll_data 中设置 fd
+    ev.data.fd = fd;
+    // 注意 epoll_data 是 union, 如果有data并在此处设置, 那么上一行的 ev.data.fd 就不能再使用(是随机数)
+    if (data)
+        ev.data.ptr = data;
+    // 将所有事件都设置为 边沿触发(EPOLLET) 和 触发后取消监听(EPOLLONESHOT)
+    ev.events = evs | EPOLLET | EPOLLONESHOT;
+    return epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
+}
+
+// 修改监听 主要目的是让触发过的事件可以再次被触发
+int epoll_mod(int efd, int fd, int evs, void *data) {
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    // Being ev.data a union, in case of data != NULL, fd will be set to random
+    if (data)
+        ev.data.ptr = data;
+    ev.events = evs | EPOLLET | EPOLLONESHOT;
+    // 通过 EPOLL_CTL_MOD 可以让事件再次能被触发
+    return epoll_ctl(efd, EPOLL_CTL_MOD, fd, &ev);
+}
+
+// 删除监听
+int epoll_del(int efd, int fd) {
+    return epoll_ctl(efd, EPOLL_CTL_DEL, fd, NULL);
+}
+```
+
+这里有两件事需要注意：
+
+- 第一，如前所述，`epoll_event` 中包括了一个 `union epoll_data`，其中可以保存一个 `fd` **或** 一个 `void *`。我们选择了使用后者，传入了我们的 `closure`，这其中包含了更多有用的信息，也包括 `fd` 在内。
+
+- 第二，刚才我们定义的添加和修改函数的第三个参数，可以接收一组事件，一般而言是 `EPOLLIN` 或 `EPOLLOUT`。同时我们添加了 `EPOLLONESHOT` 标识，这意味着当事件触发一次后就不会再次触发，除非我们手动重置该事件。这样做是为了保持对低级事件触发的某种程度的控制，并为将来的多线程实现留出空间。这篇[文档](https://idea.popcount.org/2017-02-20-epoll-is-fundamentally-broken-12/)精彩地阐述了 `epoll` 这种设计的好处，以及为什么最好使用 `EPOLLONESHOT` 标志。
+
+## epoll 循环实现
+
+我们继续实现我们的封装，接下来是一些回调函数的注册、周期回调的注册以及主循环。
+
+```c src/network.c
+// 添加回调
+// loop loop封装实例
+// cb 自定义事件封装 closure
+void evloop_add_callback(struct evloop *loop, struct closure *cb) {
+    if (epoll_add(loop->epollfd, cb->fd, EPOLLIN, cb) < 0)
+        perror("Epoll register callback: ");
+}
+
+// 添加周期事件
+// loop loop封装实例
+// seconds 以秒为单位的到期时间或触发周期
+// ns 以纳秒为单位的到期时间或触发周期
+// cb 自定义事件封装
+void evloop_add_periodic_task(struct evloop *loop,
+                              int seconds,
+                              unsigned long long ns,
+                              struct closure *cb) {
+    // 表示时间间隔或时间点的结构
+    struct itimerspec timervalue;
+    int timerfd = timerfd_create(CLOCK_MONOTONIC, 0);
+    memset(&timervalue, 0x00, sizeof(timervalue));
+    // 设置初始的到期时间 (多久后执行
+    timervalue.it_value.tv_sec = seconds;
+    timervalue.it_value.tv_nsec = ns;
+    // 设置初始的触发周期 (间隔多久执行
+    timervalue.it_interval.tv_sec = seconds;
+    timervalue.it_interval.tv_nsec = ns;
+    // 设置好 timer
+    if (timerfd_settime(timerfd, 0, &timervalue, NULL) < 0) {
+        perror("timerfd_settime");
+        return;
+    }
+    // 将 timer 添加到 epoll, 让其能够触发
+    struct epoll_event ev;
+    ev.data.fd = timerfd;
+    ev.events = EPOLLIN;
+    if (epoll_ctl(loop->epollfd, EPOLL_CTL_ADD, timerfd, &ev) < 0) {
+        perror("epoll_ctl(2): EPOLLIN");
+        return;
+    }
+    // 将周期性任务的信息绑定到 loop
+    // 如果周期性任务的数量大于periodic_maxsize, 动态扩容
+    if (loop->periodic_nr + 1 > loop->periodic_maxsize) {
+        loop->periodic_maxsize *= 2;
+        loop->periodic_tasks =
+            realloc(loop->periodic_tasks,
+                    loop->periodic_maxsize * sizeof(*loop->periodic_tasks));
+    }
+    // 存储周期性任务的内容 timerfd 和 自定义事件
+    loop->periodic_tasks[loop->periodic_nr] =
+        malloc(sizeof(*loop->periodic_tasks[loop->periodic_nr]));
+    loop->periodic_tasks[loop->periodic_nr]->closure = cb;
+    loop->periodic_tasks[loop->periodic_nr]->timerfd = timerfd;
+    // 记录当前绑定了多少周期性任务
+    loop->periodic_nr++;
+}
+
+// epoll 主循环
+int evloop_wait(struct evloop *el) {
+    int rc = 0;             // 返回值
+    int events = 0;         // 单次触发事件数
+    long int timer = 0L;    // 拿到我们周期性事件的 timerfd
+    int periodic_done = 0;  // 标记是否是周期性事件并且已经执行
+    while (1) {
+        // 等待事件发生
+        events = epoll_wait(el->epollfd, el->events,
+                            el->max_events, el->timeout);
+        // 有异常
+        if (events < 0) {
+            // 系统中断, 暂时不管
+            if (errno == EINTR)
+                continue;
+            // 确实出了问题, 结束循环
+            rc = -1;
+            el->status = errno;
+            break;
+        }
+        // 循环处理每个事件
+        for (int i = 0; i < events; i++) {
+            // 错误校验 检查是否是错误事件 检查是否不是输入输出事件
+            if ((el->events[i].events & EPOLLERR) ||
+                (el->events[i].events & EPOLLHUP) ||
+                (!(el->events[i].events & EPOLLIN) &&
+                 !(el->events[i].events & EPOLLOUT))) {
+                // 总之这个 fd 上出现了一些异常, 我们把链接关了
+                perror ("epoll_wait(2)");
+                shutdown(el->events[i].data.fd, 0);
+                close(el->events[i].data.fd);
+                el->status = errno;
+                continue;
+            }
+            // 拿到我们的 closure
+            struct closure *closure = el->events[i].data.ptr;
+            // 标记没有完成周期事件
+            periodic_done = 0;
+            // 当没有被标识完成时, 循环查找我们存储的周期事件
+            for (int i = 0; i < el->periodic_nr && periodic_done == 0; i++) {
+                // 找到了
+                if (el->events[i].data.fd == el->periodic_tasks[i]->timerfd) {
+                    // 拿到 closure
+                    struct closure *c = el->periodic_tasks[i]->closure;
+                    // 读 timerfd
+                    (void) read(el->events[i].data.fd, &timer, 8);
+                    // 执行回调
+                    c->call(el, c->args);
+                    // 标记完成
+                    periodic_done = 1;
+                }
+            }
+            if (periodic_done == 1)
+                continue;
+            // 并不是完成了某个周期性事件 那就是触发事件了 这里执行回调
+            closure->call(el, closure->args);
+        }
+    }
+    return rc;
+}
+
+// 重置该 closure 对 read 事件的监听
+int evloop_rearm_callback_read(struct evloop *el, struct closure *cb) {
+    return epoll_mod(el->epollfd, cb->fd, EPOLLIN, cb);
+}
+
+// 重置该 closure 对 write 事件的监听
+int evloop_rearm_callback_write(struct evloop *el, struct closure *cb) {
+    return epoll_mod(el->epollfd, cb->fd, EPOLLOUT, cb);
+}
+
+// 删除回调函数
+int evloop_del_callback(struct evloop *el, struct closure *cb) {
+    return epoll_del(el->epollfd, cb->fd);
+}
+```
+
+在我们之前的所有代码中，`evloop_wait` 是最有意思的，他启动一个循环不停监视 `epoll_wait`，执行错误检查，区分本次触发是周期性的自动触发或是读写触发，然后执行我们设置的回调函数。
+
+# 结尾
+
+我们的代码越写越多，这次我们又添加了一个模块。
+
+此时我们的文件结构是这样的：
+
+```
+sol/
+ ├── src/
+ │    ├── mqtt.h
+ |    ├── mqtt.c
+ │    ├── network.h
+ │    ├── network.c
+ │    ├── pack.h
+ │    └── pack.c
+ ├── CHANGELOG
+ ├── CMakeLists.txt
+ ├── COPYING
+ └── README.md
 ```
