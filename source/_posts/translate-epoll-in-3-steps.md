@@ -6,6 +6,7 @@ categories:
 tags:
 - 网络编程
 - 翻译
+- C
 ---
 
 > 原文 [epoll() Tutorial – epoll() In 3 Easy Steps!](https://suchprogramming.com/epoll-in-3-easy-steps/)
@@ -13,6 +14,8 @@ tags:
 # 前言
 
 就在不久前，能够让一台服务器[支持10000个并发连接](http://www.kegel.com/c10k.html)还是一个很了不起的事情。有很多因素让这个行为成为可能，例如 [nginx](https://www.nginx.com/)，他可以比他的前辈们更高效的处理更多连接。不过其中最大的因素应该还是大部分操作系统引入了恒定时间的轮询机制[O1](https://robbell.io/2009/06/a-beginners-guide-to-big-o-notation)，用来监视系统中的文件描述符。
+
+<!-- more -->
 
 在 [No Starch Press](https://nostarch.com/) 的书[《Linux 编程接口》](https://nostarch.com/tlpi)中，第 63.4.5 节提供了一个表格，描述了通过一些最常见的轮询方法检查不同数量的文件描述符所需的时间。
 

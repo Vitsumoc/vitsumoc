@@ -5,8 +5,9 @@ categories:
 - 网络编程
 tags:
 - 网络编程
-- 物联网
 - 翻译
+- 物联网
+- C
 ---
 
 > 原文 [Sol - An MQTT broker from scratch. Part 2 - Networking](https://codepr.github.io/posts/sol-mqtt-broker-p2/)

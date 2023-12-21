@@ -6,6 +6,7 @@ categories:
 tags:
 - 网络编程
 - SSH
+- golang
 ---
 
 # subSocks简介
