@@ -10,11 +10,10 @@ tags:
 ---
 
 > 原文 [n2n Frequently Asked Questions](https://github.com/ntop/n2n/blob/dev/doc/Faq.md)
-> [项目地址](https://github.com/ntop/n2n)
-
-# n2n 常见问题
 
 <!-- more -->
+
+# n2n 常见问题
 
 ## 发布
 

@@ -12,11 +12,11 @@ tags:
 
 > 原文 [Sol - An MQTT broker from scratch. Part 1 - The protocol](https://codepr.github.io/posts/sol-mqtt-broker/)
 
+<!--more-->
+
 # 前言
 
 我已经在物联网领域工作有一段时间了，这段时间里我一直在处理物联网架构相关的工作，探索物联网系统开发的最佳模式，研究相关的协议和标准，例如MQTT。
-
-<!--more-->
 
 因为我一直在渴望着提升我编程能力的机会，我觉得在物联网方向深入研究会很有趣也很有好处。因此，我再一次 `git init` 了一个项目，并且要通过写下这些博客来挑战我自己，强迫自己进步。
 

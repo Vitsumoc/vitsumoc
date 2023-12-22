@@ -12,11 +12,11 @@ tags:
 
 > 原文 [Sol - An MQTT broker from scratch. Part 2 - Networking](https://codepr.github.io/posts/sol-mqtt-broker-p2/)
 
+<!--more-->
+
 # 前言
 
 让我们继续之前的工作，在第一部分中我们实现了 MQTT v3.1.1 的数据结构和解码函数，接下来我们需要做一些组包和编码函数，让我们可以发送网络包。
-
-<!--more-->
 
 顺带说明一下，我们并没有打算去编写完美的或者内存效率很高的代码，而且，过早的优化是万恶之源，以后我们有的是时间来提高我们的代码质量。
 
