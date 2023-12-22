@@ -597,15 +597,6 @@ struct evloop {
 // 回调函数接口
 typedef void callback(struct evloop *, void *);
 
-/*
- * Callback object, represents a callback function with an associated
- * descriptor if needed, args is a void pointer which can be a structure
- * pointing to callback parameters and closure_id is a UUID for the closure
- * itself.
- * The last two fields are payload, a serialized version of the result of
- * a callback, ready to be sent through wire and a function pointer to the
- * callback function to execute.
- */
 // 自定义事件结构体
 struct closure {
     int fd;                     // 监听的 fd
