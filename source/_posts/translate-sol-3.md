@@ -1,5 +1,5 @@
 ---
-title: "[未完成][翻译]Sol - 从零开始的MQTT broker - 第三部分：服务"
+title: "[翻译]Sol - 从零开始的MQTT broker - 第三部分：服务"
 date: 2023-12-22 09:44:08
 categories:
 - 网络编程
@@ -365,36 +365,33 @@ static void on_write(struct evloop *loop, void *arg) {
 # 工具 bytestring
 
 ```c src/pack.h
-/*
- * bytestring structure, provides a convenient way of handling byte string data.
- * It is essentially an unsigned char pointer that track the position of the
- * last written byte and the total size of the bystestring
- */
+// bytestring 结构体, 提供了一个便携的保存 bytes 的方法
+// 他本质上提供了一个指向最后编辑位置的指针, 和 bytes 的总长度
 struct bytestring {
     size_t size;
     size_t last;
     unsigned char *data;
 };
 
-/*
- * const struct bytestring constructor, it require a size cause we use a bounded
- * bytestring, e.g. no resize over a defined size
- */
+// bytestring 的初始化函数, 需要一个长度作为参数
+// 为了简化, 我们直接采用固定长度, 并且不会再后续使用过程中扩容
 struct bytestring *bytestring_create(size_t);
 void bytestring_init(struct bytestring *, size_t);
 void bytestring_release(struct bytestring *);
 void bytestring_reset(struct bytestring *);
 ```
 
-And their trivial implementation
+这里是关于 `bytestring` 的实现。
 
 ```c src/pack.c
+// 创建
 struct bytestring *bytestring_create(size_t len) {
     struct bytestring *bstring = malloc(sizeof(*bstring));
     bytestring_init(bstring, len);
     return bstring;
 }
 
+// 初始化内部结构
 void bytestring_init(struct bytestring *bstring, size_t size) {
     if (!bstring)
         return;
@@ -403,6 +400,7 @@ void bytestring_init(struct bytestring *bstring, size_t size) {
     bytestring_reset(bstring);
 }
 
+// 释放
 void bytestring_release(struct bytestring *bstring) {
     if (!bstring)
         return;
@@ -410,6 +408,7 @@ void bytestring_release(struct bytestring *bstring) {
     free(bstring);
 }
 
+// 清空数据
 void bytestring_reset(struct bytestring *bstring) {
     if (!bstring)
         return;
@@ -418,15 +417,11 @@ void bytestring_reset(struct bytestring *bstring) {
 }
 ```
 
-### Generic utilities
+# 日志和通用工具
 
-Let's open a brief parenthesis, from my experience, generally there's always
-need for generic helpers and utility functions, I usually collect them into a
-dedicated `util` module; that's the case for calls like `sol_info`, `sol_debug`
-and `sol_error` on those chunks of code previously analysed.
+让我们稍微打断一下主线，按照我的经验，到这个阶段我们往往会需要一些工具函数，我一般会把他们统一放在 `util` 包中。我们刚才已经看到了一些 `sol_info`, `sol_debug` 或者 `sol_error` 这样的函数，其实就是 `util` 包中的定义。
 
-Our logging requirements is so simple that there's no need for a dedicated
-module yet, so I generally add those logging functions to the `util` module.
+我们的日志需求很简单，所以不需要专门做一个日志模块，就先放到 `util` 包里。
 
 ```c src/util.h
 #include <stdio.h>
@@ -445,7 +440,7 @@ int generate_uuid(char *);
 char *remove_occur(char *, char) ;
 char *append_string(char *, char *, size_t);
 
-/* Logging */
+// 日志相关
 void sol_log_init(const char *);
 void sol_log_close(void);
 void sol_log(int, const char *, ...);
@@ -459,9 +454,7 @@ void sol_log(int, const char *, ...);
 #define STREQ(s1, s2, len) strncasecmp(s1, s2, len) == 0 ? true : false
 ```
 
-And here we go, a log function with some macros to conveniently call the
-correct level of logging, with an additional utility macro `STREQ` to compare two
-strings.
+log函数设置了一些宏定义，方便我们使用不同级别的日志。我们还做了一个 `STREQ` 用来比较两个字符串是否相等。
 
 ```c src/util.c
 #include <time.h>
@@ -477,6 +470,7 @@ strings.
 
 static FILE *fh = NULL;
 
+// 通过文件保存日志
 void sol_log_init(const char *file) {
     assert(file);
     fh = fopen(file, "a+");
@@ -492,6 +486,7 @@ void sol_log_close(void) {
     }
 }
 
+// 按级别写入内容
 void sol_log(int level, const char *fmt, ...) {
     assert(fmt);
     va_list ap;
@@ -502,15 +497,14 @@ void sol_log(int level, const char *fmt, ...) {
     vsnprintf(msg, sizeof(msg), fmt, ap);
     va_end(ap);
 
-    /* Truncate message too long and copy 3 bytes to make space for 3 dots */
+    // 过长的信息会被截取, 然后加 ...
     memcpy(msg + MAX_LOG_SIZE, "...", 3);
     msg[MAX_LOG_SIZE + 3] = '\0';
 
     // Distinguish message level prefix
     const char *mark = "#i*!";
 
-    // Open two handler, one for standard output and a second for the
-    // persistent log file
+    // 同时写向标准输出和日志文件
     FILE *fp = stdout;
     if (!fp)
         return;
@@ -522,10 +516,7 @@ void sol_log(int level, const char *fmt, ...) {
         fflush(fh);
 }
 
-/*
- * Return the 'length' of a positive number, as the number of chars it would
- * take in a string
- */
+// 获得一个数字的字符串长度 如 number_len(321) => 3
 int number_len(size_t number) {
     int len = 1;
     while (number) {
@@ -535,8 +526,7 @@ int number_len(size_t number) {
     return len;
 }
 
-/* Parse the integer part of a string, by effectively iterate through it and
-   converting the numbers found */
+// 解析字符串中的数字, 返回数字的值
 int parse_int(const char *string) {
     int n = 0;
     while (*string && isdigit(*string)) {
@@ -546,23 +536,20 @@ int parse_int(const char *string) {
     return n;
 }
 
+// 去除字符串中的某个字符
 char *remove_occur(char *str, char c) {
     char *p = str;
     char *pp = str;
-    while (*p) {
-        *pp = *p++;
-        pp += (*pp != c);
+    while (*p) {          // 当 p 指向内容
+        *pp = *p++;       // 1. 使用 *p 赋值 *pp 2. p右移 (保证每次原字符串读取下一个字符)
+        pp += (*pp != c); // 仅当 *pp != c 时, pp 右移 (意味着如果时c则会被下一次写入覆盖)
     }
-    *pp = '\0';
+    *pp = '\0'; // pp的最新位置作为结尾
     return str;
 }
 
-/*
- * Append a string to another, the destination string must be NUL-terminated
- * and long enough to contain the resulting string, for the chunk part that
- * will be appended the function require the length, the resulting string will
- * be heap alloced and nul-terminated.
- */
+// 将一个字符串添加到另一个字符串后面
+// 前面是 src 后面是 chunk
 char *append_string(char *src, char *chunk, size_t chunklen) {
     size_t srclen = strlen(src);
     char *ret = malloc(srclen + chunklen + 1);
@@ -572,6 +559,7 @@ char *append_string(char *src, char *chunk, size_t chunklen) {
     return ret;
 }
 
+// 创建 uuid
 int generate_uuid(char *uuid_placeholder) {
 
     /* Generate random uuid */
@@ -583,19 +571,14 @@ int generate_uuid(char *uuid_placeholder) {
 }
 ```
 
-These simple functions allow us to have a pretty decent logging system, by
-calling `sol_log_init` on the main function we can also persist logs on disk
-by passing a path on the filesystem.
+这些简单的函数足以支撑我们的日志系统，如果在启动时调用 `sol_log_init` 我们还能将日志存入日志文件。
 
-We finally arrive to write our `start_server` function, which uses all other
-functions already defined. Basically it acts as an entry point, setting up all
-global structures and the first closure for accepting incoming connections.
+# 服务入口实现
+
+终于我们要开始写 `start_server` 函数了，这个函数会调用所有我们之前写过的内容。他将作为程序的入口点，完成各种设置和全局实例的初始化，然后等待着客户端链接。
 
 ```c src/server.c
-/*
- * Statistics topics, published every N seconds defined by configuration
- * interval
- */
+// 系统状态主题, 根据配置文件每 n 秒发布一次
 #define SYS_TOPICS 14
 
 static const char *sys_topics[SYS_TOPICS] = {
@@ -615,6 +598,7 @@ static const char *sys_topics[SYS_TOPICS] = {
     "$SOL/broker/memory/used"
 };
 
+// 一个阻塞的循环
 static void run(struct evloop *loop) {
     if (evloop_wait(loop) < 0) {
         sol_error("Event loop exited unexpectedly: %s", strerror(loop->status));
@@ -622,10 +606,7 @@ static void run(struct evloop *loop) {
     }
 }
 
-/*
- * Cleanup function to be passed in as destructor to the Hashtable for
- * connecting clients
- */
+// 清理哈希表中客户端链接
 static int client_destructor(struct hashtable_entry *entry) {
     if (!entry)
         return -1;
@@ -636,10 +617,7 @@ static int client_destructor(struct hashtable_entry *entry) {
     return 0;
 }
 
-/*
- * Cleanup function to be passed in as destructor to the Hashtable for
- * registered closures.
- */
+// 清理哈希表中的 closures
 static int closure_destructor(struct hashtable_entry *entry) {
     if (!entry)
         return -1;
@@ -650,31 +628,34 @@ static int closure_destructor(struct hashtable_entry *entry) {
     return 0;
 }
 
+// 启动服务器
 int start_server(const char *addr, const char *port) {
-    /* Initialize global Sol instance */
+    // 初始化 sol 全局实例
     trie_init(&sol.topics);
     sol.clients = hashtable_create(client_destructor);
     sol.closures = hashtable_create(closure_destructor);
 
+    // 服务端 closure
     struct closure server_closure;
-
-    /* Initialize the sockets, first the server one */
+    // 开启端口监听
     server_closure.fd = make_listen(addr, port, conf->socket_family);
     server_closure.payload = NULL;
     server_closure.args = &server_closure;
+    // 唯一事件是接受客户端链接
     server_closure.call = on_accept;
     generate_uuid(server_closure.closure_id);
 
-    /* Generate stats topics */
+    // 创建输出状态的基础 topic
     for (int i = 0; i < SYS_TOPICS; i++)
         sol_topic_put(&sol, topic_create(strdup(sys_topics[i])));
+    // 创建 evloop
     struct evloop *event_loop = evloop_create(EPOLL_MAX_EVENTS, EPOLL_TIMEOUT);
 
-    /* Set socket in EPOLLIN flag mode, ready to read data */
+    // 将服务端 closure 放入 evloop
     evloop_add_callback(event_loop, &server_closure);
 
-    /* Add periodic task for publishing stats on SYS topics */
-    // TODO Implement
+    // 添加周期性事件 汇报服务器状态
+    // TODO 实现
     struct closure sys_closure = {
         .fd = 0,
         .payload = NULL,
@@ -682,13 +663,13 @@ int start_server(const char *addr, const char *port) {
         .call = publish_stats
     };
     generate_uuid(sys_closure.closure_id);
-
-    /* Schedule as periodic task to be executed every 5 seconds */
-    evloop_add_periodic_task(event_loop, conf->stats_pub_interval,
-                             0, &sys_closure);
+    evloop_add_periodic_task(event_loop, conf->stats_pub_interval, 0, &sys_closure);
+    // 初始化完成
     sol_info("Server start");
     info.start_time = time(NULL);
+    // 进入事件循环
     run(event_loop);
+    // 释放资源
     hashtable_release(sol.clients);
     hashtable_release(sol.closures);
     sol_info("Sol v%s exiting", VERSION);
@@ -696,68 +677,56 @@ int start_server(const char *addr, const char *port) {
 }
 ```
 
-Ok, we have now a (almost) fully functioning server that uses our toyish
-callback system to handle traffic. Let's add some additional code to the server
-header, like that `info` structure and a global structure named `sol` on the
-source .c, we'll be back on that soon.
+# 定时通报服务器状态
+
+好的，我们现在有了一个（几乎）功能齐全的服务器，它使用我们的回调系统来处理流量。 接下来我们需要在头文件上添加一些代码，例如我们刚才使用的 `info` 结构体，还有全局的名为 `sol` 的实例，这些我们都还没有定义。
 
 ```c src/server.h
-/* Global informations statistics structure */
+// 全局 info
 struct sol_info {
-    /* Number of clients currently connected */
-    int nclients;
-    /* Total number of clients connected since the start */
-    int nconnections;
-    /* Timestamp of the start time */
-    long long start_time;
-    /* Total number of bytes received */
-    long long bytes_recv;
-    /* Total number of bytes sent out */
-    long long bytes_sent;
-    /* Total number of sent messages */
-    long long messages_sent;
-    /* Total number of received messages */
-    long long messages_recv;
+    int nclients;               // 当前客户端数
+    int nconnections;           // 历史客户端总数
+    long long start_time;       // 服务启动时间
+    long long bytes_recv;       // 接收字节总数
+    long long bytes_sent;       // 发送字节总数
+    long long messages_sent;    // 发送消息总数
+    long long messages_recv;    // 接收消息总数
 };
 ```
 
-This is directly linked to the periodic task added in the start_server function.
+这是刚才的 `start_server` 函数中我们添加的一个周期性任务。
 
 ```c
-/* Add periodic task for publishing stats on SYS topics */
-// TODO Implement
+// 添加周期性事件 汇报服务器状态
+// TODO 实现
 struct closure sys_closure = {
     .fd = 0,
     .payload = NULL,
     .args = &sys_closure,
     .call = publish_stats
 };
-
 generate_uuid(sys_closure.closure_id);
-
-/* Schedule as periodic task to be executed every N seconds */
-evloop_add_periodic_task(event_loop, conf->stats_pub_interval,
-                         0, &sys_closure);
+evloop_add_periodic_task(event_loop, conf->stats_pub_interval, 0, &sys_closure);
 ```
 
-The `publish_stats` callback is called periodically every N seconds where N is
-defined on a configuration global pointer that we're going to implement soon.
+`publish_stats` 函数会每隔 `conf->stats_pub_interval` 秒被调用一次， `conf->stats_pub_interval` 是一个全局的配置值，这个我们稍后会去实现。
 
-But let's add the callback first:
+现在，让我们先实现这个回调函数：
 
 ```c src/server.c
+// 发送消息的工具方法
 static void publish_message(unsigned short pkt_id,
                             unsigned short topiclen,
                             const char *topic,
                             unsigned short payloadlen,
                             unsigned char *payload) {
 
-    /* Retrieve the Topic structure from the global map, exit if not found */
+    // 从全局的 topic 表中获得我们需发送的 topic, 如果不存在则退出
     struct topic *t = sol_topic_get(&sol, topic);
     if (!t)
         return;
 
-    /* Build MQTT packet with command PUBLISH */
+    // 制作一个 PUBLISH 包
     union mqtt_packet pkt;
     struct mqtt_publish *p = mqtt_packet_publish(PUBLISH_BYTE,
                                                  pkt_id,
@@ -769,7 +738,7 @@ static void publish_message(unsigned short pkt_id,
     size_t len;
     unsigned char *packed;
 
-    /* Send payload through TCP to all subscribed clients of the topic */
+    // 通过TCP向所有订阅了该主题的客户端发送 payload
     struct list_node *cur = t->subscribers->head;
     size_t sent = 0L;
     for (; cur; cur = cur->next) {
@@ -785,7 +754,7 @@ static void publish_message(unsigned short pkt_id,
         struct subscriber *sub = cur->data;
         struct sol_client *sc = sub->client;
 
-        /* Update QoS according to subscriber's one */
+        // 根据订阅者设置的 qos 更改包中的 qos
         pkt.publish.header.bits.qos = sub->qos;
         if (pkt.publish.header.bits.qos > AT_MOST_ONCE)
             len += sizeof(uint16_t);
@@ -797,12 +766,14 @@ static void publish_message(unsigned short pkt_id,
         else if ((len - 1) > 0x80)
             remaininglen_offset = 1;
         len += remaininglen_offset;
+        
+        // 实际打包发送
         packed = pack_mqtt_packet(&pkt, PUBLISH);
         if ((sent = send_bytes(sc->fd, packed, len)) < 0)
             sol_error("Error publishing to %s: %s",
                       sc->client_id, strerror(errno));
 
-        // Update information stats
+        // 统计信息
         info.bytes_sent += sent;
         info.messages_sent++;
         free(packed);
@@ -810,10 +781,7 @@ static void publish_message(unsigned short pkt_id,
     free(p);
 }
 
-/*
- * Publish statistics periodic task, it will be called once every N config
- * defined seconds, it publish some informations on predefined topics
- */
+// 发送服务器状态的周期性任务
 static void publish_stats(struct evloop *loop, void *args) {
     char cclients[number_len(info.nclients) + 1];
     sprintf(cclients, "%d", info.nclients);
