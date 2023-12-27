@@ -14,11 +14,11 @@ tags:
 
 <!--more-->
 
-# 服务端定义
-
 这一部分我们会实现我们程序中的服务功能，通过之前在 [part-2](https://codepr.github.io/posts/sol-mqtt-broker-p2/) 中实现的 `network` 模块，我们可以比较轻松的接收并处理在 [part-1](https://codepr.github.io/posts/sol-mqtt-broker/) 中定义好的各种 `MQTT` 数据包。
 
-我们的头文件非常简单，唯一想向外部提供的函数只有 `start_server`，也只需要接收两个参数：
+# 服务端定义
+
+我们的头文件非常简单，唯一向外提供的函数只有 `start_server`，他也只需要接收两个参数：
 
 - 一个IP地址
 - 一个监听端口
@@ -32,7 +32,7 @@ tags:
 #define EPOLL_MAX_EVENTS    256
 #define EPOLL_TIMEOUT       -1
 
-// 不通类型的错误码
+// 不同类型的错误码
 // client disconnection 客户端断开
 // error reading packet 读包错误
 // error packet sent exceeds size defined by configuration 包过大 (限制默认 2M)
@@ -40,7 +40,7 @@ tags:
 #define ERRPACKETERR        2
 #define ERRMAXREQSIZE       3
 
-// handle 的返回值, 表示是否有需要发送的 payload, 或者仅仅需要重置监听来获得后续的数据
+// handler 的返回值, 表示对客户端读取后的下一个动作是读还是写
 #define REARM_R             0
 #define REARM_W             1
 
@@ -52,15 +52,11 @@ int start_server(const char *, const char *);
 
 实现的部分比我一开始预想的要庞大一些，所有我们所需的 `handler` 和 回调函数都会在这里定义。所以我们首先来实现三个最基础的回调函数，这三个函数是任何服务器都必不可少的：
 
-- 刚建立连接的 `on_accept`
+- 用于建立连接的 `on_accept`
 - 用于读取事件的 `on_read`
 - 用于发送数据的 `on_write`
 
-我们还将转发声明一些函数，主要是处理程序和映射，就像用于在 mqtt 模块上打包和解包有效负载的映射一样，我们按原样使用它们，以便使近期的开发变得更容易。
-
-We will also forward declare some functions, mostly handlers and a mapping much
-like the one used to pack and unpack payloads on mqtt module, we took them as is,
-to make thing easier for the near-future developments.
+我们还需要定义一些关于MQTT包处理的 `handler`，同样使用一个数组保存，并且使 `handler` 在其中的序号等于包类型码。（这个方式我们已经用过好几次了）
 
 ```c src/server.c
 #define _POSIX_C_SOURCE 200809L
@@ -94,7 +90,7 @@ static struct sol_info info;
 static struct sol sol;
 
 // handler 接口
-// closure the link to the client sender of the command mqtt_packet a pointer to the packet itself
+// 内含客户端的 closure 与数据包 mqtt_packet
 typedef int handler(struct closure *, union mqtt_packet *);
 
 // 命令处理 hander, 每个函数负责处理对应名称的包
@@ -142,7 +138,7 @@ static void on_read(struct evloop *, void *);
 static void on_write(struct evloop *, void *);
 static void on_accept(struct evloop *, void *);
 
-// 周期性任务, 根据配置决定每 n 秒执行一次
+// 定时回调, 周期性发布服务器状态
 static void publish_stats(struct evloop *, void *);
 
 // 从 sfd 接收一条新链接, 将他的 ip 和 fd 存入conn中
@@ -201,15 +197,16 @@ static void on_accept(struct evloop *loop, void *arg) {
     // 记录新链接
     info.nclients++;
     info.nconnections++;
+    // 日志
     sol_info("New connection from %s on port %s", conn.ip, conf->port);
 }
 ```
 
-正如你所见，我定义了两个静态函数（在C语言中，当我们不严格的追究术语时，运维这种静态函数因为只能被同样.c文件里的函数访问，我们可以把这种函数看作是其他OOP语言中的私有方法。）
+正如你所见，我定义了两个静态函数（在C语言中，当我们不严格的追究术语时，由于这种静态函数只能被同样.c文件里的函数访问，我们可以把这种函数看作是其他OOP语言中的私有方法。）
 
 `accept_new_client` 函数使用了上一篇文中 `network` 模块定义的 `accept_connection` 函数，得以从操作系统层级接收新连接并进行一些设置。`on_accept` 则是实际负责处理新链接的回调函数，他依赖 `accept_new_client` 函数。
 
-`accept_new_client` 函数所需的参数 `connection` 是我从我其他项目的代码库复制过来的，并不是说必须要用这种方式。
+`accept_new_client` 函数所需的参数结构 `connection` 是我从我其他项目的代码库复制过来的，并不是说必须要用这种方式。
 
 ```c src/server.c
 // 接收数据流组装成数据包的函数, 被 on_read 回调使用
@@ -328,8 +325,10 @@ errdc:
     sol_error("Dropping client");
     shutdown(cb->fd, 0);
     close(cb->fd);
+    // 清理哈希表
     hashtable_del(sol.clients, ((struct sol_client *) cb->obj)->client_id);
     hashtable_del(sol.closures, cb->closure_id);
+    // 记录信息
     info.nclients--;
     info.nconnections--;
     return;
@@ -358,7 +357,7 @@ static void on_write(struct evloop *loop, void *arg) {
 
 我们又添加了三个静态函数，`recv_packet` 函数就像他的名字一样，依赖 `mqtt` 模块，负责持续接收数据流直到足够一个完整的 MQTT 包。另外两个分别是 `on_read` 和 `on_write`。
 
-请注意，`on_read` 和 `on_write` 使用我们之前定义的函数不停的重置对 `socket` 的监听，就像打乒乓球一样。具体的来说， `on_read` 可以通过 `handler` 的返回值来决定下一次的操作是 `read` 还是 `write`，当然也有可能是断开链接。比如说客户端发来的数据出现了错误，或者当客户端发来了 `DISCONNECT` 包，那么此时对应的 `handler` 返回的值就既不是 `REARM_W` 也不是 `REARM_R`。
+请注意，`on_read` 和 `on_write` 使用我们之前定义的函数不停的重置对 `socket` 的监听，就像来回打乒乓球一样。例如， `on_read` 可以通过 `handler` 的返回值来决定下一次的操作是 `read` 还是 `write`，然后把客户端链接的下一个回调函数设置为 `on_read` 或者 `on_write`，当然也有可能是断开链接。比如说客户端发来的数据出现了错误，或者当客户端发来了 `DISCONNECT` 包，那么此时对应的 `handler` 返回的值就既不是 `REARM_W` 也不是 `REARM_R`。
 
 在 `on_write` 中我们看到 `send_bytes` 传入了一个带有大小和内容的 `payload`，这里使用了我定义的一个方便的工具结构 `bytestring`，我们现在就在 `src/pack.h` and `src/pack.c` 中添加他。
 
@@ -709,7 +708,7 @@ generate_uuid(sys_closure.closure_id);
 evloop_add_periodic_task(event_loop, conf->stats_pub_interval, 0, &sys_closure);
 ```
 
-`publish_stats` 函数会每隔 `conf->stats_pub_interval` 秒被调用一次， `conf->stats_pub_interval` 是一个全局的配置值，这个我们稍后会去实现。
+`publish_stats` 函数会每隔 `conf->stats_pub_interval` 秒被调用一次， `conf->stats_pub_interval` 是一个全局的配置值，配置相关的内容我们稍后会去实现。
 
 现在，让我们先实现这个回调函数：
 
@@ -812,27 +811,20 @@ static void publish_stats(struct evloop *loop, void *args) {
 }
 ```
 
-Ok now we have our first periodic callback, it publishes general informations
-on the status of the broker to a set of topics called `$SYS topics`, that we
-called instead `$SOL topics` breaking the standards in a blink of an eye. These
-informations could be added incrementally in the future.
+我们已经注册了我们第一个周期性回调，他会定时的发送 `sys_topics` 数组中主题的消息，
+
+下面是一些我们需要的全局实例：
 
 ```c src/server.c
-/*
- * General informations of the broker, all fields will be published
- * periodically to internal topics
- */
+// info 实例, 其内容会被周期性回调发送
 static struct sol_info info;
 
-/* Broker global instance, contains the topic trie and the clients hashtable */
+// sol 实例, 包括 主题树 和 客户端哈希表
 static struct sol sol;
 ```
 
-There're still some parts that we have to write in order to have this piece of
-code to compile and work, for example, what is that `closure_destructor`
-function? What about that `info` structure that we update in `on_write` and
-`on_read`? We can see that those have to do with some calls to `hashtable_*`
-and `sol_topic_*`, which will be plugged-in soon.
+# 结尾
 
-Let's move forward to [part 4](../sol-mqtt-broker-p4),
-we'll start implementing some handlers for every MQTT command.
+我们还需要补充一些代码，才能使我们上面的代码能够运行。比如，`struct sol` 的定义、`closure_destructor` 函数，哈希表的定义，比如 `topic` 的存储和解析方法。这一切我们都需要去完成。
+
+在下一部分我们会编写处理各种MQTT数据包的`handler`，根据数据包的类型和内容不同，服务器会表现出不同的行为。
