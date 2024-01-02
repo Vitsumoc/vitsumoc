@@ -14,6 +14,8 @@ tags:
 
 <!--more-->
 
+# 前言
+
 这一部分我们会实现我们程序中的服务功能，通过之前在 [part-2](https://codepr.github.io/posts/sol-mqtt-broker-p2/) 中实现的 `network` 模块，我们可以比较轻松的接收并处理在 [part-1](https://codepr.github.io/posts/sol-mqtt-broker/) 中定义好的各种 `MQTT` 数据包。
 
 # 服务端定义
@@ -50,7 +52,7 @@ int start_server(const char *, const char *);
 
 # 服务端实现
 
-实现的部分比我一开始预想的要庞大一些，所有我们所需的 `handler` 和 回调函数都会在这里定义。所以我们首先来实现三个最基础的回调函数，这三个函数是任何服务器都必不可少的：
+实现的部分比我一开始预想的要庞大一些，所有我们所需的 `处理器(handler)` 和 回调函数都会在这里定义。所以我们首先来实现三个最基础的回调函数，这三个函数是任何服务器都必不可少的：
 
 - 用于建立连接的 `on_accept`
 - 用于读取事件的 `on_read`
@@ -80,20 +82,18 @@ int start_server(const char *, const char *);
 /* Seconds in a Sol, easter egg */
 static const double SOL_SECONDS = 88775.24;
 
-/*
- * General informations of the broker, all fields will be published
- * periodically to internal topics
- */
+// 服务器本身状态信息
+// 所有数据都会通过一个周期性回调发布
 static struct sol_info info;
 
 // broker 的全局实例, 包括了主题树和客户端的哈希表
 static struct sol sol;
 
-// handler 接口
+// 处理器接口
 // 内含客户端的 closure 与数据包 mqtt_packet
 typedef int handler(struct closure *, union mqtt_packet *);
 
-// 命令处理 hander, 每个函数负责处理对应名称的包
+// 包处理器, 每个函数负责处理对应名称的包
 static int connect_handler(struct closure *, union mqtt_packet *);
 static int disconnect_handler(struct closure *, union mqtt_packet *);
 static int subscribe_handler(struct closure *, union mqtt_packet *);
@@ -105,7 +105,7 @@ static int pubrel_handler(struct closure *, union mqtt_packet *);
 static int pubcomp_handler(struct closure *, union mqtt_packet *);
 static int pingreq_handler(struct closure *, union mqtt_packet *);
 
-// handler 数组, 同样使用 type 的值作为索引
+// 处理器数组, 同样使用 type 的值作为索引
 static handler *handlers[15] = {
     NULL,
     connect_handler,
@@ -183,7 +183,7 @@ static void on_accept(struct evloop *loop, void *arg) {
         return;
     // 填充内容
     client_closure->fd = conn.fd;
-    client_closure->obj = NULL;
+    client_closure->obj = NULL;                 // 闭包的主要对象, 这个项目中是 client 对象, 在第六部分定义
     client_closure->payload = NULL;
     client_closure->args = client_closure;      // 拿自己当回调参数
     client_closure->call = on_read;             // 数据来时触发 on_read
@@ -357,7 +357,7 @@ static void on_write(struct evloop *loop, void *arg) {
 
 我们又添加了三个静态函数，`recv_packet` 函数就像他的名字一样，依赖 `mqtt` 模块，负责持续接收数据流直到足够一个完整的 MQTT 包。另外两个分别是 `on_read` 和 `on_write`。
 
-请注意，`on_read` 和 `on_write` 使用我们之前定义的函数不停的重置对 `socket` 的监听，就像来回打乒乓球一样。例如， `on_read` 可以通过 `handler` 的返回值来决定下一次的操作是 `read` 还是 `write`，然后把客户端链接的下一个回调函数设置为 `on_read` 或者 `on_write`，当然也有可能是断开链接。比如说客户端发来的数据出现了错误，或者当客户端发来了 `DISCONNECT` 包，那么此时对应的 `handler` 返回的值就既不是 `REARM_W` 也不是 `REARM_R`。
+请注意，`on_read` 和 `on_write` 使用我们之前定义的函数不停的重置对 `socket` 的监听，就像来回打乒乓球一样。例如， `on_read` 可以通过 `处理器` 的返回值来决定下一次的操作是 `read` 还是 `write`，然后把客户端链接的下一个回调函数设置为 `on_read` 或者 `on_write`，当然也有可能是断开链接。比如说客户端发来的数据出现了错误，或者当客户端发来了 `DISCONNECT` 包，那么此时对应的 `处理器` 返回的值就既不是 `REARM_W` 也不是 `REARM_R`。
 
 在 `on_write` 中我们看到 `send_bytes` 传入了一个带有大小和内容的 `payload`，这里使用了我定义的一个方便的工具结构 `bytestring`，我们现在就在 `src/pack.h` and `src/pack.c` 中添加他。
 
@@ -605,7 +605,7 @@ static void run(struct evloop *loop) {
     }
 }
 
-// 清理哈希表中客户端链接
+// 在全局哈希表中删除客户端时触发回调释放资源
 static int client_destructor(struct hashtable_entry *entry) {
     if (!entry)
         return -1;
@@ -616,7 +616,7 @@ static int client_destructor(struct hashtable_entry *entry) {
     return 0;
 }
 
-// 清理哈希表中的 closures
+// 在全局哈希表中删除闭包时触发回调释放资源
 static int closure_destructor(struct hashtable_entry *entry) {
     if (!entry)
         return -1;
@@ -631,6 +631,7 @@ static int closure_destructor(struct hashtable_entry *entry) {
 int start_server(const char *addr, const char *port) {
     // 初始化 sol 全局实例
     trie_init(&sol.topics);
+    // 确保所有的客户端和闭包都在哈希表中, 这样从哈希表删除时就可以使用回调释放资源
     sol.clients = hashtable_create(client_destructor);
     sol.closures = hashtable_create(closure_destructor);
 
@@ -827,4 +828,4 @@ static struct sol sol;
 
 我们还需要补充一些代码，才能使我们上面的代码能够运行。比如，`struct sol` 的定义、`closure_destructor` 函数，哈希表的定义，比如 `topic` 的存储和解析方法。这一切我们都需要去完成。
 
-在下一部分我们会编写处理各种MQTT数据包的`handler`，根据数据包的类型和内容不同，服务器会表现出不同的行为。
+在下一部分我们会编写处理各种MQTT数据包的 `处理器`，根据数据包的类型和内容不同，服务器会表现出不同的行为。

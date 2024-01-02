@@ -45,9 +45,9 @@ sol/
 - [第二部分 ： 网络](https://codepr.github.io/posts/sol-mqtt-broker-p2/) 解决网络通讯的功能模块
 - [第三部分 ： 服务](https://codepr.github.io/posts/sol-mqtt-broker-p3/) 程序入口
 - [第四部分 ： 数据结构](https://codepr.github.io/posts/sol-mqtt-broker-p4/) 常用数据结构实现
-- [第五部分 ： Topic abstraction](https://codepr.github.io/posts/sol-mqtt-broker-p5/) broker的主要功能
-- [第六部分 ： Handlers](https://codepr.github.io/posts/sol-mqtt-broker-p6/) 每种数据包的处理函数
-- [特别篇 ： 多线程](https://codepr.github.io/posts/sol-mqtt-broker-bonus/) 多线程模型的改进、错误修复和集成
+- [第五部分 ： 主题树](https://codepr.github.io/posts/sol-mqtt-broker-p5/) 通过特里树处理主题匹配
+- [第六部分 ： 处理器](https://codepr.github.io/posts/sol-mqtt-broker-p6/) 每种数据包的处理函数
+- [特别篇 ： 多线程](https://codepr.github.io/posts/sol-mqtt-broker-bonus/) 各种改进、bug修复、应用多线程
 
 我想说，虽然 sol 会是一个完全功能的 broker，但仍有很大改进和优化空间，以及可能的一些隐藏功能（俗称BUG）。
 
@@ -190,7 +190,7 @@ struct mqtt_connack {
             unsigned reserved : 7;
         } bits;
     };
-    unsigned char rc;
+    unsigned char rc; // return code 返回值
 };
 ```
 
@@ -393,8 +393,6 @@ void pack_u16(uint8_t **, uint16_t);
 void pack_u32(uint8_t **, uint32_t);
 // 将 len 个字节追加到bytes中
 void pack_bytes(uint8_t **, uint8_t *);
-
-#endif
 ```
 
 以及相应的实现

@@ -414,6 +414,7 @@ static void trie_prefix_map_func2(struct trie_node *node,
     struct list_node *child = node->children->head;
     for (; child; child = child->next)
         trie_prefix_map_func2(child->data, mapfunc, arg);
+    // node 本身也会被应用
     mapfunc(node, arg);
 }
 
@@ -424,15 +425,12 @@ void trie_prefix_map_tuple(Trie *trie, const char *prefix,
     if (!prefix) {
         trie_prefix_map_func2(trie->root, mapfunc, arg);
     } else {
-
-        // Walk the trie till the end of the key
+        // 找到key对应的节点
         struct trie_node *node = trie_node_find(trie->root, prefix);
-
-        // No complete key found
+        // 没有匹配到的节点
         if (!node)
             return;
-
-        // Check all possible sub-paths and add to count where there is a leaf
+        // 通过递归让node和所有的子节点都应用 mapfunc
         trie_prefix_map_func2(node, mapfunc, arg);
     }
 }
