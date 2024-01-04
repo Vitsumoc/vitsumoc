@@ -28,7 +28,7 @@ tags:
 
 - 低层的 I/O 处理器，用以正确处理数据流读写
 - 对 EPOLL 进行抽象，因为他是 Linux 独有功能，提供一些备选方案
-- 管理加密消息，实现明文消息和加密消息互转的透明接口
+- 管理加密消息，实现可用明文消息或加密消息的透明接口
 - 正确处理客户端会话，实现类似 `'+'` 通配符之类的其他 MQTT 功能
 
 *备注：虽然我们自己做的哈希表运行的不错，但我还是决定选择使用久经沙场的 `UTHASH` 库。由于他只有一个头文件，集成进我们的项目也非常容易。他的项目文档在[这里](https://troydhanson.github.io/uthash/)。*
@@ -58,23 +58,20 @@ enum client_status {
 // 现在不再需要为每个客户端申请内存, 我在程序启动时初始化了一个客户端池, 当然, 读写 buffer 是使用时再申请的
 // 这是一个可以被哈希的结构, 参考 https://troydhanson.github.io/uthash/userguide.html
 struct client {
-    struct ev_ctx *ctx; /* An event context refrence mostly used to fire write events */
+    struct ev_ctx *ctx; // 事件循环上下文指针
     int rc;     // 持有处理的上一个消息的返回码
     int status; // 当前状态
     int rpos;   // 表示去除 Fixed Header, 数据包实际开始的位置
                 // 因为收包时需要解析 Fixed Header 中变长的 Remaing Length, 不想在解包时再次解析
                 // 就通过此字段记录
     size_t read;  // 已经读取的字节数
-    size_t toread;// 还需读取的字节数
+    size_t toread;// 完成此数据包总共需要读取的字节数
     unsigned char *rbuf; // 读取 buffer
     size_t wrote; // 已经写入的字节数
     size_t towrite; // 还需写入的字节数
     unsigned char *wbuf;  // 写入 buffer
     char client_id[MQTT_CLIENT_ID_LEN]; // MQTT 规范中的客户端 ID
-    struct connection conn; // 网络连接封装, 支持普通连接或TLS连接
-                             /* A connection structure, takes care of plain or
-                             * TLS encrypted communication by using callbacks
-                             */
+    struct connection conn; // 网络连接封装, 通过抽象接口支持普通连接或TLS连接
     struct client_session *session; // 客户端会话
     unsigned long last_seen;  // 客户端上次活动的时间戳
     bool online;  // 在线标识
@@ -86,20 +83,7 @@ struct client {
 
 // 每个客户端都持有一个会话, 用来缓存该客户端订阅的主题、失联时错过的消息(只有当 clean_session 为 false)、还有服务器已经发往客户端但没收到回复的消息(inflight messages)(这些消息都带有 message ID)
 // 基于MQTT协议, 最大的 mid (message ID) 数量为 65535, 所以 i_acks, i_msgs 和 in_i_acks 被初始化为这个尺寸
-
 // 这是一个可被哈希的结构体, APP可以追踪他完整的生命周期
-/*
- * Every client has a session which track his subscriptions, possible missed
- * messages during disconnection time (that iff clean_session is set to false),
- * inflight messages and the message ID for each one.
- * A maximum of 65535 mid can be used at the same time according to MQTT specs,
- * so i_acks, i_msgs and in_i_acks, thus being allocated on the heap during the
- * init, will be of 65535 length each.
- *
- * It's a hashable struct that will be tracked during the entire lifetime of
- * the application, governed by the clean_session flag on connection from
- * clients
- */
 struct client_session {
     int next_free_mid;                    // 下一个可用的 mid (message ID)
     List *subscriptions;                  // 客户端订阅的所有主题, 使用主题结构体存储
@@ -167,24 +151,16 @@ static ssize_t recv_packet(struct client *c) {
         // 超长异常
         if (pktlen > conf->max_request_size)
             return -ERRMAXREQSIZE;
-        /*
-         * Update the toread field for the client with the entire length of
-         * the current packet, which is comprehensive of packet length,
-         * bytes used to encode it and 1 byte for the header
-         * We've already tracked the bytes we read so far, we just need to
-         * read toread-read bytes.
-         */
+        // rpos 定位到头部和变长长度之后
         c->rpos = pos + 1;
+        // 数据包总大小
         c->toread = pktlen + pos + 1;  // pos = bytes used to store length
-        /* Looks like we got an ACK packet, we're done reading */
+        // ACK 包无需继续读取
         if (pktlen <= 4)
             goto exit;
         c->status = WAITING_DATA;
     }
-    /*
-     * Last status, we have access to the length of the packet and we know for
-     * sure that it's not a PINGREQ/PINGRESP/DISCONNECT packet.
-     */
+    // 读取完整的数据包字节
     nread = recv_data(&c->conn, c->rbuf + c->read, c->toread - c->read);
     if (errno != EAGAIN && errno != EWOULDBLOCK && nread <= 0)
         return -ERRCLIENTDC;
@@ -194,44 +170,28 @@ static ssize_t recv_packet(struct client *c) {
 exit:
     return 0;
 }
-/*
- * Handle incoming requests, after being accepted or after a reply, under the
- * hood it calls recv_packet and return an error code according to the outcome
- * of the operation
- */
+
+// 在接收链接或回复消息后使用此函数获取后续客户端输入的数据
 static inline int read_data(struct client *c) {
-    /*
-     * We must read all incoming bytes till an entire packet is received. This
-     * is achieved by following the MQTT protocol specifications, which
-     * send the size of the remaining packet as the second byte. By knowing it
-     * we know if the packet is ready to be deserialized and used.
-     */
+    // 我们必须接收一个完整的数据包
     int err = recv_packet(c);
-    /*
-     * Looks like we got a client disconnection or If a not correct packet
-     * received, we must free the buffer and reset the handler to the request
-     * again, setting EPOLL to EPOLLIN
-     *
-     * TODO: Set a error_handler for ERRMAXREQSIZE instead of dropping client
-     *       connection, explicitly returning an informative error code to the
-     *       client connected.
-     */
+    // 链接断开或收到了错误的数据包
+    // TODO：设置一个处理 ERRMAXREQSIZE 的函数, 显示的提醒客户端故障
     if (err < 0)
         goto err;
+    // 表示阻塞, 需要继续读取
     if (c->read < c->toread)
         return -ERREAGAIN;
+    // 记录
     info.bytes_recv += c->read;
     return 0;
-    // Disconnect packet received
+    // 断开链接或故障
 err:
     return err;
 }
-/*
- * Write stream of bytes to a client represented by a connection object, till
- * all bytes to be written is exhausted, tracked by towrite field or if an
- * EAGAIN (socket descriptor must be in non-blocking mode) error is raised,
- * meaning we cannot write anymore for the current cycle.
- */
+
+// 通过网络连接向客户端发送数据流, 持续发送直到所有数据发送完成, 通过 towrite 字段跟踪
+// 当阻塞时返回 EAGAIN
 static inline int write_data(struct client *c) {
     ssize_t wrote = send_data(&c->conn, c->wbuf+c->wrote, c->towrite-c->wrote);
     if (errno != EAGAIN && errno != EWOULDBLOCK && wrote < 0)
@@ -239,57 +199,42 @@ static inline int write_data(struct client *c) {
     c->wrote += wrote > 0 ? wrote : 0;
     if (c->wrote < c->towrite && errno == EAGAIN)
         return -ERREAGAIN;
-    // Update information stats
+    // 发送成功 更新状态
     info.bytes_sent += c->towrite;
-    // Reset client written bytes track fields
+    // 重置记录数据
     c->towrite = c->wrote = 0;
     return 0;
 }
 ```
 
-Worth a note, `recv_packet` and `write_data` functions calls in turn two lower
-level functions defined in the **network.h** header:
+# 加密通讯
+
+需要注意的是，`recv_packet` 和 `write_data` 是两个在 **network.h** 模块中定义的函数：
 
 - `ssize_t send_data(struct connection *, const unsigned char *, size_t)`
 - `ssize_t recv_data(struct connection *, unsigned char *, size_t)`
 
-Both functions accept a `struct connection` as first parameter, the other two
-are simply the buffer to be filled/emptied and the number of bytes to
-read/write.
+他们都需要使用 `struct connection` 作为第一个参数，后面两个参数就是常规的读/写 buffer 和读/写字节数。
 
-That connection structure directly address the 3rd point described earlier in
-the improvements list, it's an abstraction over a socket connection with a
-client and it is comprised of 4 fundamental callbacks neeed to manage the
-communication:
+这个连接结构直接针对了前言中需改进列表内的第三条（明文消息和加密消息的抽象），他是客户端链接的抽象实现，并且提供了管理通信所需的4个基本回调函数：
 
 - accept
 - send
 - recv
 - close
 
-This approach allows to build a new connection for each connecting client based
-on the communication type chosen, be it plain or TLS encrypted, allowing to use
-just a single function in both cases.
-It's definition is:
+这个改进允许我们基于选择的类型创建每条链接，不论是普通链接还是TLS链接都使用相同的函数收发数据。
+
+结构定义如下：
 
 ```c network.h
-/*
- * Connection abstraction struct, provide a transparent interface for
- * connection handling, taking care of communication layer, being it encrypted
- * or plain, by setting the right callbacks to be used.
- *
- * The 4 main operations reflected by those callbacks are the ones that can be
- * performed on every FD:
- *
- * - accept
- * - read
- * - write
- * - close
- *
- * According to the type of connection we need, each one of these actions will
- * be set with the right function needed. Maintain even the address:port of the
- * connecting client.
- */
+// 链接抽象结构，向外提供统一接口，根据传输层加密与否设置正确的回调函数
+// 四个主要的回调函数表示了可以在链接上进行的四种操作：
+// - accept
+// - read
+// - write
+// - close
+// 同时维护了 ip:port 信息
 struct connection {
     int fd;
     SSL *ssl;
@@ -302,17 +247,14 @@ struct connection {
 };
 ```
 
-It also stores an `SSL *` and an `SSL_CTX *`, those are left `NULL` in case of
-plain communication.
+结构体中存储了 `SSL *` 和 `SSL_CTX *`，当我们使用普通链接时他们会为 `NULL`。
 
-Another good improvement was the correction of the packing and unpacking
-functions (thanks to [beej networking
-guide](https://beej.us/guide/bgnet/html/single/bgnet.html#serialization), this
-guide is pure gold) and the addition of some helper functions to handle
-integer and bytes unpacking:
+# 编解码与辅助函数
+
+另一个有益的提升是修正了之前错误的编码和解码函数（感谢[beej networking guide](https://beej.us/guide/bgnet/html/single/bgnet.html#serialization)，这个教程真的很优秀）并且添加了一些工具函数用来处理整形和bytes的解码。
 
 ```c pack.c
-/* Helper functions */
+// 整数解码
 long long unpack_integer(unsigned char **buf, char size) {
     long long val = 0LL;
     switch (size) {
@@ -361,29 +303,18 @@ unsigned char *unpack_bytes(unsigned char **buf, size_t len) {
 }
 ```
 
-### Adding a tiny eventloop: ev
+# 微型的事件循环：ev
 
-Abstracting over the multiplexing APIs offered by the host machine has not been
-that hard in a single threaded context, it essentially consists of a structure
-tracking a range of events by using a pre-allocated array of custom
-struct events. The header is pretty descriptive, the most important parts to
-grasp are the standardization of events into our convention (see `enum ev_type`)
-the custom event struct (`struct ev`) and the `events_monitored` array that
-pre-allocate a number of events corresponding to multiplexing events fired
-from the kernel space (e.g. if a descriptor is ready to read some data or to
-write).
+在单线程环境中抽象主机提供的多路复用API并不是一件困难的事，本质上就是提供一个数据结构，用来持有一组自定义事件。头文件里描述的很清楚，最重要的部分是我们对事件类型的枚举（`enum ev_type`），自定义事件（`struct ev`）和持有自定义事件的数组（`events_monitored`）。这些构成了我们的事件封装（`ev_ctx`）。
 
-Using an opaque `void *` pointer allows us to plug-in whatever underlying API
-the host machine provide, be it `EPOLL`, `SELECT` or `KQUEUE`.
+`ev_ctx` 中使用不透明的 `void *` 指针可以让我们引用系统提供的任何底层 API，无论是 `EPOLL`、`SELECT` 还是 `KQUEUE`。
 
 ```c ev.h
 #include <sys/time.h>
 #define EV_OK  0
 #define EV_ERR 1
-/*
- * Event types, meant to be OR-ed on a bitmask to define the type of an event
- * which can have multiple traits
- */
+
+// 事件类型, 支持或运算
 enum ev_type {
     EV_NONE       = 0x00,
     EV_READ       = 0x01,
@@ -391,102 +322,71 @@ enum ev_type {
     EV_DISCONNECT = 0x04,
     EV_EVENTFD    = 0x08,
     EV_TIMERFD    = 0x10,
-    EV_CLOSEFD    = 0x20
+    EV_CLOSEFD    = 0x20    // 停止循环, 关闭服务
 };
 struct ev_ctx;
-/*
- * Event struture used as the main carrier of clients informations, it will be
- * tracked by an array in every context created
- */
+
+// 自定义事件, 存储与事件上下文的数组中
+// 携带有客户端信息, 被触发时执行对应的回调函数
 struct ev {
     int fd;
     int mask;
-    void *rdata; // opaque pointer for read callback args
-    void *wdata; // opaque pointer for write callback args
-    void (*rcallback)(struct ev_ctx *, void *); // read callback
-    void (*wcallback)(struct ev_ctx *, void *); // write callback
+    void *rdata; // 读取回调函数参数的不透明指针
+    void *wdata; // 写入回调函数参数的不透明指针
+    void (*rcallback)(struct ev_ctx *, void *); // 读取回调函数
+    void (*wcallback)(struct ev_ctx *, void *); // 写入回调函数
 };
-/*
- * Event loop context, carry the expected number of events to be monitored at
- * every cycle and an opaque pointer to the backend used as engine
- * (Select | Epoll | Kqueue).
- * By now we stick with epoll and skip over select, cause as the current
- * threaded model employed by the server is not very friendly with select
- * Level-trigger default setting. But it would be quiet easy abstract over the
- * select model as well for single threaded uses or in a loop per thread
- * scenario (currently thanks to epoll Edge-triggered + EPOLLONESHOT we can
- * share a single loop over multiple threads).
- */
+
+// 事件循环上下文结构, 持有被监视的事件对象和指向后端事件引擎的指针
+// 当前我们仍然使用 epoll, 因为现在的线程模型与 select 默认的电平触发机制不是很适配
+// 对于单线程场景, 抽象select很容易
+// 现在由于 epoll 边缘触发 + 单次触发 机制，我们可以轻松的在多线程场景使用我们的事件循环
 struct ev_ctx {
     int events_nr;
-    int maxfd; // the maximum FD monitored by the event context,
-               // events_monitored must be at least maxfd long
+    int maxfd;                          // 最大监听fd数, events_monitored 的长度不得小于此数
     int stop;
     int maxevents;
-    unsigned long long fired_events;
-    struct ev *events_monitored;
-    void *api; // opaque pointer to platform defined backends
+    unsigned long long fired_events;    // 被触发事件数
+    struct ev *events_monitored;        // 监控事件列表
+    void *api;                          // 指向基于平台的事件引擎的指针
 };
 void ev_init(struct ev_ctx *, int);
 void ev_destroy(struct ev_ctx *);
-/*
- * Poll an event context for events, accepts a timeout or block forever,
- * returning only when a list of FDs are ready to either READ, WRITE or TIMER
- * to be executed.
- */
+
+// 轮询 ev_ctx 中的事件, 无限阻塞或超时, 当有事件需要处理时返回
 int ev_poll(struct ev_ctx *, time_t);
-/*
- * Blocks forever in a loop polling for events with ev_poll calls. At every
- * cycle executes callbacks registered with each event
- */
+
+// 调用 ev_poll 再阻塞中轮询事件, 每轮中执行事件中对应的回调函数
 int ev_run(struct ev_ctx *);
-/*
- * Trigger a stop on a running event, it's meant to be run as an event in a
- * running ev_ctx
- */
+
+// 触发停止事件
 void ev_stop(struct ev_ctx *);
-/*
- * Add a single FD to the underlying backend of the event loop. Equal to
- * ev_fire_event just without an event to be carried. Useful to add simple
- * descritors like a listening socket o message queue FD.
- */
+
+// 向循环队列尾部添加 fd, 和 ev_fire_event 相同只是没有回调函数
+// 可以用来添加 socket 监听之类的简单描述符
 int ev_watch_fd(struct ev_ctx *, int, int);
-/*
- * Remove a FD from the loop, even tho a close syscall is sufficient to remove
- * the FD from the underlying backend such as EPOLL/SELECT, this call ensure
- * that any associated events is cleaned out an set to EV_NONE
- */
+
+// 在循环中删除 fd, 虽然 close 调用足以从事件引擎中删除 fd, 但是还是用此调用封装来确保所有相关事件都被清理并设置为 EV_NONE
 int ev_del_fd(struct ev_ctx *, int);
-/*
- * Register a new event, semantically it's equal to ev_register_event but
- * it's meant to be used when an FD is not already watched by the event loop.
- * It could be easily integrated in ev_fire_event call but I prefer maintain
- * the samantic separation of responsibilities.
- */
+
+// 注册一个新事件, 在功能上他和 ev_fire_event 相同但是此函数用于注册一个还未加入事件监听的fd
+// 此函数可以被集成到 ev_fire_event 中, 但是我还是倾向于保持语义分离
 int ev_register_event(struct ev_ctx *, int, int,
                       void (*callback)(struct ev_ctx *, void *), void *);
+
+// 注册一个周期性事件
 int ev_register_cron(struct ev_ctx *,
                      void (*callback)(struct ev_ctx *, void *),
                      void *,
                      long long, long long);
-/*
- * Register a new event for the next loop cycle to a FD. Equal to ev_watch_fd
- * but allow to carry an event object for the next cycle.
- */
+
+// 为下一个循环周期的 FD 注册一个新事件
+// 和 ev_watch_fd相同, 但可以携带回调函数和参数
 int ev_fire_event(struct ev_ctx *, int, int,
                   void (*callback)(struct ev_ctx *, void *), void *);
 ```
 
-At the init of the server, the `ev_ctx` will be instructed to run some
-periodic tasks and to run a callback on accept on new connections. From now
-on start a simple juggling of callbacks to be scheduled on the event loop,
-typically after being accepted a connection his handle (fd) will be added to
-the backend of the loop (this case we're using `EPOLL` as a backend but also
-`KQUEUE` or `SELECT/POLL` should be easy to plug-in) and read_callback will be
-run every time there's new data incoming. If a complete packet is received
-and correctly parsed it will be processed by calling the right handler from
-the handler module, based on the command it carries and a response will be
-fired back.
+在服务器初始化时，`ev_ctx` 会被注册一些基本的周期性事件和服务端口的 `on_accpet` 事件。之后我们的程序就由事件循环不停驱动，比如当客户端链接建立后，我们会对输入的数据进行监听，触发 `read_callback`，收到完整的数据包并处理后，决定是否要发送回复。
 
 ```text
                              MAIN THREAD
@@ -510,27 +410,15 @@ fired back.
            |                     |                       |
 ```
 
-This is the lifecycle of a connecting client, we got an accept-only callback
-that demand IO handling to read and write callbacks till the disconnection of
-the client.
-
-The mentioned callbacks have been added to the server module and they're
-extremely simple, a thing always appreciated
+这是一个连接客户端的生命周期，我们有一个 `accept` 回调函数，他将接入的链接放入事件循环中，并且开启读取监听：
 
 ```c server.c
-/*
- * Handle incoming connections, create a a fresh new struct client structure
- * and link it to the fd, ready to be set in EV_READ event, then schedule a
- * call to the read_callback to handle incoming streams of bytes
- */
+// 处理输入的链接, 创建一个客户端对象并关联到fd
+// 设置为 EV_READ 事件并绑定 read_callback 用以处理输入的数据流
 static void accept_callback(struct ev_ctx *ctx, void *data) {
     int serverfd = *((int *) data);
     while (1) {
-        /*
-         * Accept a new incoming connection assigning ip address
-         * and socket descriptor to the connection structure
-         * pointer passed as argument
-         */
+        // 接收一个新的连接, 将ip地址和fd配置给作为参数传入的conn结构
         struct connection conn;
         connection_init(&conn, conf->tls ? server.ssl_ctx : NULL);
         int fd = accept_connection(&conn, serverfd);
@@ -540,69 +428,55 @@ static void accept_callback(struct ev_ctx *ctx, void *data) {
             close_connection(&conn);
             break;
         }
-        /*
-         * Create a client structure to handle his context
-         * connection
-         */
+        // 创建一个客户端结构, 用来持有conn和ev_ctx
         struct client *c = memorypool_alloc(server.pool);
         c->conn = conn;
         client_init(c);
         c->ctx = ctx;
-        /* Add it to the epoll loop */
+        // 客户端添加到读取循环中
         ev_register_event(ctx, fd, EV_READ, read_callback, c);
-        /* Record the new client connected */
+        // 记录
         info.nclients++;
         info.nconnections++;
         log_info("[%p] Connection from %s", (void *) pthread_self(), conn.ip);
     }
 }
-/*
- * Reading packet callback, it's the main function that will be called every
- * time a connected client has some data to be read, notified by the eventloop
- * context.
- */
+
+// 读取数据包的回调, 每当客户端发来数据时由事件循环触发此函数
 static void read_callback(struct ev_ctx *ctx, void *data) {
+    // 客户端传入自身作为回调参数
     struct client *c = data;
+    // 状态机校验, 也意味着只要是 WAITING_* 状态都需要继续读取数据
     if (c->status == SENDING_DATA)
         return;
-    /*
-     * Received a bunch of data from a client, after the creation
-     * of an IO event we need to read the bytes and encoding the
-     * content according to the protocol
-     */
+
+    // 从客户端获取数据, 按照协议可了解数据是否已经读取完全
     int rc = read_data(c);
     switch (rc) {
         case 0:
-            /*
-             * All is ok, raise an event to the worker poll EPOLL and
-             * link it with the IO event containing the decode payload
-             * ready to be processed
-             */
-            /* Record last action as of now */
+            // 记录活跃时间
             c->last_seen = time(NULL);
+            // 置为 SENDING 状态, 后续根据处理器的处理决定是否要发送数据
             c->status = SENDING_DATA;
+            // 后续解码 + 处理器处理
             process_message(ctx, c);
             break;
         case -ERRCLIENTDC:
         case -ERRPACKETERR:
         case -ERRMAXREQSIZE:
-            /*
-             * We got an unexpected error or a disconnection from the
-             * client side, remove client from the global map and
-             * free resources allocated such as io_event structure and
-             * paired payload
-             */
+            // 客户端断开或数据错误
+            // 断开连接、清理资源
             log_error("Closing connection with %s (%s): %s",
                       c->client_id, c->conn.ip, solerr(rc));
-            // Publish, if present, LWT message
+            // 如果有遗嘱则发布遗嘱
             if (c->has_lwt == true) {
                 char *tname = (char *) c->session->lwt_msg.publish.topic;
                 struct topic *t = topic_get(&server, tname);
                 publish_message(&c->session->lwt_msg, t);
             }
-            // Clean resources
+            // 清理资源
             ev_del_fd(ctx, c->conn.fd);
-            // Remove from subscriptions for now
+            // 从主题中删除订阅
             if (c->session && list_size(c->session->subscriptions) > 0) {
                 struct list *subs = c->session->subscriptions;
                 list_foreach(item, subs) {
@@ -620,42 +494,34 @@ static void read_callback(struct ev_ctx *ctx, void *data) {
             break;
     }
 }
-/*
- * This function is called only if the client has sent a full stream of bytes
- * consisting of a complete packet as expected by the MQTT protocol and by the
- * declared length of the packet.
- * It uses eventloop APIs to react accordingly to the packet type received,
- * validating it before proceed to call handlers. Depending on the handler
- * called and its outcome, it'll enqueue an event to write a reply or just
- * reset the client state to allow reading some more packets.
- */
+
+// 此函数仅当客户端已经发送符合MQTT协议长度的完整字节流后才被调用
+// 此函数使用事件循环基于收到的数据包类型做出反应, 在传入处理器前进行校验。
+// 此函数根据处理器的输出结果, 在事件队列中加入回复事件, 或重置客户端继续监听输入事件
 static void process_message(struct ev_ctx *ctx, struct client *c) {
+    // io.data 是 mqtt_packet 类型
     struct io_event io = { .client = c };
-    /*
-     * Unpack received bytes into a mqtt_packet structure and execute the
-     * correct handler based on the type of the operation.
-     */
+    // 将收到的数据解码为mqtt包
     mqtt_unpack(c->rbuf + c->rpos, &io.data, *c->rbuf, c->read - c->rpos);
+    // 重置读取标识
     c->toread = c->read = c->rpos = 0;
+    // 使用对应的处理器处理
     c->rc = handle_command(io.data.header.bits.type, &io);
     switch (c->rc) {
+        // 回复处理
         case REPLY:
         case MQTT_NOT_AUTHORIZED:
         case MQTT_BAD_USERNAME_OR_PASSWORD:
-            /*
-             * Write out to client, after a request has been processed in
-             * worker thread routine. Just send out all bytes stored in the
-             * reply buffer to the reply file descriptor.
-             */
+            // 向客户端发送数据
             enqueue_event_write(c);
-            /* Free resource, ACKs will be free'd closing the server */
+            // 释放资源
             if (io.data.header.bits.type != PUBLISH)
                 mqtt_packet_destroy(&io.data);
             break;
+        // 断链处理
         case -ERRCLIENTDC:
             ev_del_fd(ctx, c->conn.fd);
             client_deactivate(io.client);
-            // Update stats
             info.nclients--;
             info.nconnections--;
             break;
@@ -669,24 +535,19 @@ static void process_message(struct ev_ctx *ctx, struct client *c) {
             break;
     }
 }
-/*
- * Callback dedicated to client replies, try to send as much data as possible
- * epmtying the client buffer and rearming the socket descriptor for reading
- * after
- */
+
+// 写入事件触发的回调函数, 阻塞可重发, 发完后重置状态机, 并加入读取事件监听
 static void write_callback(struct ev_ctx *ctx, void *arg) {
     struct client *client = arg;
+    // 发送数据
     int err = write_data(client);
     switch (err) {
         case 0: // OK
-            /*
-             * Rearm descriptor making it ready to receive input,
-             * read_callback will be the callback to be used; also reset the
-             * read buffer status for the client.
-             */
+            // 开启读取监听
             client->status = WAITING_HEADER;
             ev_fire_event(ctx, client->conn.fd, EV_READ, read_callback, client);
             break;
+        // 阻塞重发
         case -ERREAGAIN:
             enqueue_event_write(client);
             break;
@@ -704,59 +565,46 @@ static void write_callback(struct ev_ctx *ctx, void *arg) {
 }
 ```
 
-Of course the starting server will have to make a blocking call starting the
-eventloop, and we'll need a stop mechanism as well, thanks to `ev_stop` API it
-has been pretty simple to add an additional event routine to be called when we
-want to stop the running loop.
+当然，启动的服务器必须进行阻塞调用以启动事件循环，我们也需要一个停止机制。得益于 ev_stop API，添加一个额外的事件例程来在我们想要停止运行的循环时调用变得非常简单。
+
+现在我们的服务器会使用一个阻塞的循环来提供服务，但是我们也需要一个停止机制。感谢 `ev_stop` 接口，他这让我们可以简单的停止循环。
 
 ```c server.c
-/*
- * Eventloop stop callback, will be triggered by an EV_CLOSEFD event and stop
- * the running loop, unblocking the call.
- */
+// 循环停止事件的回调函数, 由 EV_CLOSEFD 触发
 static void stop_handler(struct ev_ctx *ctx, void *arg) {
     (void) arg;
     ev_stop(ctx);
 }
-/*
- * IO worker function, wait for events on a dedicated epoll descriptor which
- * is shared among multiple threads for input and output only, following the
- * normal EPOLL semantic, EPOLLIN for incoming bytes to be unpacked and
- * processed by a worker thread, EPOLLOUT for bytes incoming from a worker
- * thread, ready to be delivered out.
- */
+
+// 事件循环启动函数, 是对 epoll 或者其他多路复用机制的抽象
 static void eventloop_start(void *args) {
     int sfd = *((int *) args);
     struct ev_ctx ctx;
     ev_init(&ctx, EVENTLOOP_MAX_EVENTS);
-    // Register stop event
+    // 注册停止事件
     ev_register_event(&ctx, conf->run, EV_CLOSEFD|EV_READ, stop_handler, NULL);
-    // Register listening FD with accept callback
+    // 使用网络服务端口注册 accept_callback
     ev_register_event(&ctx, sfd, EV_READ, accept_callback, &sfd);
-    // Register periodic tasks
+    // 注册周期性事件
     ev_register_cron(&ctx, publish_stats, NULL, conf->stats_pub_interval, 0);
     ev_register_cron(&ctx, inflight_msg_check, NULL, 0, 9e8);
-    // Start the loop, blocking call
+    // 开始循环, 阻塞线程
     ev_run(&ctx);
     ev_destroy(&ctx);
 }
-/* Fire a write callback to reply after a client request */
+
+// 添加一个写入事件监听, 用来向客户端发送数据
 void enqueue_event_write(const struct client *c) {
     ev_fire_event(c->ctx, c->conn.fd, EV_WRITE, write_callback, (void *) c);
 }
 ```
 
-So the final `start_server` function, which is one of the two exposed APIs of
-the server module will just be changed to start an eventloop with an opened
-socket in listening mode:
+最终，我们的 `start_server` 函数，作为程序的入口，他会监听一个端口，并打开事件循环来提供服务。
 
 ```c server.c
-/*
- * Main entry point for the server, to be called with an address and a port
- * to start listening
- */
+// 服务入口, 传入地址和端口开始工作
 int start_server(const char *addr, const char *port) {
-    /* Initialize global Sol instance */
+    // Sol 全局对象初始化
     trie_init(&server.topics, NULL);
     server.authentications = NULL;
     server.pool = memorypool_new(BASE_CLIENTS_NUM, sizeof(struct client));
@@ -765,26 +613,25 @@ int start_server(const char *addr, const char *port) {
     server.wildcards = list_new(wildcard_destructor);
     if (conf->allow_anonymous == false)
         config_read_passwd_file(conf->password_file, &server.authentications);
-    /* Generate stats topics */
+    // 服务器状态主题
     for (int i = 0; i < SYS_TOPICS; i++)
         topic_put(&server, topic_new(xstrdup(sys_topics[i].name)));
-    /* Start listening for new connections */
+    // 监听网络端口
     int sfd = make_listen(addr, port, conf->socket_family);
-    /* Setup SSL in case of flag true */
+    // 初始化SSL
     if (conf->tls == true) {
         openssl_init();
         server.ssl_ctx = create_ssl_context();
-        load_certificates(server.ssl_ctx, conf->cafile,
-                          conf->certfile, conf->keyfile);
+        load_certificates(server.ssl_ctx, conf->cafile, conf->certfile, conf->keyfile);
     }
     log_info("Server start");
     info.start_time = time(NULL);
-    // start eventloop, could be spread on multiple threads
+    // 开启事件循环
     eventloop_start(&sfd);
     close(sfd);
     AUTH_DESTROY(server.authentications);
     list_destroy(server.wildcards, 1);
-    /* Destroy SSL context, if any present */
+    // 释放SSL资源
     if (conf->tls == true) {
         SSL_CTX_free(server.ssl_ctx);
         openssl_cleanup();
@@ -794,19 +641,6 @@ int start_server(const char *addr, const char *port) {
 }
 ```
 
-Commands are handled through a dispatch table, a common pattern used in C where
-we map function pointers inside an array, in this case each position in the
-array corresponds to an MQTT command.<br>
-As you can see, there's also a `memorypool_new` call for clients, I decided
-to pre-allocate a fixed number of clients, allowing the reuse of them when
-disconnection occurs, the memory cost is negligible and totally worth it, as
-long as the connecting clients are lazily inited, specifically their read and
-write buffer, which can also be MB size.
+正如你看到的，这里有一个用于创建客户端池的 `memorypool_new`，我们预先分配了一定数量的客户端，并且在断开链接时回收他们。只要我们的客户端内容是懒加载的，特别是他们的读写buffer（可能是 MB 级别）是懒加载的，那么我们这个客户端池就相当划算。
 
-This of course is only a fraction of what the ordeal has been but eventually I
-came up with a decent prototype, the next step will be to stress test it a bit
-and see how it goes compared to the battle-tested and indisputably better
-pieces of software like Mosquitto or Mosca. Lot of missing features still, like
-a persistence layer for session storing, but the mere pub/sub part should be
-testable. Hopefully, this tutorial would work as a starting point for something
-neater and carefully designed. Cya.
+当然，这只是整个过程的一小部分，但最终我做出了一个相当不错的原型。下一步将是进行一些压力测试，看看它与 Mosquitto 或 Mosca 这些久经考验且无可争议的优秀软件相比如何。我们仍然缺少许多功能，例如用于存储会话的持久层，但先贼发布/订阅部分应该是可测试的。希望这个教程可以作为更整洁和精心设计的项目的起点。再见！
