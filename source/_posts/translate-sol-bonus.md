@@ -2,10 +2,11 @@
 title: "[翻译]Sol - 从零开始的MQTT broker - 特别篇：重构与事件循环"
 date: 2024-01-03 09:14:03
 categories:
-- 网络编程
+- MQTT
 tags:
-- 网络编程
+- MQTT
 - 翻译
+- 网络编程
 - 物联网
 - C
 ---

@@ -2,10 +2,11 @@
 title: "[翻译]Sol - 从零开始的MQTT broker - 第五部分：主题树"
 date: 2023-12-28 10:43:27
 categories:
-- 网络编程
+- MQTT
 tags:
-- 网络编程
+- MQTT
 - 翻译
+- 网络编程
 - 物联网
 - C
 - 数据结构

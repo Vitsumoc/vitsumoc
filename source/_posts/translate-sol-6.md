@@ -2,10 +2,11 @@
 title: "[翻译]Sol - 从零开始的MQTT broker - 第六部分：处理器"
 date: 2023-12-29 08:56:57
 categories:
-- 网络编程
+- MQTT
 tags:
-- 网络编程
+- MQTT
 - 翻译
+- 网络编程
 - 物联网
 - C
 ---

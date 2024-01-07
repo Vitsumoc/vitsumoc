@@ -8,6 +8,31 @@ tags:
 - 网络协议
 ---
 
+<head>
+  <style>
+    :root {
+      --vc-marked: #ffc107;
+      --vc-referred: #EE0000;
+    }
+    [data-user-color-scheme="dark"] {
+      --vc-marked: #886c57;
+      --vc-referred: #EE0000;
+    }
+    .bold {
+      font-weight: bold;
+    }
+    .vcLinked {
+      color: var(--post-link-color);
+    }
+    .vcMarked {
+      background: var(--vc-marked);
+    }
+    .vcReferred {
+      color: var(--vc-referred);
+    }
+  </style>
+</head>
+
 > 原文 [MQTT Version 5.0](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
 > **\[mqtt-v5.0]**
 > MQTT Version 5.0. Edited by Andrew Banks, Ed Briggs, Ken Borgendale, and Rahul Gupta. 07 March 2019. OASIS Standard. https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html. Latest version: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html.
@@ -134,19 +159,19 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 1.5.5 [变长整数](#1-5-5-变长整数)
     - 1.5.6 [二进制数据](#1-5-6-二进制数据)
     - 1.5.7 [UTF-8字符串对](#1-5-7-UTF-8字符串对)
-  - 1.6 安全性
-  - 1.7 编辑约定
-  - 1.8 变更历史
-    - 1.8.1 MQTT v3.1.1
-    - 1.8.2 MQTT v5.0
-- 2 [MQTT包结构](#2-MQTT包结构)
-  - 2.1 Structure of an MQTT Control Packet
-    - 2.1.1 Fixed Header
-    - 2.1.2 MQTT Control Packet type
-    - 2.1.3 Flags
-    - 2.1.4 Remaining Length
-  - 2.2 Variable Header
-    - 2.2.1 Packet Identifier
+  - 1.6 [安全性](#1-6-安全性)
+  - 1.7 [编辑约定](#1-7-编辑约定)
+  - 1.8 [变更历史](#1-8-变更历史)
+    - 1.8.1 [MQTT v3.1.1](#1-8-1-MQTT-v3-1-1)
+    - 1.8.2 [MQTT v5.0](#1-8-2-MQTT-v5-0)
+- 2 [MQTT包格式](#2-MQTT包格式)
+  - 2.1 [MQTT包结构](#2-1-MQTT包结构)
+    - 2.1.1 [固定头](#2-1-1-固定头)
+    - 2.1.2 [MQTT包类型](#2-1-2-MQTT包类型)
+    - 2.1.3 [控制标识](2-1-3-控制标识)
+    - 2.1.4 [剩余长度](#2-1-4-剩余长度)
+  - 2.2 [可变头](#2-2-可变头)
+    - 2.2.1 [包ID](#2-2-1-包ID)
     - 2.2.2 Properties
       - 2.2.2.1 Property Length
       - 2.2.2.2 Property
@@ -221,7 +246,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.2.2.3.18 Authentication Data
     - 3.2.3 CONNACK Payload
   - 3.3 PUBLISH – Publish message
-    - 3.3.1 PUBLISH Fixed Header
+    - 3.3.1 [PUBLISH 固定头](#3-3-1-PUBLISH-固定头)
       - 3.3.1.1 DUP
       - 3.3.1.2 QoS
       - 3.3.1.3 RETAIN
@@ -381,7 +406,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
   - 4.13 [错误处理](#4-13-错误处理)
     - 4.13.1 Malformed Packet and Protocol Errors
     - 4.13.2 Other errors
-- 5 [安全性 (非规范性)](#5-安全性（非规范性）)
+- 5 [安全性（非规范性）](#5-安全性（非规范性）)
   - 5.1 Introduction
   - 5.2 MQTT solutions: security and certification
   - 5.3 Lightweight crytography and constrained devices
@@ -394,7 +419,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 5.4.6 Non-repudiation of message transmission
     - 5.4.7 Detecting compromise of Clients and Servers
     - 5.4.8 Detecting abnormal behaviors
-    - 5.4.9 Handling of Disallowed Unicode code points
+    - 5.4.9 [处理禁止的Unicode码段](#5-4-9-处理禁止的Unicode码段)
       - 5.4.9.1 Considerations for the use of Disallowed Unicode code points
       - 5.4.9.2 Interactions between Publishers and Subscribers
       - 5.4.9.3 Remedies
@@ -413,7 +438,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 7.1.2 MQTT Client conformance clause
 - Appendix A. Acknowledgments
 - Appendix B. Mandatory normative statement (non-normative)
-- Appendix C. Summary of new features in MQTT v5.0 (non-normative)
+- 附录 C. [MQTT v5.0 新特性汇总（非规范性）](#附录-C-MQTT-v5-0-新特性汇总（非规范性）)
 
 # 1 介绍
 
@@ -500,11 +525,11 @@ Copyright © OASIS Open 2019. All Rights Reserved.
 
 **格式错误的包**
 
-一个不能通过本规范解析的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的消息。
+一个不能通过本规范解析的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 **协议错误**
 
-数据包被解析后发现的不符合协议规范的数据内容或客户端与服务器状态不一致的数据。参考 [4.13](#4-13-错误处理) 查看关于错误处理的消息。
+数据包被解析后发现的不符合协议规范的数据内容或客户端与服务器状态不一致的数据。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 **遗嘱**
 
@@ -516,25 +541,25 @@ Copyright © OASIS Open 2019. All Rights Reserved.
 
 ## 1.3 规范性引用
 
-<span id="1.3-RFC2119" style="font-weight:bold;">[RFC2119]</span>
+<span id="1.3-RFC2119" class="bold">[RFC2119]</span>
 
 Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, DOI 10.17487/RFC2119, March 1997,
 
 http://www.rfc-editor.org/info/rfc2119
 
-<span id="1.3-RFC3629" style="font-weight:bold;">[RFC3629]</span>
+<span id="1.3-RFC3629" class="bold">[RFC3629]</span>
 
 Yergeau, F., "UTF-8, a transformation format of ISO 10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November 2003,
 
 http://www.rfc-editor.org/info/rfc3629
 
-<span id="1.3-RFC6455" style="font-weight:bold;">[RFC6455]</span>
+<span id="1.3-RFC6455" class="bold">[RFC6455]</span>
 
 Fette, I. and A. Melnikov, "The WebSocket Protocol", RFC 6455, DOI 10.17487/RFC6455, December 2011,
 
 http://www.rfc-editor.org/info/rfc6455
 
-<span id="1.3-Unicode" style="font-weight:bold;">[Unicode]</span>
+<span id="1.3-Unicode" class="bold">[Unicode]</span>
 
 The Unicode Consortium. The Unicode Standard,
 
@@ -542,149 +567,149 @@ http://www.unicode.org/versions/latest/
 
 ## 1.4 非规范性引用
 
-<span id="1.4-RFC0793" style="font-weight:bold;">[RFC0793]</span>
+<span id="1.4-RFC0793" class="bold">[RFC0793]</span>
 
 Postel, J., "Transmission Control Protocol", STD 7, RFC 793, DOI 10.17487/RFC0793, September 1981, http://www.rfc-editor.org/info/rfc793
 
-<span id="1.4-RFC5246" style="font-weight:bold;">[RFC5246]</span>
+<span id="1.4-RFC5246" class="bold">[RFC5246]</span>
 
 Dierks, T. and E. Rescorla, "The Transport Layer Security (TLS) Protocol Version 1.2", RFC 5246, DOI 10.17487/RFC5246, August 2008,
 
 http://www.rfc-editor.org/info/rfc5246
 
-<span id="1.4-AES" style="font-weight:bold;">[AES]</span>
+<span id="1.4-AES" class="bold">[AES]</span>
 
 Advanced Encryption Standard (AES) (FIPS PUB 197).
 
 https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf
 
-<span id="1.4-CHACHA20" style="font-weight:bold;">[CHACHA20]</span>
+<span id="1.4-CHACHA20" class="bold">[CHACHA20]</span>
 
 ChaCha20 and Poly1305 for IETF Protocols
 
 https://tools.ietf.org/html/rfc7539
 
-<span id="1.4-FIPS1402" style="font-weight:bold;">[FIPS1402]</span>
+<span id="1.4-FIPS1402" class="bold">[FIPS1402]</span>
 
 Security Requirements for Cryptographic Modules (FIPS PUB 140-2)
 
 https://csrc.nist.gov/csrc/media/publications/fips/140/2/final/documents/fips1402.pdf
 
-<span id="1.4-IEEE 802.1AR" style="font-weight:bold;">[IEEE 802.1AR]</span>
+<span id="1.4-IEEE 802.1AR" class="bold">[IEEE 802.1AR]</span>
 
 IEEE Standard for Local and metropolitan area networks - Secure Device Identity
 
 http://standards.ieee.org/findstds/standard/802.1AR-2009.html
 
-<span id="1.4-ISO29192" style="font-weight:bold;">[ISO29192]</span>
+<span id="1.4-ISO29192" class="bold">[ISO29192]</span>
 
 ISO/IEC 29192-1:2012 Information technology -- Security techniques -- Lightweight cryptography -- Part 1: General
 
 https://www.iso.org/standard/56425.html
 
-<span id="1.4-MQTT NIST" style="font-weight:bold;">[MQTT NIST]</span>
+<span id="1.4-MQTT NIST" class="bold">[MQTT NIST]</span>
 
 MQTT supplemental publication, MQTT and the NIST Framework for Improving Critical Infrastructure Cybersecurity
 
 http://docs.oasis-open.org/mqtt/mqtt-nist-cybersecurity/v1.0/mqtt-nist-cybersecurity-v1.0.html
 
-<span id="1.4-MQTTV311" style="font-weight:bold;">[MQTTV311]</span>
+<span id="1.4-MQTTV311" class="bold">[MQTTV311]</span>
 
 MQTT V3.1.1 Protocol Specification
 
 http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
 
-<span id="1.4-ISO20922" style="font-weight:bold;">[ISO20922]</span>
+<span id="1.4-ISO20922" class="bold">[ISO20922]</span>
 
 MQTT V3.1.1 ISO Standard (ISO/IEC 20922:2016)
 
 https://www.iso.org/standard/69466.html
 
-<span id="1.4-NISTCSF" style="font-weight:bold;">[NISTCSF]</span>
+<span id="1.4-NISTCSF" class="bold">[NISTCSF]</span>
 
 Improving Critical Infrastructure Cybersecurity Executive Order 13636
 
 https://www.nist.gov/sites/default/files/documents/itl/preliminary-cybersecurity-framework.pdf
 
-<span id="1.4-NIST7628" style="font-weight:bold;">[NIST7628]</span>
+<span id="1.4-NIST7628" class="bold">[NIST7628]</span>
 
 NISTIR 7628 Guidelines for Smart Grid Cyber Security Catalogue
 
 https://www.nist.gov/sites/default/files/documents/smartgrid/nistir-7628_total.pdf
 
-<span id="1.4-NSAB" style="font-weight:bold;">[NSAB]</span>
+<span id="1.4-NSAB" class="bold">[NSAB]</span>
 
 NSA Suite B Cryptography
 
 http://www.nsa.gov/ia/programs/suiteb_cryptography/
 
-<span id="1.4-PCIDSS" style="font-weight:bold;">[PCIDSS]</span>
+<span id="1.4-PCIDSS" class="bold">[PCIDSS]</span>
 
 PCI-DSS Payment Card Industry Data Security Standard
 
 https://www.pcisecuritystandards.org/pci_security/
 
-<span id="1.4-RFC1928" style="font-weight:bold;">[RFC1928]</span>
+<span id="1.4-RFC1928" class="bold">[RFC1928]</span>
 
 Leech, M., Ganis, M., Lee, Y., Kuris, R., Koblas, D., and L. Jones, "SOCKS Protocol Version 5", RFC 1928, DOI 10.17487/RFC1928, March 1996,
 
 http://www.rfc-editor.org/info/rfc1928
 
-<span id="1.4-RFC4511" style="font-weight:bold;">[RFC4511]</span>
+<span id="1.4-RFC4511" class="bold">[RFC4511]</span>
 
 Sermersheim, J., Ed., "Lightweight Directory Access Protocol (LDAP): The Protocol", RFC 4511, DOI 10.17487/RFC4511, June 2006,
 
 http://www.rfc-editor.org/info/rfc4511
 
-<span id="1.4-RFC5280" style="font-weight:bold;">[RFC5280]</span>
+<span id="1.4-RFC5280" class="bold">[RFC5280]</span>
 
 Cooper, D., Santesson, S., Farrell, S., Boeyen, S., Housley, R., and W. Polk, "Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile", RFC 5280, DOI 10.17487/RFC5280, May 2008,
 
 http://www.rfc-editor.org/info/rfc5280
 
-<span id="1.4-RFC6066" style="font-weight:bold;">[RFC6066]</span>
+<span id="1.4-RFC6066" class="bold">[RFC6066]</span>
 
 Eastlake 3rd, D., "Transport Layer Security (TLS) Extensions: Extension Definitions", RFC 6066, DOI 10.17487/RFC6066, January 2011,
 
 http://www.rfc-editor.org/info/rfc6066
 
-<span id="1.4-RFC6749" style="font-weight:bold;">[RFC6749]</span>
+<span id="1.4-RFC6749" class="bold">[RFC6749]</span>
 
 Hardt, D., Ed., "The OAuth 2.0 Authorization Framework", RFC 6749, DOI 10.17487/RFC6749, October 2012,
 
 http://www.rfc-editor.org/info/rfc6749
 
-<span id="1.4-RFC6960" style="font-weight:bold;">[RFC6960]</span>
+<span id="1.4-RFC6960" class="bold">[RFC6960]</span>
 
 Santesson, S., Myers, M., Ankney, R., Malpani, A., Galperin, S., and C. Adams, "X.509 Internet Public Key Infrastructure Online Certificate Status Protocol - OCSP", RFC 6960, DOI 10.17487/RFC6960, June 2013,
 
 http://www.rfc-editor.org/info/rfc6960
 
-<span id="1.4-SARBANES" style="font-weight:bold;">[SARBANES]</span>
+<span id="1.4-SARBANES" class="bold">[SARBANES]</span>
 
 Sarbanes-Oxley Act of 2002.
 
 http://www.gpo.gov/fdsys/pkg/PLAW-107publ204/html/PLAW-107publ204.htm
 
-<span id="1.4-USEUPRIVSH" style="font-weight:bold;">[USEUPRIVSH]</span>
+<span id="1.4-USEUPRIVSH" class="bold">[USEUPRIVSH]</span>
 
 U.S.-EU Privacy Shield Framework
 
 https://www.privacyshield.gov
 
-<span id="1.4-RFC3986" style="font-weight:bold;">[RFC3986]</span>
+<span id="1.4-RFC3986" class="bold">[RFC3986]</span>
 
 Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform Resource Identifier (URI): Generic Syntax", STD 66, RFC 3986, DOI 10.17487/RFC3986, January 2005,
 
 http://www.rfc-editor.org/info/rfc3986
 
-<span id="1.4-RFC1035" style="font-weight:bold;">[RFC1035]</span>
+<span id="1.4-RFC1035" class="bold">[RFC1035]</span>
 
 Mockapetris, P., "Domain names - implementation and specification", STD 13, RFC 1035, DOI 10.17487/RFC1035, November 1987,
 
 http://www.rfc-editor.org/info/rfc1035
 
-<span id="1.4-RFC2782" style="font-weight:bold;">[RFC2782]</span>
+<span id="1.4-RFC2782" class="bold">[RFC2782]</span>
 
 Gulbrandsen, A., Vixie, P., and L. Esibov, "A DNS RR for specifying the location of services (DNS SRV)", RFC 2782, DOI 10.17487/RFC2782, February 2000,
 
@@ -706,17 +731,542 @@ http://www.rfc-editor.org/info/rfc2782
 
 ### 1.5.4 UTF-8字符串
 
+MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1.3-RFC3629) 是一种高效的 [Unicode](#1.3-Unicode) 编码，他优化了 ACSII 的编码以用来支持基于文本的通信。
+
+每个 UTF-8 编码的字符串都使用开头的两个字节表示字符串的长度，就像下方的 <span class="vcLinked">图1-1 UTF-8 字符串结构</span> 示意的那样。因此，UTF-8 字符串的最大长度为65535字节。
+
+除非另有说明，否则所有 UTF-8 编码字符串可以具有 0 到 65,535 字节范围内的任意长度。
+
+图1-1 UTF-8 字符串结构
+<table>
+    <tr>
+        <th>Bit</th>
+        <th>7</th>
+        <th>6</th>
+        <th>5</th>
+        <th>4</th>
+        <th>3</th>
+        <th>2</th>
+        <th>1</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 1</td>
+        <td colspan="8">字符串长度高字节(MSB)</td>
+    </tr>
+    <tr>
+        <td>byte 2</td>
+        <td colspan="8">字符串长度低字节(LSB)</td>
+    </tr>
+    <tr>
+        <td>byte 3 ...</td>
+        <td colspan="8">当长度 > 0 时, UTF-8 编码的字符数据</td>
+    </tr>
+</table>
+
+<span class="vcMarked">在 UTF-8 编码字符串中的字符必须为 <a href="#1.3-Unicode">[Unicode]</a> 和 <a href="#1.3-RFC3629">[RFC3629]</a> 中所定义的，格式正确的字符编码。尤其不能使用U+D800 至 U+DFFF之间的编码</span> <span class="vcReferred">[MQTT-1.5.4-1]</span>。如果客户端或服务器接收到的 MQTT 包中包括了非法 UTF-8 编码，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+<span class="vcMarked">UTF-8 编码字符串必须不包含空字符 U+0000</span> <span class="vcReferred">[MQTT-1.5.4-2]</span>。如果一个接收者（服务器或客户端）接收的 MQTT 包其中有空字符 U+0000 ，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+数据不应该包括下方列表中的 Unicode 码段，如果一个接收者（服务器或客户端）接受的 MQTT 包其中有此类字符，接收者可以将此包视为一个格式错误的包。这些是禁止使用的 Unicode 码段。参考 [5.4.9](#5-4-9-处理禁止的Unicode码段) 查看关于错误处理的信息。
+
+- U+0001..U+001F 控制字符
+- U+007F..U+009F 控制字符
+- [Unicode](#1.3-Unicode) 规范中定义的非文本字符（例如 U+0FFFF）
+
+<span class="vcMarked">无论 UTF-8 编码序列 0xEF 0xBB 0xBF 出现在字符串的何处，他永远被解释为 U+FEFF (0宽无换行空格) 而且不能被数据包的接收者跳过或剥离</span> <span class="vcReferred">[MQTT-1.5.4-3]</span>。
+
+**非规范性示例**
+
+例如，字符串 A𪛔 的第一个字符是拉丁文大写字母A，第二个字符是码点 U+2A6D4 （代表 CJK IDEOGRAPH EXTENSION B 字符），他是这样编码的：
+
+图1‑2 UTF-8 编码字符串非规范性示例
+<table>
+    <tr>
+        <th>Bit</th>
+        <th>7</th>
+        <th>6</th>
+        <th>5</th>
+        <th>4</th>
+        <th>3</th>
+        <th>2</th>
+        <th>1</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 1</td>
+        <td colspan="8">字符串长度高字节(MSB)(0x00)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 2</td>
+        <td colspan="8">字符串长度低字节(LSB)(0x05)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 3</td>
+        <td colspan="8">‘A’ (0x41)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>1</th>
+    </tr>
+    <tr>
+        <td>byte 4</td>
+        <td colspan="8">(0xF0)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>1</th>
+        <th>1</th>
+        <th>1</th>
+        <th>1</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 5</td>
+        <td colspan="8">(0xAA)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>1</th>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 6</td>
+        <td colspan="8">(0x9B)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>1</th>
+        <th>0</th>
+        <th>0</th>
+        <th>1</th>
+        <th>1</th>
+        <th>0</th>
+        <th>1</th>
+        <th>1</th>
+    </tr>
+    <tr>
+        <td>byte 7</td>
+        <td colspan="8">(0x94)</td>
+    </tr>
+    <tr>
+        <td></td>
+        <th>1</th>
+        <th>0</th>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+        <th>1</th>
+        <th>0</th>
+        <th>0</th>
+    </tr>
+</table>
+
 ### 1.5.5 变长整数
+
+变长整数中将一个字节的最大值视为 127，更大的值采用如下方式处理。每个字节中较低的七位用来存储数字的值，最高位用来表示是否有后续的字节。因此，每个字节都编码了128个可能的值和一个 “后续位”。变长整数的最大字节数是4。<span class="vcMarked">变长整数编码时必须使用能够表示数字值的最小长度来进行编码</span> <span class="vcReferred">[MQTT-1.5.5-1]</span>。表1-1 中展示了变长整数可以表示的值。
+
+表1-1 变长整数的值
+| 位数 | 最小值 | 最大值 |
+| --- | --- | --- |
+| 1 | 0 (0x00) | 127 (0x7F) |
+| 2 | 128 (0x80, 0x01) | 16,383 (0xFF, 0x7F) |
+| 3 | 16,384 (0x80, 0x80, 0x01) | 2,097,151 (0xFF, 0xFF, 0x7F) |
+| 4 | 2,097,152 (0x80, 0x80, 0x80, 0x01) | 268,435,455 (0xFF, 0xFF, 0xFF, 0x7F) |
+
+**非规范性示例**
+
+将非负整数 X 编码为变长整数的伪代码：
+
+```text
+do
+   encodedByte = X MOD 128
+   X = X DIV 128
+   // if there are more data to encode, set the top bit of this byte
+   if (X > 0)
+      encodedByte = encodedByte OR 128
+   endif
+   'output' encodedByte
+while (X > 0)
+```
+
+上例中的 MOD 表示取模（C语言中的 %），DIV表示整数除法（C语言中的 /），OR表示位运算中的或（C语言中的 |）。
+
+**非规范性示例**
+
+解码变长整数的伪代码：
+
+```text
+multiplier = 1
+value = 0
+do
+   encodedByte = 'next byte from stream'
+   value += (encodedByte AND 127) * multiplier
+   if (multiplier > 128*128*128)
+      throw Error(Malformed Variable Byte Integer)
+   multiplier *= 128
+while ((encodedByte AND 128) != 0)
+```
+
+上例中的 AND 表示位运算中的且（C语言中的 &）。
+
+当该算法完成时，value的值即是变长整数表示的值。
 
 ### 1.5.6 二进制数据
 
+二进制数据由2字节整数表示的字节流长度加上实际的字节流内容组成。因此，二进制数据的长度范围是 0-65535 字节。
+
 ### 1.5.7 UTF-8字符串对
 
-# 2 MQTT包结构
+UT-8 字符串对包括两个 UTF-8 编码的字符串。这种数据类型用来存储 键-值 对。第一个字符串表示键，第二个字符串表示值。
+
+<span class="vcMarked">UTF-8字符串对中的两个字符串都必须遵守 UTF-8 字符串的需求</span> <span class="vcReferred">[MQTT-1.5.7-1]</span>。如果一个接收者（客户端或服务器）接收到的键值对没有遵守这些需求，则被视为一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+## 1.6 安全性
+
+MQTT 的客户端和服务器实现应该提供认证、授权和加密传输选项，这一部分在第五章讨论。强烈建议与关键基础设施、个人身份信息或其他个人或敏感信息相关的应用程序使用这些安全功能。
+
+## 1.7 编辑约定
+
+本规范中以<span class="vcMarked">黄色</span>突出显示的文本标识了一致性声明。每个一致性声明都被分配了一个格式为 <span class="vcReferred">[MQTT-x.x.x-y]</span> 的引用，其中 <span class="vcReferred">x.x.x</span> 是章节序号，<span class="vcReferred">y</span> 是章节内的序号。
+
+## 1.8 变更历史
+
+### 1.8.1 MQTT v3.1.1
+
+MQTT v3.1.1 是 OASIS 提出的第一个 MQTT 标准 **\[MQTTV311]** 。
+
+MQTT v3.1.1 同时也是 ISO/IEC 20922:2016 标准 [ISO20922](#1.4-ISO20922)。
+
+### 1.8.2 MQTT v5.0
+
+MQTT v5.0 为 MQTT 添加了大量新功能，同时保留了大部分核心功能。主要功能目标是：
+
+- 可扩展性和大型系统的增强
+- 改进错误报告能力
+- 将常见用法规范化，包括功能发现和请求响应
+- 包括用户属性在内的拓展机制
+- 性能改进，增强对小型客户端的支持
+
+参考 [附录 C](#附录-C-MQTT-v5-0-新特性汇总（非规范性）) 查阅 MQTT v5.0 的变更汇总。
+
+# 2 MQTT包格式
+
+## 2.1 MQTT包结构
+
+MQTT 协议操作通过一系列的 MQTT 包交互来实现。本章用来描述这些 MQTT 包的结构。
+
+一个 MQTT 包由三部分构成，顺序固定，参考下图：
+
+<table>
+  <tr><td>固定头，所有的 MQTT 包都必须持有</td><tr>
+  <tr><td>可变头，部分 MQTT 包持有</td></tr>
+  <tr><td>载荷，部分 MQTT 包持有</td></tr>
+</table>
+
+### 2.1.1 固定头
+
+每个 MQTT 包都包含着一个下图所示的固定头：
+
+图2-2 固定头格式
+
+<table>
+    <tr>
+        <th>Bit</th>
+        <th>7</th>
+        <th>6</th>
+        <th>5</th>
+        <th>4</th>
+        <th>3</th>
+        <th>2</th>
+        <th>1</th>
+        <th>0</th>
+    </tr>
+    <tr>
+        <td>byte 1</td>
+        <td colspan="4">MQTT包类型</td>
+        <td colspan="4">针对不同包类型的控制标识</td>
+    </tr>
+    <tr>
+        <td>byte 2...</td>
+        <td colspan="8">剩余长度</td>
+    </tr>
+</table>
+
+### 2.1.2 MQTT包类型
+
+**位置：**第一个Byte，比特位7-4。
+
+表示为 4bit 的无符号整数，数值的含义如下表所示：
+
+表2-1 MQTT包类型
+
+| Name | Value | Direction of flow | Description |
+| --- | --- | --- | --- |
+| 保留 | 0 | 禁止 | 保留 |
+| CONNECT | 1 | 客户端到服务器 | 连接请求 |
+| CONNACK | 2 | 服务器到客户端 | 连接回复 |
+| PUBLISH | 3 | 双向 | 消息发布 |
+| PUBACK | 4 | 双向 | 消息回复（QoS1） |
+| PUBREC | 5 | 双向 | 消息已接收（QoS2交付第 1 部分） |
+| PUBREL | 6 | 双向 | 消息释放（QoS2交付第 2 部分） |
+| PUBCOMP | 7 | 双向 | 消息完成（QoS2交付第 3 部分） |
+| SUBSCRIBE | 8 | 客户端到服务器 | 订阅请求 |
+| SUBACK | 9 | 服务器到客户端 | 订阅回复 |
+| UNSUBSCRIBE | 10 | 客户端到服务器 | 取消订阅请求 |
+| UNSUBACK | 11 | 服务器到客户端 | 取消订阅回复 |
+| PINGREQ | 12 | 客户端到服务器 | PING 请求 |
+| PINGRESP | 13 | 服务器到客户端 | PING 响应 |
+| DISCONNECT | 14 | 双向 | 断开连接通知 |
+| AUTH | 15 | 双向 | 认证交换 |
+
+### 2.1.3 控制标识
+
+固定头第一个 byte 中剩下的四个bit \[3-0]包括了基于不同 MQTT 包类型的控制标识。<span class="vcMarked">当一个比特位被标记为 “保留” 时，他的意义被保留到未来使用而他的值必须按照下表设置</span> <span class="vcReferred">[MQTT-2.1.3-1]</span>。如果接收到的控制标志不符合规范，则被认为是一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+表2‑2 控制标志
+
+<table>
+  <thead>
+    <td>MQTT包</td>
+    <td>控制标志</td>
+    <td>Bit 3</td>
+    <td>Bit 2</td>
+    <td>Bit 1</td>
+    <td>Bit 0</td>
+  </thead>
+  <tr>
+    <td>CONNECT</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>CONNACK</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PUBLISH</td>
+    <td>MQTT 5.0版本使用</td>
+    <td>DUP</td>
+    <td colspan="2">QoS</td>
+    <td>RETAIN</td>
+  </tr>
+  <tr>
+    <td>PUBACK</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PUBREC</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PUBREL</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PUBCOMP</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>SUBSCRIBE</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>SUBACK</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>UNSUBSCRIBE</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>UNSUBACK</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PINGREQ</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>PINGRESP</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>DISCONNECT</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+  <tr>
+    <td>AUTH</td>
+    <td>Reserved</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+    <td>0</td>
+  </tr>
+</table>
+
+DUP = 重复发送的 PUBLISH 包
+QoS = PUBLISH 包的服务质量标识
+RETAIN = PUBLISH 保留信息标识
+
+参考 [3.3.1](#3-3-1-PUBLISH-固定头) 了解更多关于 DUP，QoS 和 RETAIN 标识在 PUBLISH 中的使用方式。
+
+### 2.1.4 剩余长度
+
+**位置：**从第二个Byte开始。
+
+剩余长度是一个变长整数，用来表示当前包剩余的字节数，包括可变头和载荷。剩余长度的值不包括剩余长度自己本身占用的字节数。一个 MQTT 包完整的字节数等于固定头的长度加上剩余长度的值。
+
+## 2.2 可变头
+
+某些类型的 MQTT 包包含可变头。他位于固定头和载荷之间。可变头的内容根据数据包的类型变化。可变头中的包ID字段多种类型的数据包中都存在。
+
+### 2.2.1 包ID
+
+很多类型的 MQTT 包都在其可变头中包含了 2byte 的包ID字段。这些 MQTT 包是 PUBLISH （当 QoS > 0时），PUBACK，PUBREC，PUBREL，PUBCOMP，SUBSCRIBE，SUBACK，UNSUBSCRIBE，UNSUBACK。
+
+需要包ID的 MQTT 包类型如下表所示：
+
+表2-3 包含包ID的 MQTT 包类型
+
+| MQTT 包 | 包ID字段 |
+| --- | --- |
+| CONNECT | 否 |
+| CONNACK | 否 |
+| PUBLISH | 是（仅当 QoS > 0 时） |
+| PUBACK | 是 |
+| PUBREC | 是 |
+| PUBREL | 是 |
+| PUBCOMP | 是 |
+| SUBSCRIBE | 是 |
+| SUBACK | 是 |
+| UNSUBSCRIBE | 是 |
+| UNSUBACK | 是 |
+| PINGREQ | 否 |
+| PINGRESP | 否 |
+| DISCONNECT | 否 |
+| AUTH | 否 |
+
+<span class="vcMarked">当 PUBLISH 包的 QoS 值为 0 时，必须不包含 包ID 字段</span> <span class="vcReferred">[MQTT-2.2.1-2]</span>。
+
+<span class="vcMarked">每当客户端发送新的 SUBSCRIBE包，UNSUBSCRIBE包 或 QoS > 0 的 PUBLISH包，必须携带一个非零且当前未被使用的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-3]</span>。
+
+<span class="vcMarked">每当服务端发送新的 QoS > 0 的 PUBLISH包，必须携带一个非零且当前未被使用的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-4]</span>。
+
+包ID仅在发送者处理了对应的回复后可重新使用，定义如下。对于 QoS = 1 的 PUBLISH，对应的回复是 PUBACK；对于 QoS = 2 的PUBLISH，对应的回复是 PUBCOMP 或当原因码为 128 或更大时为 PUBREC。对于 SUBSCRIBE 或 UNSUBSCRIBE，对应的回复是 SUBACK 或 UNSUBACK。
+
+在一个会话中，客户端与服务器分别使用一个单独、统一的集合用作提供 PUBLISH、SUBSCRIBE 和 UNSUBSCRIBE 的包ID。包ID在任何时候都不能被多个命令使用。
+
+<span class="vcMarked">PUBACK，PUBREC，PUBREL 或 PUBCOMP 包必须携带和 PUBLISH 相同的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-5]</span>。<span class="vcMarked">SUBACK 和 UNSUBACK 必须携带和其对应的 SUBSCRIBE 和 UNSUBSCRIBE 包相同的包ID</span> <span class="vcReferred">[MQTT-2.2.1-6]</span>。
+
+客户端与服务器各自独立的维护包ID分配。因此，客户端与服务器可以同时使用同样的包ID发送信息。
+
+**非规范性示例**
+
+客户端发送一个包ID为 0x1234 的 PUBLISH 包，之后在其接收到对应的 PUBACK 之前，从服务器接收到一个 包ID 为 0x1234 的 PUBLISH 包。这样的情况是合理而且完全有可能的。
+
+```text
+Client                                                   Server
+PUBLISH 包ID=0x1234 ‒→
+                                                    ←‒ PUBLISH 包ID=0x1234
+PUBACK 包ID=0x1234 ‒→
+                                                    ←‒ PUBACK 包ID=0x1234
+```
 
 # 3 MQTT包
 
 #### 3.1.2.5 遗嘱标识
+
+### 3.3.1 PUBLISH 固定头
 
 # 4 操作行为
 
@@ -728,6 +1278,10 @@ http://www.rfc-editor.org/info/rfc2782
 
 # 5 安全性（非规范性）
 
+### 5.4.9 处理禁止的Unicode码段
+
 # 6 使用WebSocket作为传输层
 
 # 7 一致性
+
+# 附录 C. MQTT v5.0 新特性汇总（非规范性）

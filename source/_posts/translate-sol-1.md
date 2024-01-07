@@ -2,10 +2,11 @@
 title: "[翻译]Sol - 从零开始的MQTT broker - 第一部分：协议"
 date: 2023-12-08 15:30:15
 categories:
-- 网络编程
+- MQTT
 tags:
-- 网络编程
+- MQTT
 - 翻译
+- 网络编程
 - 物联网
 - C
 ---
