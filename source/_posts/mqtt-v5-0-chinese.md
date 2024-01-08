@@ -8,6 +8,12 @@ tags:
 - 网络协议
 ---
 
+> 原文 [MQTT Version 5.0](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
+> **\[mqtt-v5.0]**
+> MQTT Version 5.0. Edited by Andrew Banks, Ed Briggs, Ken Borgendale, and Rahul Gupta. 07 March 2019. OASIS Standard. https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html. Latest version: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html.
+
+<!-- more -->
+
 <head>
   <style>
     :root {
@@ -32,12 +38,6 @@ tags:
     }
   </style>
 </head>
-
-> 原文 [MQTT Version 5.0](https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html)
-> **\[mqtt-v5.0]**
-> MQTT Version 5.0. Edited by Andrew Banks, Ed Briggs, Ken Borgendale, and Rahul Gupta. 07 March 2019. OASIS Standard. https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html. Latest version: https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html.
-
-<!-- more -->
 
 # MQTT 5.0
 
@@ -172,28 +172,28 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 2.1.4 [剩余长度](#2-1-4-剩余长度)
   - 2.2 [可变头](#2-2-可变头)
     - 2.2.1 [包ID](#2-2-1-包ID)
-    - 2.2.2 Properties
-      - 2.2.2.1 Property Length
-      - 2.2.2.2 Property
-  - 2.3 Payload
-  - 2.4 Reason Code
+    - 2.2.2 [属性集](#2-2-2-属性集)
+      - 2.2.2.1 [属性长度](#2-2-2-1-属性长度)
+      - 2.2.2.2 [属性](#2-2-2-2-属性)
+  - 2.3 [载荷](#2-3-载荷)
+  - 2.4 [原因码](#2-4-原因码)
 - 3 [MQTT包](#3-MQTT包)
-  - 3.1 CONNECT – Connection Request
-    - 3.1.1 CONNECT Fixed Header
-    - 3.1.2 CONNECT Variable Header
-      - 3.1.2.1 Protocol Name
-      - 3.1.2.2 Protocol Version
-      - 3.1.2.3 Connect Flags
-      - 3.1.2.4 Clean Start
+  - 3.1 [CONNECT - 连接请求](#3-1-CONNECT-连接请求)
+    - 3.1.1 [CONNECT固定头](#3-1-1-CONNECT固定头)
+    - 3.1.2 [CONNECT可变头](#3-1-2-CONNECT可变头)
+      - 3.1.2.1 [协议名](#3-1-2-1-协议名)
+      - 3.1.2.2 [协议版本](#3-1-2-2-协议版本)
+      - 3.1.2.3 [连接标识](#3-1-2-3-连接标识)
+      - 3.1.2.4 [全新开始](#3-1-2-4-全新开始)
       - 3.1.2.5 [遗嘱标识](#3-1-2-5-遗嘱标识)
-      - 3.1.2.6 Will QoS
-      - 3.1.2.7 Will Retain
-      - 3.1.2.8 User Name Flag
-      - 3.1.2.9 Password Flag
-      - 3.1.2.10 Keep Alive
-      - 3.1.2.11 CONNECT Properties
-        - 3.1.2.11.1 Property Length
-        - 3.1.2.11.2 Session Expiry Interval
+      - 3.1.2.6 [遗嘱QoS](#3-1-2-6-遗嘱QoS)
+      - 3.1.2.7 [遗嘱保留消息](#3-1-2-7-遗嘱保留消息)
+      - 3.1.2.8 [用户名标识](#3-1-2-8-用户名标识)
+      - 3.1.2.9 [密码标识](#3-1-2-9-密码标识)
+      - 3.1.2.10 [保活时间](#3-1-2-10-保活时间)
+      - 3.1.2.11 [CONNECT 属性集](#3-1-2-11-CONNECT-属性集)
+        - 3.1.2.11.1 [属性长度](#3-1-2-11-1-属性长度)
+        - 3.1.2.11.2 [会话过期间隔](#3-1-2-11-2-会话过期间隔)
         - 3.1.2.11.3 Receive Maximum
         - 3.1.2.11.4 Maximum Packet Size
         - 3.1.2.11.5 Topic Alias Maximum
@@ -205,7 +205,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
       - 3.1.2.12 Variable Header non-normative example
     - 3.1.3 CONNECT Payload
       - 3.1.3.1 Client Identifier (ClientID)
-      - 3.1.3.2 Will Properties
+      - 3.1.3.2 [遗嘱属性集](#3-1-3-2-遗嘱属性集)
         - 3.1.3.2.1 Property Length
         - 3.1.3.2.2 Will Delay Interval
         - 3.1.3.2.3 Payload Format Indicator
@@ -375,8 +375,8 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 3.15.3 AUTH Payload
     - 3.15.4 AUTH Actions
 - 4 [操作行为](#4-操作行为)
-  - 4.1 Session State
-    - 4.1.1 Storing Session State
+  - 4.1 [会话状态](#4-1-会话状态)
+    - 4.1.1 [存储会话状态](#4-1-1-存储会话状态)
     - 4.1.2 Session State non-normative examples
   - 4.2 [网络连接](#4-2-网络连接)
   - 4.3 Quality of Service levels and protocol flows
@@ -739,29 +739,33 @@ MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1
 
 图1-1 UTF-8 字符串结构
 <table>
+  <thead>
     <tr>
-        <th>Bit</th>
-        <th>7</th>
-        <th>6</th>
-        <th>5</th>
-        <th>4</th>
-        <th>3</th>
-        <th>2</th>
-        <th>1</th>
-        <th>0</th>
+      <th>Bit</th>
+      <th>7</th>
+      <th>6</th>
+      <th>5</th>
+      <th>4</th>
+      <th>3</th>
+      <th>2</th>
+      <th>1</th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>byte 1</td>
+      <td colspan="8">字符串长度高字节(MSB)</td>
     </tr>
     <tr>
-        <td>byte 1</td>
-        <td colspan="8">字符串长度高字节(MSB)</td>
+      <td>byte 2</td>
+      <td colspan="8">字符串长度低字节(LSB)</td>
     </tr>
     <tr>
-        <td>byte 2</td>
-        <td colspan="8">字符串长度低字节(LSB)</td>
+      <td>byte 3 ...</td>
+      <td colspan="8">当长度 > 0 时, UTF-8 编码的字符数据</td>
     </tr>
-    <tr>
-        <td>byte 3 ...</td>
-        <td colspan="8">当长度 > 0 时, UTF-8 编码的字符数据</td>
-    </tr>
+  </tbody>
 </table>
 
 <span class="vcMarked">在 UTF-8 编码字符串中的字符必须为 <a href="#1.3-Unicode">[Unicode]</a> 和 <a href="#1.3-RFC3629">[RFC3629]</a> 中所定义的，格式正确的字符编码。尤其不能使用U+D800 至 U+DFFF之间的编码</span> <span class="vcReferred">[MQTT-1.5.4-1]</span>。如果客户端或服务器接收到的 MQTT 包中包括了非法 UTF-8 编码，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
@@ -782,122 +786,126 @@ MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1
 
 图1‑2 UTF-8 编码字符串非规范性示例
 <table>
+  <thead>
     <tr>
-        <th>Bit</th>
-        <th>7</th>
-        <th>6</th>
-        <th>5</th>
-        <th>4</th>
-        <th>3</th>
-        <th>2</th>
-        <th>1</th>
-        <th>0</th>
+      <th>Bit</th>
+      <th>7</th>
+      <th>6</th>
+      <th>5</th>
+      <th>4</th>
+      <th>3</th>
+      <th>2</th>
+      <th>1</th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>byte 1</td>
+      <td colspan="8">字符串长度高字节(MSB)(0x00)</td>
     </tr>
     <tr>
-        <td>byte 1</td>
-        <td colspan="8">字符串长度高字节(MSB)(0x00)</td>
+      <td></td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
-        <td></td>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
+      <td>byte 2</td>
+      <td colspan="8">字符串长度低字节(LSB)(0x05)</td>
     </tr>
     <tr>
-        <td>byte 2</td>
-        <td colspan="8">字符串长度低字节(LSB)(0x05)</td>
+      <td></td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
-        <td></td>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
+      <td>byte 3</td>
+      <td colspan="8">‘A’ (0x41)</td>
     </tr>
     <tr>
-        <td>byte 3</td>
-        <td colspan="8">‘A’ (0x41)</td>
+      <td></td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
-        <td></td>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>1</th>
+      <td>byte 4</td>
+      <td colspan="8">(0xF0)</td>
     </tr>
     <tr>
-        <td>byte 4</td>
-        <td colspan="8">(0xF0)</td>
+      <td></td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
     <tr>
-        <td></td>
-        <th>1</th>
-        <th>1</th>
-        <th>1</th>
-        <th>1</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
-        <th>0</th>
+      <td>byte 5</td>
+      <td colspan="8">(0xAA)</td>
     </tr>
     <tr>
-        <td>byte 5</td>
-        <td colspan="8">(0xAA)</td>
+      <td></td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
-        <td></td>
-        <th>1</th>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
+      <td>byte 6</td>
+      <td colspan="8">(0x9B)</td>
     </tr>
     <tr>
-        <td>byte 6</td>
-        <td colspan="8">(0x9B)</td>
+      <td></td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
     </tr>
     <tr>
-        <td></td>
-        <th>1</th>
-        <th>0</th>
-        <th>0</th>
-        <th>1</th>
-        <th>1</th>
-        <th>0</th>
-        <th>1</th>
-        <th>1</th>
+      <td>byte 7</td>
+      <td colspan="8">(0x94)</td>
     </tr>
     <tr>
-        <td>byte 7</td>
-        <td colspan="8">(0x94)</td>
+      <td></td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
     </tr>
-    <tr>
-        <td></td>
-        <th>1</th>
-        <th>0</th>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
-        <th>1</th>
-        <th>0</th>
-        <th>0</th>
-    </tr>
+  </tbody>
 </table>
 
 ### 1.5.5 变长整数
@@ -997,9 +1005,11 @@ MQTT 协议操作通过一系列的 MQTT 包交互来实现。本章用来描述
 一个 MQTT 包由三部分构成，顺序固定，参考下图：
 
 <table>
-  <tr><td>固定头，所有的 MQTT 包都必须持有</td><tr>
-  <tr><td>可变头，部分 MQTT 包持有</td></tr>
-  <tr><td>载荷，部分 MQTT 包持有</td></tr>
+  <tbody>
+    <tr><td>固定头，所有的 MQTT 包都必须持有</td><tr>
+    <tr><td>可变头，部分 MQTT 包持有</td></tr>
+    <tr><td>载荷，部分 MQTT 包持有</td></tr>
+  </tbody>
 </table>
 
 ### 2.1.1 固定头
@@ -1009,26 +1019,30 @@ MQTT 协议操作通过一系列的 MQTT 包交互来实现。本章用来描述
 图2-2 固定头格式
 
 <table>
+  <thead>
     <tr>
-        <th>Bit</th>
-        <th>7</th>
-        <th>6</th>
-        <th>5</th>
-        <th>4</th>
-        <th>3</th>
-        <th>2</th>
-        <th>1</th>
-        <th>0</th>
+      <th>Bit</th>
+      <th>7</th>
+      <th>6</th>
+      <th>5</th>
+      <th>4</th>
+      <th>3</th>
+      <th>2</th>
+      <th>1</th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>byte 1</td>
+      <td colspan="4">MQTT包类型</td>
+      <td colspan="4">针对不同包类型的控制标识</td>
     </tr>
     <tr>
-        <td>byte 1</td>
-        <td colspan="4">MQTT包类型</td>
-        <td colspan="4">针对不同包类型的控制标识</td>
+      <td>byte 2...</td>
+      <td colspan="8">剩余长度</td>
     </tr>
-    <tr>
-        <td>byte 2...</td>
-        <td colspan="8">剩余长度</td>
-    </tr>
+  </tbody>
 </table>
 
 ### 2.1.2 MQTT包类型
@@ -1066,137 +1080,141 @@ MQTT 协议操作通过一系列的 MQTT 包交互来实现。本章用来描述
 
 <table>
   <thead>
-    <td>MQTT包</td>
-    <td>控制标志</td>
-    <td>Bit 3</td>
-    <td>Bit 2</td>
-    <td>Bit 1</td>
-    <td>Bit 0</td>
+    <tr>
+      <td>MQTT包</td>
+      <td>控制标志</td>
+      <td>Bit 3</td>
+      <td>Bit 2</td>
+      <td>Bit 1</td>
+      <td>Bit 0</td>
+    </tr>
   </thead>
-  <tr>
-    <td>CONNECT</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>CONNACK</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PUBLISH</td>
-    <td>MQTT 5.0版本使用</td>
-    <td>DUP</td>
-    <td colspan="2">QoS</td>
-    <td>RETAIN</td>
-  </tr>
-  <tr>
-    <td>PUBACK</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PUBREC</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PUBREL</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>1</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PUBCOMP</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>SUBSCRIBE</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>1</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>SUBACK</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>UNSUBSCRIBE</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>1</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>UNSUBACK</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PINGREQ</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>PINGRESP</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>DISCONNECT</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
-  <tr>
-    <td>AUTH</td>
-    <td>Reserved</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-    <td>0</td>
-  </tr>
+  <tbody>
+    <tr>
+      <td>CONNECT</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>CONNACK</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PUBLISH</td>
+      <td>MQTT 5.0版本使用</td>
+      <td>DUP</td>
+      <td colspan="2">QoS</td>
+      <td>RETAIN</td>
+    </tr>
+    <tr>
+      <td>PUBACK</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PUBREC</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PUBREL</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PUBCOMP</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>SUBSCRIBE</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>SUBACK</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>UNSUBSCRIBE</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>UNSUBACK</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PINGREQ</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>PINGRESP</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>DISCONNECT</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>AUTH</td>
+      <td>Reserved</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
 </table>
 
 DUP = 重复发送的 PUBLISH 包
 QoS = PUBLISH 包的服务质量标识
-RETAIN = PUBLISH 保留信息标识
+RETAIN = PUBLISH 保留消息标识
 
 参考 [3.3.1](#3-3-1-PUBLISH-固定头) 了解更多关于 DUP，QoS 和 RETAIN 标识在 PUBLISH 中的使用方式。
 
@@ -1262,13 +1280,410 @@ PUBACK 包ID=0x1234 ‒→
                                                     ←‒ PUBACK 包ID=0x1234
 ```
 
+### 2.2.2 属性集
+
+在 CONNECT，CONNACK，PUBLISH，PUBACK，PUBREC，PUBREL，PUBCOMP，SUBSCRIBE，SUBACK，UNSUBSCRIBE，UNSUBACK，DISCONNECT 和 AUTH 包的可变头中的最后一个字段是属性集。在 CONNECT 的载荷中也存在着一组可选的遗嘱属性集。
+
+属性集由属性长度和属性组成。
+
+#### 2.2.2.1 属性长度
+
+属性长度是一个变长整数。属性长度的值不包括自己所占用的字节数，但包括了后续所有属性占用的字节数。<span class="vcMarked">如果没有属性，必须明确通过一个0值的属性长度来表示</span> <span class="vcReferred">[MQTT-2.2.2-1]</span>。
+
+#### 2.2.2.2 属性
+
+属性由一个标识了其用途和数据类型的ID和一个后续的值组成。属性ID是一个变长整数。当一个数据包使用的属性ID和其包类型不一致，或属性的值和ID指明的类型不一致时，视为一个格式错误的包。如果收到，需使用带有原因码为 0x81 的 CONNACK 或 DISCONNECT 数据包，采用 [4.13](#4-13-错误处理) 描述的方法处理此错误。不同ID的属性没有顺序要求。
+
+表2-4 属性
+<table>
+  <thead>
+    <tr>
+      <th colspan="2">ID</th>
+      <th rowspan="2">名称（用途）</th>
+      <th rowspan="2">数据类型</th>
+      <th rowspan="2">包类型 / 遗嘱属性</th>
+    </tr>
+    <tr>
+      <th>十进制</th><th>十六进制</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>0x01</td><td>载荷格式指示</td><td>单字节</td><td>PUBLISH，Will Properties</td></tr>
+    <tr><td>2</td><td>0x02</td><td>消息过期间隔</td><td>4字节整数</td><td>PUBLISH，Will Properties</td></tr>
+    <tr><td>3</td><td>0x03</td><td>内容类型</td><td>UTF-8字符串</td><td>PUBLISH，Will Properties</td></tr>
+    <tr><td>8</td><td>0x08</td><td>响应主题</td><td>UTF-8字符串</td><td>PUBLISH，Will Properties</td></tr>
+    <tr><td>9</td><td>0x09</td><td>相关数据</td><td>二进制数据</td><td>PUBLISH，Will Properties</td></tr>
+    <tr><td>11</td><td>0x0B</td><td>订阅ID</td><td>变长整数</td><td>PUBLISH，SUBSCRIBE</td></tr>
+    <tr><td>17</td><td>0x11</td><td>会话过期间隔</td><td>4字节整数</td><td>CONNECT，CONNACK，DISCONNECT</td></tr>
+    <tr><td>18</td><td>0x12</td><td>分配的客户端ID</td><td>UTF-8字符串</td><td>CONNACK</td></tr>
+    <tr><td>19</td><td>0x13</td><td>服务端保活时间</td><td>2字节整数</td><td>CONNACK</td></tr>
+    <tr><td>21</td><td>0x15</td><td>认证方式</td><td>UTF-8字符串</td><td>CONNECT，CONNACK，AUTH</td></tr>
+    <tr><td>22</td><td>0x16</td><td>认证数据</td><td>二进制数据</td><td>CONNECT，CONNACK，AUTH</td></tr>
+    <tr><td>23</td><td>0x17</td><td>请求问题信息</td><td>单字节</td><td>CONNECT</td></tr>
+    <tr><td>24</td><td>0x18</td><td>遗嘱延迟间隔</td><td>4字节整数</td><td>Will Properties</td></tr>
+    <tr><td>25</td><td>0x19</td><td>请求响应消息</td><td>单字节</td><td>CONNECT</td></tr>
+    <tr><td>26</td><td>0x1A</td><td>响应消息</td><td>UTF-8字符串</td><td>CONNACK</td></tr>
+    <tr><td>28</td><td>0x1C</td><td>服务引用</td><td>UTF-8字符串</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>31</td><td>0x1F</td><td>原因字符串</td><td>UTF-8字符串</td><td>CONNACK，PUBACK，PUBREC，PUBREL，PUBCOMP，SUBACK，UNSUBACK，DISCONNECT，AUTH</td></tr>
+    <tr><td>33</td><td>0x21</td><td>接收最大值</td><td>2字节整数</td><td>CONNECT，CONNACK</td></tr>
+    <tr><td>34</td><td>0x22</td><td>主题别名最大值</td><td>2字节整数</td><td>CONNECT，CONNACK</td></tr>
+    <tr><td>35</td><td>0x23</td><td>主题别名</td><td>2字节整数</td><td>PUBLISH</td></tr>
+    <tr><td>36</td><td>0x24</td><td>QoS最大值</td><td>单字节</td><td>CONNACK</td></tr>
+    <tr><td>37</td><td>0x25</td><td>保留消息可用</td><td>单字节</td><td>CONNACK</td></tr>
+    <tr><td>38</td><td>0x26</td><td>用户属性</td><td>UTF-8字符串对</td><td>CONNECT，CONNACK，PUBLISH，Will Properties，PUBACK，PUBREC，PUBREL，PUBCOMP，SUBSCRIBE，SUBACK，UNSUBSCRIBE，UNSUBACK，DISCONNECT，AUTH</td></tr>
+    <tr><td>39</td><td>0x27</td><td>最大报文大小</td><td>4字节整数</td><td>CONNECT，CONNACK</td></tr>
+    <tr><td>40</td><td>0x28</td><td>通配符订阅可用</td><td>单字节</td><td>CONNACK</td></tr>
+    <tr><td>41</td><td>0x29</td><td>订阅ID可用</td><td>单字节</td><td>CONNACK</td></tr>
+    <tr><td>42</td><td>0x2A</td><td>共享订阅可用</td><td>单字节</td><td>CONNACK</td></tr>
+  </tbody>
+</table>
+
+*非规范性评论*
+
+*虽然属性ID被定义为一个变长整数，但在规范的此版本中所有的属性ID都只有一个字节的长度。*
+
+## 2.3 载荷
+
+有些 MQTT 包的尾部是载荷。在 PUBLISH 包中的载荷就是应用消息。
+
+表2-5 包含载荷的 MQTT 包
+
+| MQTT 包 | 载荷 |
+| --- | --- |
+| CONNECT | 有 |
+| CONNACK | 无 |
+| PUBLISH | 可选 |
+| PUBACK | 无 |
+| PUBREC | 无 |
+| PUBREL | 无 |
+| PUBCOMP | 无 |
+| SUBSCRIBE | 有 |
+| SUBACK | 有 |
+| UNSUBSCRIBE | 有 |
+| UNSUBACK | 有 |
+| PINGREQ | 无 |
+| PINGRESP | 无 |
+| DISCONNECT | 无 |
+| AUTH | 无 |
+
+## 2.4 原因码
+
+原因码是一个单字节的无符号整数值，用来表示一个操作的结果。小于 0x80 的原因码用来表示操作成功，最常见的表示成功的原因码是 0x00。0x80或更大的原因码表示失败。
+
+在 CONNACK，PUBACK，PUBREC，PUBREL，PUBCOMP，DISCONNECT 和 AUTH 包的可变头中有一个原因码字段。在 SUBACK 和 UNSUBACK 的载荷中包一个列表，其中有一个或多个原因码字段。
+
+原因码字段值的通用定义如下：
+
+表2-6 原因码
+
+<table>
+  <thead>
+    <tr>
+      <th colspan="2">原因码</th>
+      <th rowspan="2">名称</th>
+      <th rowspan="2">包类型</th>
+    </tr>
+    <tr>
+      <th>十进制</th><th>十六进制</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>0x00</td><td>成功</td><td>CONNACK，PUBACK，PUBREC，PUBREL，PUBCOMP，UNSUBACK，AUTH</td></tr>
+    <tr><td>0</td><td>0x00</td><td>普通断开</td><td>DISCONNECT</td></tr>
+    <tr><td>0</td><td>0x00</td><td>授予 QoS 0</td><td>SUBACK</td></tr>
+    <tr><td>1</td><td>0x01</td><td>授予 QoS 1</td><td>SUBACK</td></tr>
+    <tr><td>2</td><td>0x02</td><td>授予 QoS 2</td><td>SUBACK</td></tr>
+    <tr><td>4</td><td>0x04</td><td>携带遗嘱的断开链接</td><td>DISCONNECT</td></tr>
+    <tr><td>16</td><td>0x16</td><td>没有匹配的订阅者</td><td>PUBACK，PUBREC</td></tr>
+    <tr><td>17</td><td>0x11</td><td>没有存在的订阅</td><td>UNSUBACK</td></tr>
+    <tr><td>24</td><td>0x18</td><td>继续认证</td><td>AUTH</td></tr>
+    <tr><td>25</td><td>0x19</td><td>重新认证</td><td>AUTH</td></tr>
+    <tr><td>128</td><td>0x80</td><td>未指定错误</td><td>CONNACK，PUBACK，PUBREC，SUBACK，UNSUBACK，DISCONNECT</td></tr>
+    <tr><td>129</td><td>0x81</td><td>格式错误的包</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>130</td><td>0x82</td><td>协议错误</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>131</td><td>0x83</td><td>特定实现错误</td><td>CONNACK，PUBACK，PUBREC，SUBACK，UNSUBACK，DISCONNECT</td></tr>
+    <tr><td>132</td><td>0x84</td><td>协议版本不支持</td><td>CONNACK</td></tr>
+    <tr><td>133</td><td>0x85</td><td>客户端ID不可用</td><td>CONNACK</td></tr>
+    <tr><td>134</td><td>0x86</td><td>用户名或密码错误</td><td>CONNACK</td></tr>
+    <tr><td>135</td><td>0x87</td><td>未经授权</td><td>CONNACK，PUBACK，PUBREC，SUBACK，UNSUBACK，DISCONNECT</td></tr>
+    <tr><td>136</td><td>0x88</td><td>服务器不可用</td><td>CONNACK</td></tr>
+    <tr><td>137</td><td>0x89</td><td>服务器忙</td><td>CONNACK</td></tr>
+    <tr><td>138</td><td>0x8A</td><td>被禁止</td><td>CONNACK</td></tr>
+    <tr><td>139</td><td>0x8B</td><td>服务器关闭</td><td>DISCONNECT</td></tr>
+    <tr><td>140</td><td>0x8C</td><td>认证模式错误</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>141</td><td>0x8D</td><td>保活超时</td><td>DISCONNECT</td></tr>
+    <tr><td>142</td><td>0x8E</td><td>会话被接管</td><td>DISCONNECT</td></tr>
+    <tr><td>143</td><td>0x8F</td><td>主题过滤器不可用</td><td>SUBACK，UNSUBACK，DISCONNECT</td></tr>
+    <tr><td>144</td><td>0x90</td><td>主题名不可用</td><td>CONNACK，PUBACK，PUBREC，DISCONNECT</td></tr>
+    <tr><td>145</td><td>0x91</td><td>包ID已被使用</td><td>PUBACK，PUBREC，SUBACK，UNSUBACK</td></tr>
+    <tr><td>146</td><td>0x92</td><td>包ID未找到</td><td>PUBREL，PUBCOMP</td></tr>
+    <tr><td>147</td><td>0x93</td><td>超出接收最大值</td><td>DISCONNECT</td></tr>
+    <tr><td>148</td><td>0x94</td><td>主题别名不可用</td><td>DISCONNECT</td></tr>
+    <tr><td>149</td><td>0x95</td><td>包过大</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>150</td><td>0x96</td><td>消息频率过高</td><td>DISCONNECT</td></tr>
+    <tr><td>151</td><td>0x97</td><td>超限</td><td>CONNACK，PUBACK，PUBREC，SUBACK，DISCONNECT</td></tr>
+    <tr><td>152</td><td>0x98</td><td>管理员行为</td><td>DISCONNECT</td></tr>
+    <tr><td>153</td><td>0x99</td><td>载荷格式错误</td><td>CONNACK，PUBACK，PUBREC，DISCONNECT</td></tr>
+    <tr><td>154</td><td>0x9A</td><td>不支持保留消息</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>155</td><td>0x9B</td><td>不支持 QoS</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>156</td><td>0x9C</td><td>临时使用另一台服务器</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>157</td><td>0x9D</td><td>服务器迁移</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>158</td><td>0x9E</td><td>不支持共享订阅</td><td>SUBACK，DISCONNECT</td></tr>
+    <tr><td>159</td><td>0x9F</td><td>连接频率超限</td><td>CONNACK，DISCONNECT</td></tr>
+    <tr><td>160</td><td>0xA0</td><td>最大连接时间</td><td>DISCONNECT</td></tr>
+    <tr><td>161</td><td>0xA1</td><td>不支持订阅ID</td><td>SUBACK，DISCONNECT</td></tr>
+    <tr><td>162</td><td>0xA2</td><td>不支持通配符订阅</td><td>SUBACK，DISCONNECT</td></tr>
+  </tbody>
+</table>
+
+*非规范性评论*
+
+*对于 0x91（包ID已被使用）的原因码，对此的处理应是处理重复状态，或是使用 Clean Start 为 1 的标识重新创建连接来重置会话，或是检查客户端或服务端的实现是否有缺陷。*
+
 # 3 MQTT包
 
+## 3.1 CONNECT - 连接请求
+
+<span class="vcMarked">当客户端和服务器的网络连接建立后，客户端向服务器发送的第一个数据包必须是 CONNECT 包</span> <span class="vcReferred">[MQTT-3.1.0-1]</span>。
+
+一个客户端在一次网络连接中只能发送一个 CONNECT 包。<span class="vcMarked">服务器必须将客户端发送的第二个 CONNECT 包视为协议错误并关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.0-2]</span>。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+CONNECT 的载荷包含一个或更多的字段，包括唯一的客户端ID，遗嘱主题，遗嘱载荷，用户名和密码。除了客户端ID以外的字段都可以省略，他们的存在与否根据可变头中的标识确定。
+
+### 3.1.1 CONNECT固定头
+
+图3‑1 CONNECT 包固定头
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（1）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2...</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+**剩余长度**
+
+表示可变头长度和载荷长度的总和，使用变长整数表示。
+
+### 3.1.2 CONNECT可变头
+
+CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议版本、连接标识、保活时间和属性集。属性集的编码方式请参考 [2.2.2](#2-2-2-属性集)。
+
+#### 3.1.2.1 协议名
+
+图3-2 协议名字节
+
+<table>
+  <thead>
+    <tr><td></td><td>描述</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="10">协议名</td></tr>
+    <tr><td>byte 1</td><td>长度高位（MSB）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td>长度低位（LSB）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 3</td><td>'M'</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+    <tr><td>byte 4</td><td>'Q'</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+    <tr><td>byte 5</td><td>'T'</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 6</td><td>'T'</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+协议名是 UTF-8字符串表示的大写 “MQTT”，就像上图所示。这个字符串、他的位置和他的长度在未来的 MQTT 规范版本中永远不会改变。
+
+支持多种协议的服务器可以通过协议名称来判断收到的数据是否是 MQTT 数据。<span class="vcMarked">协议名称必须是 UTF-8字符串表示的 “MQTT”。如果服务器不想接收此连接，同时又想告知客户端服务器是一个 MQTT 服务器，可以发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务端必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-1]</span>。
+ 
+*非规范性评论*
+
+*数据包检查器（例如防火墙）可以使用协议名称来识别 MQTT 流量。*
+
+#### 3.1.2.2 协议版本
+
+图3‑3 协议版本字节
+
+<table>
+  <thead>
+    <tr><td></td><td>描述</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="10">协议版本</td></tr>
+    <tr><td>byte 7</td><td>版本（5）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+  </tbody>
+</table>
+
+此处的单字节无符号值表示了客户端使用的协议的版本。MQTT 5.0 版本的协议版本的值应为 5（0x05）。
+
+支持多个协议版本的服务器可以通过协议版本字段来判断客户端使用何种版本的 MQTT 协议。<span class="vcMarked">如果客户端使用的协议版本不为 5 而且服务器不想接受此 CONNECT 包，服务器可以发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务端必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-2]</span>。
+
+#### 3.1.2.3 连接标识
+
+连接标志字节包含了几个指定 MQTT 连接行为的参数。他还用来指示载荷中的某些字段是否存在。
+
+图3‑4 连接标识位
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td></td><td>用户名标识</td><td>密码标识</td><td>遗嘱保留消息</td><td colspan="2">遗嘱QoS</td><td>遗嘱标识</td><td>全新开始</td><td>保留</td></tr>
+    <tr><td>byte 8</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td>X</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<span class="vcMarked">服务器必须验证 CONNECT 包中的保留位的值是 0</span> <span class="vcReferred">[MQTT-3.1.2-3]</span>。如果保留位的值非 0，则视为一个格式错误的包，参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+#### 3.1.2.4 全新开始
+
+**位置：**连接标识字节中的比特位 1。
+
+这个比特位指定了此连接是一个全新的会话还是一个已经存在会话的延续。参考 [4.1](#4-1-会话状态) 了解关于会话状态的定义。
+
+<span class="vcMarked">如果接收到全新开始值置为 1 的 CONNECT 包，客户端和服务器必须丢弃任何已经存在的会话并开始一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-4]</span>。因此，当 CONNECT 包中的全新开始值置为 1 时，对应的 CONNACK 包中的会话存在总是会被至为0。
+
+<span class="vcMarked">如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中已经存在和客户端ID关联的会话，服务器必须基于已经存在的会话状态恢复客户端的连接</span> <span class="vcReferred">[MQTT-3.1.2-5]</span>。<span class="vcMarked">如果服务端接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中没有和客户端ID关联的会话，服务器必须创建一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-6]</span>。
+
 #### 3.1.2.5 遗嘱标识
+
+**位置：**连接标识字节中的比特位 2。
+
+<span class="vcMarked">如果遗嘱标识被置为 1，则表示遗嘱消息必须被存储在服务器中，并且关联到此会话</span> <span class="vcReferred">[MQTT-3.1.2-7]</span>。遗嘱消息由 CONNECT 载荷中的遗嘱属性集、遗嘱主题和遗嘱载荷组成。<span class="vcMarked">遗嘱消息必须在网络连接断开后的遗嘱延迟间隔时间过期后或会话结束时发布，除非由于服务器接收到一个带有 0x00（普通断开）原因码的 DISCONNECT 包从而删除了遗嘱消息，或是在遗嘱延迟间隔时间过期前接收了一个带有相同客户端ID的连接</span> <span class="vcReferred">[MQTT-3.1.2-8]</span>。
+
+遗嘱消息被发布的场景包括不限于：
+
+- 服务端检测到了 I/O 错误或网络故障
+- 客户端没有成功在保活时间内通信
+- 客户端在没有发送原因码为 0x00（普通断开）的 DISCONNECT 包的前提下断开网络连接
+- 服务器在没有收到原因码为 0x00（普通断开）的 DISCONNECT 包的前提下断开网络连接
+
+<span class="vcMarked">当遗嘱标识被置为 1 时，载荷中必须包括遗嘱属性集、遗嘱主题和遗嘱载荷字段</span> <span class="vcReferred">[MQTT-3.1.2-9]</span>。<span class="vcMarked">当服务器发布遗嘱后或服务器从客户端收到了原因码为 0x00（普通断开）的 DISCONNECT 包后，服务器必须从会话状态中删除遗嘱消息</span> <span class="vcReferred">[MQTT-3.1.2-10]</span>。
+
+服务器应该在下列两种情况中的某一种先发生时发布遗嘱消息：网络连接断开后经过了遗嘱延迟间隔时间、会话结束。如果发生了服务器关闭或故障，服务器也许可以在随后的重启之后发布遗嘱消息。当此种情况发生时，服务器故障发生的时间和遗嘱消息发布的时间之间可能会有延迟。
+
+参考 [3.1.3.2](#3-1-3-2-遗嘱属性集) 了解关于遗嘱延迟间隔的消息。
+
+*非规范性评论*
+
+*客户端可以设置遗嘱延迟间隔大于会话过期间隔，再发送带有原因码 0x04（携带遗嘱的断开链接）的 DISCONNECT 断开连接。这样可以使用遗嘱消息来通知会话已过期。*
+
+#### 3.1.2.6 遗嘱QoS
+
+**位置：**连接标识字节中的比特位 4 和 3。
+
+这两个比特位指定了发布遗嘱消息时使用的 QoS 等级。
+
+<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱QoS必须被置为 0（0x00）</span> <span class="vcReferred">[MQTT-3.1.2-11]</span>。
+
+<span class="vcMarked">当遗嘱标识被置为 1 时，遗嘱QoS的值可以是 0（0x00），1（0x01）或 2（0x02）</span> <span class="vcReferred">[MQTT-3.1.2-12]</span>。当值为 3（0x03）时视为格式错误的包，参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+
+#### 3.1.2.7 遗嘱保留消息
+
+**位置：**连接标识字节中的比特位 5。
+
+这个比特位指定了当遗嘱消息发布时是否会被保留。
+
+<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱保留消息的值必须被置为 0</span> <span class="vcReferred">[MQTT-3.1.2-13]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 0 时，服务器必须将遗嘱消息作为一个非保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-14]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 1 时，服务器必须将遗嘱消息作为一个保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-15]</span>。
+
+#### 3.1.2.8 用户名标识
+
+**位置：**连接标识字节中的比特位 7。
+
+<span class="vcMarked">当用户名标识被置为 0 时，载荷中必须不能存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-16]</span>。<span class="vcMarked">当用户名标识被置为 1 时，载荷中必须存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-17]</span>。
+
+#### 3.1.2.9 密码标识
+
+**位置：**连接标识字节中的比特位 6。
+
+<span class="vcMarked">当密码标识被置为 0 时，载荷中必须不能存在密码</span> <span class="vcReferred">[MQTT-3.1.2-18]</span>。<span class="vcMarked">当密码标识被置为 1 时，载荷中必须存在密码</span> <span class="vcReferred">[MQTT-3.1.2-19]</span>。
+
+*非规范性评论*
+
+*本版协议允许在不使用用户名时使用密码，和 MQTT v3.1.1 不同。这反映了密码作为密码以外的凭证的常见用途。*
+
+#### 3.1.2.10 保活时间
+
+图3-5 保活时间字节
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 9</td><td colspan="8">保活时间高位（MSB）</td></tr>
+    <tr><td>byte 10</td><td colspan="8">保活时间地位（LSB）</td></tr>
+  </tbody>
+</table>
+
+保活时间是一个表示时间间隔秒数的 2字节整数。他是允许客户端在发送一个 MQTT 包后到发送下一个数据包之间的最大时间间隔。客户端有责任确保两个 MQTT 包之间的时间间隔不超过保活时间。<span class="vcMarked">如果保活时间不为 0 且没有任何其他需要发送的数据包，客户端必须发送 PINGREQ 包</span> <span class="vcReferred">[MQTT-3.1.2-20]</span>。
+
+<span class="vcMarked">如果服务端在 CONNACK 中提供了服务端保活时间，则客户端必须采用服务端保活时间的值来替代自己发送的保活时间的值</span> <span class="vcReferred">[MQTT-3.1.2-21]</span>。
+
+不论保活时间的值如何设置，客户端可以在任何时间发送 PINGREQ，并通过检查相应的 PINGRESP 来确认服务端与网络是否可用。
+
+<span class="vcMarked">如果保活时间为非零值且服务器在 1.5 倍的保活时间内没有收到来自客户端的任何 MQTT 包，服务器必须断开到客户端的网络连接并视为网络连接故障</span> <span class="vcReferred">[MQTT-3.1.2-22]</span>。
+
+如果客户端在发送 PINGREQ 的合理时间后依然没有收到 PINGRESP，客户端应断开到服务器的网络连接。
+
+保活时间的值为 0 表示关闭保活机制。当保活时间为 0 时客户端没有义务按任何特定时间发送 MQTT 包。
+
+*非规范性评论*
+
+*服务器可能会因为其他原因关闭向客户端的连接，例如服务器关机。设置保活时间并非意味着客户端可以持续保持连接。*
+
+*非规范性评论*
+
+*保活时间的具体值是由应用程序设置的，通常来说，是几分钟。保活时间的最大值 65535 表示 18小时12分钟15秒。*
+
+#### 3.1.2.11 CONNECT 属性集
+
+##### 3.1.2.11.1 属性长度
+
+CONNECT 包可变头中的属性集长度，使用变长整数编码。
+
+##### 3.1.2.11.2 会话过期间隔
+
+会话过期间隔的属性ID是**17 (0x11) Byte**。
+
+随后跟随 4字节整数 用来表示会话过期间隔，单位为秒。在属性集中出现两次会话过期间隔视为协议错误。
+
+当没有设置会话过期间隔是使用 0 作为默认值。如果会话过期间隔的值为 0 或者没有设置，当网络连接断开时会话立即结束。
+
+如果会话过期间隔被设置为 0xFFFFFFFF (UINT_MAX)，表示会话不会过期。
+
+<span class="vcMarked">当会话过期间隔的值大于0时，客户端和服务器都必须在网络连接断开后存储会话状态</span> <span class="vcReferred">[MQTT-3.1.2-23]</span>。
+
+*非规范性评论*
+
+*客户端或服务器的时钟可能在某些时间内没有运行，例如当客户端或服务器被关闭时。这可能会导致状态被延迟删除。*
+
+参考 [4.1](#4-1-会话状态) 了解更多关于会话的信息。参考 [4.1.1](#4-1-1-存储会话状态) 了解更多关于会话状态存储的细节和限制。
+
+当会话过期时，客户端与服务器不需要自动删除会话状态。
+
+*非规范性评论*
+
+*将全新开始标识设置为 1 并将会话过期间隔设置为 0，等同于在 MQTT v3.1.1 规范中将 CleanSession 设置为 1。将全新开始标识设置为 0 且不设置会话过期间隔，等同于在 MQTT v3.1.1 规范中将 CleanSession 设置为 0。*
+
+*非规范性评论*
+
+*一个只想处理其在线时消息的客户端可以将全新开始标识设置为 1 同时将会话过期间隔设置为 0。这样他将不会收到任何在他离线时产生的消息，并且他必须在每次连接后重新订阅所有他需要的主题。*
+
+*非规范性评论*
+
+*当客户端使用一个间歇性可用的网络连接服务器时，客户端可以设置一个较短的会话过期间隔这样每当网络连接可用时他都会重连并继续进行可靠的消息交付。而当客户端没有重连时，允许会话超时，这样应用消息就会丢失。*
+
+#### 3.1.3.2 遗嘱属性集
 
 ### 3.3.1 PUBLISH 固定头
 
 # 4 操作行为
+
+## 4.1 会话状态
+
+### 4.1.1 存储会话状态
 
 ## 4.2 网络连接
 
