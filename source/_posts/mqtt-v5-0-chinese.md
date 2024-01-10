@@ -198,12 +198,12 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.1.2.11.4 [最大包尺寸](#3-1-2-11-4-最大包尺寸)
         - 3.1.2.11.5 [主题别名最大值](#3-1-2-11-5-主题别名最大值)
         - 3.1.2.11.6 [请求响应信息](#3-1-2-11-6-请求响应信息)
-        - 3.1.2.11.7 Request Problem Information
-        - 3.1.2.11.8 User Property
-        - 3.1.2.11.9 Authentication Method
-        - 3.1.2.11.10 Authentication Data
-      - 3.1.2.12 Variable Header non-normative example
-    - 3.1.3 CONNECT Payload
+        - 3.1.2.11.7 [请求问题信息](#3-1-2-11-7-请求问题信息)
+        - 3.1.2.11.8 [用户属性](#3-1-2-11-8-用户属性)
+        - 3.1.2.11.9 [认证方式](#3-1-2-11-9-认证方式)
+        - 3.1.2.11.10 [认证数据](#3-1-2-11-10-认证数据)
+      - 3.1.2.12 [可变头非规范性示例](#3-1-2-12-可变头非规范性示例)
+    - 3.1.3 [CONNECT载荷](#3-1-3-CONNECT载荷)
       - 3.1.3.1 Client Identifier (ClientID)
       - 3.1.3.2 [遗嘱属性集](#3-1-3-2-遗嘱属性集)
         - 3.1.3.2.1 Property Length
@@ -401,7 +401,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 4.10.1 Basic Request Response (non-normative)
     - 4.10.2 Determining a Response Topic value (non-normative)
   - 4.11 Server redirection
-  - 4.12 Enhanced authentication
+  - 4.12 [增强认证](#4-12-增强认证)
     - 4.12.1 Re-authentication
   - 4.13 [错误处理](#4-13-错误处理)
     - 4.13.1 Malformed Packet and Protocol Errors
@@ -1756,7 +1756,128 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 <span class="vcMarked">如果请求问题信息的值为 0，服务器可以在 CONNACK 或 DISCONNECT 包中携带原因字符串或用户属性，但必须不在除 PUBLISH，CONNACK，DISCONNECT 之外的包中携带原因字符串或用户属性</span> <span class="vcReferred">[MQTT-3.1.2-29]</span>。如果请求问题信息的值为 0 且客户端接收到除 PUBLISH，CONNACK，DISCONNECT 之外的包中带有了原因字符串或用户属性，客户端使用带有原因码 0x82（协议错误）的 DISCONNECT 包断开连接，参考 [4.13](#4-13-错误处理) 了解更多信息。
 
 如果请求问题信息的值为 1，服务器可以在任何允许的包中返回原因字符串或用户属性。
- 
+
+##### 3.1.2.11.8 用户属性
+
+用户属性的属性ID是**38 (0x26) Byte**。
+
+随后跟随 UTF-8字符串对。
+
+用户属性可以出现多次，用来携带多个 键-值 对。同样的 键 允许出现超过一次。
+
+*非规范性评论*
+
+CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过程中依赖的属性。这些属性的含义超出了本规范的范围。
+
+##### 3.1.2.11.9 认证方式
+
+认证方式的属性ID是**21 (0x15) Byte**。
+
+随后跟随 UTF-8字符串，其中包括了使用的扩展认证方式的名称。认证方式在属性集中出现超过一次视为协议错误。
+
+如果没有设置认证方式，将不会执行扩展认证。参考 [4.12](#4-12-增强认证)。
+
+<span class="vcMarked">如果客户端再 CONNECK 包中设置了认证方式，那么在其收到 CONNACK 包之前，客户端必须不能发送除了 AUTH 和 DISCONNECT 包之外的任何类型的包</span> <span class="vcReferred">[MQTT-3.1.2-30]</span>。
+
+##### 3.1.2.11.10 认证数据
+
+认证数据的属性ID是**22 (0x16) Byte**。
+
+随后跟随 二进制数据 其中包括认证数据。当认证方式不存在是提供认证数据，或是在任何情况下提供超过一次的认证数据，均视为协议错误。
+
+认证数据的内容由认证方式决定。参考 [4.12](#4-12-增强认证) 了解更多关于扩展认证的信息。
+
+#### 3.1.2.12 可变头非规范性示例
+
+图3-6 可变头示例
+
+<table>
+  <thead>
+    <tr><td></td><td>描述</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="10">协议名称</td></tr>
+    <tr>
+      <td>byte 1</td><td>长度高字节（MSB）（0）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 2</td><td>长度低字节（LSB）（4）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 3</td><td>‘M’</td>
+      <td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td>
+    </tr>
+    <tr>
+      <td>byte 4</td><td>‘Q’</td>
+      <td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td>
+    </tr>
+    <tr>
+      <td>byte 5</td><td>‘T’</td>
+      <td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 6</td><td>‘T’</td>
+      <td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td>
+    </tr>
+    <tr><td colspan="10">协议版本</td></tr>
+    <tr>
+      <td>byte 7</td><td>版本（5）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td>
+    </tr>
+    <tr><td colspan="10">连接标识</td></tr>
+    <tr>
+      <td>byte 8</td>
+      <td>
+        用户名标识（1）</br>
+        密码标识（1）</br>
+        遗嘱保留消息（0）</br>
+        遗嘱QoS（01）</br>
+        遗嘱标识（1）</br>
+        全新开始（1）</br>
+        保留（0）
+      </td>
+      <td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td>
+    </tr>
+    <tr><td colspan="10">保活时间</td></tr>
+    <tr>
+      <td>byte 9</td><td>保活时间高位（MSB）（0）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 10</td><td>保活时间低位（LSB）（10）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td>
+    </tr>
+    <tr><td colspan="10">属性集</td></tr>
+    <tr>
+      <td>byte 11</td><td>长度（5）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td>
+    </tr>
+    <tr>
+      <td>byte 12</td><td>属性ID：会话过期间隔（17）</td>
+      <td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td>
+    </tr>
+    <tr>
+      <td>byte 13</td><td rowspan="4">会话过期间隔（10）</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 14</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 15</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 16</td>
+      <td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+### 3.1.3 CONNECT载荷
 
 #### 3.1.3.2 遗嘱属性集
 
@@ -1775,6 +1896,8 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 ## 4.9 流量控制
 
 ## 4.10 请求 / 响应
+
+## 4.12 增强认证
 
 ## 4.13 错误处理
 
