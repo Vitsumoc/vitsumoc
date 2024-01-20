@@ -220,11 +220,11 @@ Copyright © OASIS Open 2019. All Rights Reserved.
       - 3.1.3.6 [密码](#3-1-3-6-密码)
     - 3.1.4 [CONNECT动作](#3-1-4-CONNECT动作)
   - 3.2 [CONNACK – 连接回复](#3-2-CONNACK-–-连接回复)
-    - 3.2.1 CONNACK Fixed Header
-    - 3.2.2 CONNACK Variable Header
-      - 3.2.2.1 Connect Acknowledge Flags
-        - 3.2.2.1.1 Session Present
-      - 3.2.2.2 Connect Reason Code
+    - 3.2.1 [CONNACK固定头](#3-2-1-CONNACK固定头)
+    - 3.2.2 [CONNACK可变头](#3-2-2-CONNACK可变头)
+      - 3.2.2.1 [连接回复标识](#3-2-2-1-连接回复标识)
+        - 3.2.2.1.1 [会话展示](#3-2-2-1-1-会话展示)
+      - 3.2.2.2 [连接原因码](#3-2-2-2-连接原因码)
       - 3.2.2.3 CONNACK Properties
         - 3.2.2.3.1 Property Length
         - 3.2.2.3.2 Session Expiry Interval
@@ -2038,6 +2038,60 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 *如果客户端在认证完成前就发送了过多的数据，服务器可以限制从网络连接读取数据或关闭网络连接。建议将此作为避免拒绝服务攻击的一种方法。*
 
 ## 3.2 CONNACK – 连接回复
+
+CONNACK 包是由服务器发送用来响应客户端发送的 CONNECT 包的MQTT包。<span class="vcMarked">服务器**必须**在发送除 AUTH 外的其他任何MQTT包之前使用带有响应码 0x00（成功）的 CONNACK 包回复客户端</span> <span class="vcReferred">[MQTT-3.2.0-1]</span>。<span class="vcMarked">服务器**必须**不在一次网络连接中发送超过一个 CONNACK 包</span> <span class="vcReferred">[MQTT-3.2.0-2]</span>。
+
+如果客户端没有在合理的时间内收到来自服务器的 CONNACK 包，客户端**应该**断开网络连接。一个“合理”的时间取决于应用程序的类型和通信基础设施。
+
+### 3.2.1 CONNACK固定头
+
+固定头格式参考 图3-7。
+
+*图3-7 CONNACK包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（2）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+**剩余长度字段**
+
+这是使用可变整数编码的值，代表可变头的长度。
+
+### 3.2.2 CONNACK可变头
+
+CONNACK 包中的可变头按序包括了下列字段：连接回复标识，连接原因码，属性集。属性集的编码方式参考 [2.2.2](#2-2-2-属性集)。
+
+#### 3.2.2.1 连接回复标识
+
+<span class="vcMarked">Byte 1 是 “连接回复标识”。Bits 7-1 是保留字段，**必须**被置为0</span> <span class="vcReferred">[MQTT-3.2.2-1]</span>。
+
+Bit 0 是会话展示标识。
+
+##### 3.2.2.1.1 会话展示
+
+会话展示标识位于连接回复标识的 bit 0。
+
+会话展示标识向客户端通知服务器是否在使用一个与客户端有相同客户端ID的连接的会话状态。这允许客户端和服务器对会话状态是否存在有一致的观点。
+
+<span class="vcMarked">如果服务器接收连接的全新开始标识被置为 1，服务器**必须**在带有 0x00（成功）的原因码的 CONNACK 包中将会话展示置为 0</span> <span class="vcReferred">[MQTT-3.2.2-2]</span>。
+
+<span class="vcMarked">如果服务器接收到的连接中全新开始位被置为 0，且服务器持有对此客户端ID的会话状态，服务器**必须**在 CONNACK 包中将会话展示标识置为 1，其他情况下，服务器都**必须**在 CONNACK 包中将会话展示标识置为 0。这两种情况下服务器都**必须**在 CONNACK 中使用原因码 0x00（成功）</span> <span class="vcReferred">[MQTT-3.2.2-3]</span>。
+
+如果客户端从服务器接收到的会话展示的值不符合预期，客户端按照如下步骤继续：
+
+- <span class="vcMarked">如果客户端不持有会话状态，且接收到的会话展示值为1，客户端**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.2.2-4]</span>。如果客户端想要使用新的会话重启，客户端可以将全新开始标识置为 1 然后重新连接。
+- <span class="vcMarked">如果客户端持有会话状态且收到的会话展示值为 0，如果客户端继续使用此网络连接，客户端**必须**丢弃会话状态</span> <span class="vcReferred">[MQTT-3.2.2-5]</span>。
+
+<span class="vcMarked">如果服务器使用非 0 原因码的 CONNACK 包，服务器**必须**将会话展示的值置为 0</span> <span class="vcReferred">[MQTT-3.2.2-6]</span>。
+
+#### 3.2.2.2 连接原因码
 
 ### 3.3.1 PUBLISH 固定头
 
