@@ -247,23 +247,23 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 3.2.3 [CONNACK载荷](#3-2-3-CONNACK载荷)
   - 3.3 [PUBLISH – 发布消息](#3-3-PUBLISH-发布消息)
     - 3.3.1 [PUBLISH 固定头](#3-3-1-PUBLISH-固定头)
-      - 3.3.1.1 DUP
-      - 3.3.1.2 QoS
-      - 3.3.1.3 RETAIN
-      - 3.3.1.4 Remaining Length
-    - 3.3.2 PUBLISH Variable Header
-      - 3.3.2.1 Topic Name
-      - 3.3.2.2 Packet Identifier
-      - 3.3.2.3 PUBLISH Properties
-        - 3.3.2.3.1 Property Length
-        - 3.3.2.3.2 Payload Format Indicator
-        - 3.3.2.3.3 Message Expiry Interval`
-        - 3.3.2.3.4 Topic Alias
-        - 3.3.2.3.5 Response Topic
-        - 3.3.2.3.6 Correlation Data
-        - 3.3.2.3.7 User Property
-        - 3.3.2.3.8 Subscription Identifier
-        - 3.3.2.3.9 Content Type
+      - 3.3.1.1 [重复标识](#3-3-1-1-重复标识)
+      - 3.3.1.2 [QoS](#3-3-1-2-QoS)
+      - 3.3.1.3 [保留消息](#3-3-1-3-保留消息)
+      - 3.3.1.4 [剩余长度](#3-3-1-4-剩余长度)
+    - 3.3.2 [PUBLISH可变头](#3-3-2-PUBLISH可变头)
+      - 3.3.2.1 [主题名称](#3-3-2-1-主题名称)
+      - 3.3.2.2 [包ID](#3-3-2-2-包ID)
+      - 3.3.2.3 [PUBLISH属性集](#3-3-2-3-PUBLISH属性集)
+        - 3.3.2.3.1 [属性长度](#3-3-2-3-1-属性长度)
+        - 3.3.2.3.2 [载荷格式标识](#3-3-2-3-2-载荷格式标识)
+        - 3.3.2.3.3 [消息过期间隔](#3-3-2-3-3-消息过期间隔)
+        - 3.3.2.3.4 [主题别名](#3-3-2-3-4-主题别名)
+        - 3.3.2.3.5 [响应主题](#3-3-2-3-5-响应主题)
+        - 3.3.2.3.6 [关联数据](#3-3-2-3-6-关联数据)
+        - 3.3.2.3.7 [用户属性](#3-3-2-3-7-用户属性)
+        - 3.3.2.3.8 [订阅ID](#3-3-2-3-8-订阅ID)
+        - 3.3.2.3.9 [内容类型](#3-3-2-3-9-内容类型)
     - 3.3.3 PUBLISH Payload
     - 3.3.4 PUBLISH Actions
   - 3.4 PUBACK – Publish acknowledgement
@@ -314,7 +314,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.8.2.1.2 Subscription Identifier
         - 3.8.2.1.3 User Property
     - 3.8.3 SUBSCRIBE Payload
-      - 3.8.3.1 Subscription Options
+      - 3.8.3.1 [订阅选项](#3-8-3-1-订阅选项)
     - 3.8.4 SUBSCRIBE Actions
   - 3.9 SUBACK – Subscribe acknowledgement
     - 3.9.1 SUBACK Fixed Header
@@ -2315,6 +2315,260 @@ CONNACK 没有载荷。
 PUBLISH 包可以由客户端发往服务端，或由服务端发往客户端，用于传输应用消息。
 
 ### 3.3.1 PUBLISH 固定头
+
+*图 3‑8 – PUBLISH 包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（3）</td><td>重复标识</td><td colspan="2">QoS等级</td><td>保留消息</td></tr>
+    <tr><td></td><td>0</td><td>0</td><td>1</td><td>1</td><td>X</td><td>X</td><td>X</td><td>X</td></tr>
+    <tr><td>byte 2...</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+#### 3.3.1.1 重复标识
+
+**位置：** byte 1，bit 3。
+
+如果重复标识的值为 0，这表示这是客户端或服务器第一次尝试发送此 PUBLISH 包。如果重复标识的值为 1，这表示本包可能是之前尝试发送包的重传。
+
+<span class="vcMarked">当客户端或服务器尝试重传 PUBLISH 包时，他们**必须**把重复标志置为 1</span> <span class="vcReferred">[MQTT-3.3.1-1]</span>。<span class="vcMarked">对于 QoS 0 的消息，重复标识**必须**被置为 0</span> <span class="vcReferred">[MQTT-3.3.1-2]</span>。
+
+当服务器将 PUBLISH 包转发给订阅者时，来自传入 PUBLISH 包的重复标识不会传播。<span class="vcMarked">转发的 PUBLISH 包的重复标识独立于接收的 PUBLISH 包，此值仅被本次转发包是否为重传独立决定</span> <span class="vcReferred">[MQTT-3.3.1-3]</span>。
+
+*非规范性评论*
+
+*MQTT包的接收方接收到重复标志为 1 的包并不能假设他已经接收到了此包的早期副本。*
+
+*非规范性评论* 
+
+*需要注意的是，重复标识仅表示 MQTT 包的重复，并不能表示其中应用消息的重复。当使用 QoS 1 时，客户端有可能接收到重复标志为 0 的包，但其中包含的应用消息却是早已接收的，只是包ID不同。章节 [2.2.1](#2-2-1-包ID) 提供了更多关于包ID的信息。*
+
+#### 3.3.1.2 QoS
+
+**位置：** byte 1，bit 2-1。
+
+该字段表示应用消息传送的保障级别。QoS 级别如下表所示。
+
+表 3-2 QoS 定义
+
+| QoS 值 | bit 2 | bit 1 | 描述 |
+| --- | --- | --- | --- |
+| 0 | 0 | 0 | 至多一次 |
+| 1 | 0 | 1 | 至少一次 |
+| 2 | 1 | 0 | 确保一次 |
+| - | 1 | 1 | 保留 - 不可使用 |
+
+如果客户端在 CONNACK 中向服务器提示了最大QoS，之后收到了超过最大QoS值的 PUBLISH 包，服务器使用带有原因码 0x9B（不支持的QoS）的 DISCONNECT 包断开连接，如同 [4.13](#4-13-错误处理) 中的描述。
+
+<span class="vcMarked">PUBLISH 包**必须不**能将 QoS 的两个 bit 都设置为 1</span> <span class="vcReferred">[MQTT-3.3.1-4]</span>。如果服务器或者客户端接收到了两个 bit 都为 1 的 PUBLISH 包，视为格式错误的包，使用带有原因码 0x81（格式错误的包）的 DISCONNECT 断开连接，参考 [4.13](#4-13-错误处理)。
+
+#### 3.3.1.3 保留消息
+
+**位置：** byte 1，bit 0。
+
+<span class="vcMarked">当客户端向服务器发送的 PUBLISH 包中的保留消息被置为 1 时，服务器**必须**在此主题下保存此应用消息，替换任何已经存在的消息</span> <span class="vcReferred">[MQTT-3.3.1-5]</span>，之后该保留消息可以被发布给订阅该主题的订阅者。<span class="vcMarked">如果载荷为空，服务器照常处理，只不过该同名主题下现有的保留消息**必须**被移除，未来的订阅者也不会再收到保留消息</span> <span class="vcReferred">[MQTT-3.3.1-6]</span>。<span class="vcMarked">带有空载荷的保留消息**必须不**被服务器作为保留消息存储</span> <span class="vcReferred">[MQTT-3.3.1-7]</span>。
+
+<span class="vcMarked">如果客户端发送到服务器的 PUBLISH 包中的保留消息值为 0，服务器**必须不**将该消息作为保留消息存储且**必须不**删除或替换已经存在的保留消息</span> <span class="vcReferred">[MQTT-3.3.1-8]</span>。
+
+如果服务器回复的 CONNACK 带有保留消息可用标识且其值为 0，此时服务器又收到了带有保留消息值为 1 的 PUBLISH 包，服务器需使用带有原因码 0x9A（不支持保留消息）的 DISCONNECT 包断开连接，参考 [4.13](#4-13-错误处理)。
+
+当一个新的非共享订阅创建时，如果存在保留消息，每个匹配主题名上的保留消息都按照订阅选项中的保留消息处理标识的指示发往客户端。这些消息发送时的保留消息标识都置为 1。保留消息是否发送由订阅选项中的保留消息处理字段控制。当客户端进行订阅时：
+
+- <span class="vcMarked">如果保留消息处理值为 0，服务器**必须**将匹配订阅主题过滤器的保留消息发送给客户端</span> <span class="vcReferred">[MQTT-3.3.1-9]</span>。
+- <span class="vcMarked">如果保留消息处理值为 1，当该订阅之前不存在时，服务器**必须**将匹配订阅主题过滤器的保留消息发送给客户端，反之当该订阅之前存在时，服务器**必须不**发送保留消息</span> <span class="vcReferred">[MQTT-3.3.1-10]</span>。
+- <span class="vcMarked">如果保留消息处理值为 2，服务器**必须不**发送保留消息</span> <span class="vcReferred">[MQTT-3.3.1-11]</span>。
+
+参考 [3.8.3.1](#3-8-3-1-订阅选项) 了解关于订阅选项的定义。
+
+当服务器接收到保留消息值为 1，QoS 值为 0 的 PUBLISH 包，服务器**应该**存储这个新的 QoS 值为 0 的消息作为该主题新的保留消息，但是**可以**在任何时候丢弃他。如果服务器丢弃了该消息，该主题下将没有保留消息。
+
+如果主题下的保留消息过期，他将会被丢弃且主题下将没有保留消息。
+
+服务器向已经建立的连接转发的应用消息中保留消息的值是由订阅选项中的保留消息引用发布选项决定的。参考 [3.8.3.1](#3-8-3-1-订阅选项) 了解关于订阅选项的定义。
+
+- <span class="vcMarked">如果保留消息引用发布的值为 0，服务器**必须**在转发应用消息时将保留消息值置为 0，无论其收到的 PUBLISH 包中的保留消息值如何设置</span> <span class="vcReferred">[MQTT-3.3.1-12]</span>。
+- <span class="vcMarked">如果保留消息引用发布的值为 1，服务器**必须**使用和收到的 PUBLISH 包中保留消息值相同的保留消息值</span> <span class="vcReferred">[MQTT-3.3.1-13]</span>。
+
+*非规范性评论*
+
+*当发布者不规律的发布状态消息时，保留消息非常有用。新的非共享订阅者会受到最新的状态。*
+
+#### 3.3.1.4 剩余长度
+
+剩余长度是 `变长整数`，表示可变头与载荷的总长度。
+
+### 3.3.2 PUBLISH可变头
+
+PUBLISH 可变头按顺序包含下列字段：主题名称，包ID，属性集。属性集的编码规则参考 [2.2.2](#2-2-2-属性集)。
+
+#### 3.3.2.1 主题名称
+
+主题名称决定了载荷发布的信息通道。
+
+<span class="vcMarked">主题名称**必须**作为 PUBLISH 包可变头的第一个字段。他**必须**采用`UTF-8字符串`编码</span>，定义参考 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.3.2-1]</span>。
+
+<span class="vcMarked">PUBLISH 包中的主题名称**必须不**包含通配符</span> <span class="vcReferred">[MQTT-3.3.2-2]</span>。
+
+<span class="vcMarked">服务器发往客户端的 PUBLISH 包中的主题名称必须匹配订阅者的主题过滤器</span>，匹配流程参考 [4.7](#4-7-主题名和主题过滤器) <span class="vcReferred">[MQTT-3.3.2-3]</span>。然而，考虑到服务器允许进行主题名称映射，转发的 PUBLISH 包的主题名称可以与原始 PUBLISH 包的主题名称不同。
+
+为了减少 PUBLISH 包的尺寸，发送者可以使用主题别名。主题别名的描述参考 [3.3.2.3.4](#3-3-2-3-4-主题别名)。主题名称长度为 0 且没有主题别名视为协议错误。
+
+#### 3.3.2.2 包ID
+
+仅当 QoS 等级为 1 或 2 的 PUBLISH 包中存在包ID字段，章节 [2.2.1](#2-2-1-包ID) 提供了更多关于包ID的信息。
+
+#### 3.3.2.3 PUBLISH属性集
+
+##### 3.3.2.3.1 属性长度
+
+属性长度是变长整数编码的表示 PUBLISH 中属性集长度的值。
+
+##### 3.3.2.3.2 载荷格式标识
+
+载荷格式标识的属性ID是**1 (0x01) Byte**。
+
+随后跟随的值表示载荷格式，二选其一：
+
+- 0（0x00）Byte 表示载荷格式未指定，等同于没有发送载荷格式字段。
+- 1（0x01）Byte 表示载荷是UTF-8编码的字符数据。载荷中的UTF-8数据**必须**是编码良好的UTF-8格式，符合 [Unicode](#1.3-Unicode) 规范和 [RFC3629](#1.3-RFC3629)。
+
+<span class="vcMarked">服务器**必须**将载荷格式标识原封不动的发送给所有应用消息的接收者</span> <span class="vcReferred">[MQTT-3.3.2-4]</span>。接收者**可以**验证载荷是否和更是标志匹配，当不匹配时，发送带有原因码 0x99（载荷格式错误）的 PUBACK、PUBREC 或 DISCONNECT，参考 [4.13](#4-13-错误处理)。参考 [5.4.9](#5-4-9-处理禁止的Unicode码段) 了解关于验证载荷格式的安全建议。
+
+##### 3.3.2.3.3 消息过期间隔
+
+载荷格式标识的属性ID是**2 (0x02) Byte**。
+
+随后跟随 `4字节整数`，表示消息过期间隔。
+
+<span class="vcMarked">当该字段存在时，此四字节的值表示以秒为单位的应用消息生命时间。如果消息过期间隔已经超时，且服务器尚未设法开始向前传递到匹配的订阅者，服务器**必须**删除面向该订阅者的该消息的副本</span> <span class="vcReferred">[MQTT-3.3.2-5]</span>。
+
+如果该字段不存在，应用消息不会过期。
+
+<span class="vcMarked">客户端发送给服务器的 PUBLISH 包中的消息过期间隔**必须**被设置为服务器接收的消息过期间隔的值减去消息在服务器中等待的时间</span> <span class="vcReferred">[MQTT-3.3.2-6]</span>。参考 [4.1](#4-1-会话状态) 了解关于存储状态的更多细节和限制。
+
+##### 3.3.2.3.4 主题别名
+
+主题别名的属性ID是**35 (0x23) Byte**。
+
+随后跟随 `2字节整数` 表示主题别名的值。主题别名在属性集中出现超过一次视为协议错误。
+
+主题别名是一个用于替代主题名来区分主题的整数值。使用主题别名可以减少 PUBLISH 包的尺寸，主题别名在主题名较长且同一个主题名被反复使用的网络连接中有很大作用。
+
+发送者可以决定是否使用主题别名，以及主题别名的值。他在 PUBLISH 包中创建了一个非零长度主题名和主题别名值的映射。接收者正常处理 PUBLISH 包，但需要同样添加该主题别名到主题名的映射。
+
+一旦接收者设置了主题别名的映射，发送者可以发送包含主图别名的 PUBLISH 包，其中主题名可以为零长度。接收者将按照其中包含正常主题名的方式对待此 PUBLISH 包。
+
+发送者可以在同一网络连接中通过再次发送一个带有相同的主题别名和不同的主题名 PUBLISH 包的方式改变主题别名的映射。
+ 
+主题别名映射仅在单次网络连接中存在，其生命周期等同于网络连接的生命周期。<span class="vcMarked">接收者**必须不**能将主题别名从一个网络连接转发到另一个网络连接</span> <span class="vcReferred">[MQTT-3.3.2-7]</span>。
+
+主题别名的值不可为 0。<span class="vcMarked">发送者**必须不**能发送一个包含主题别名值为 0 的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.3.2-8]</span>。
+
+<span class="vcMarked">客户端**必须不**发送包含主题别名值超过服务器 CONNACK 中设置的主题别名最大值的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.3.2-9]</span>。<span class="vcMarked">客户端**必须**接收所有大于 0 且小于或等于其 CONNECT 包中设置的主题别名最大值的主题别名</span> <span class="vcReferred">[MQTT-3.3.2-10]</span>。
+
+<span class="vcMarked">服务器**必须不**发送包含主题别名值超过客户端 CONNECT 包中设置的主题别名最大值的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.3.2-11]</span>。<span class="vcMarked">服务器**必须**接收所有大于 0 且小于等于其 CONNACK 包中设置的主题别名最大值的主题别名</span> <span class="vcReferred">[MQTT-3.3.2-12]</span>。
+
+客户端和服务器使用的主题别名映射是互相独立的。因此，当一个客户端发送的 PUBLISH 包中的主题别名为 1，同时服务器发送的 PUBLISH 包中的主题别名也为 1 一般来说引用了不同的主题。
+
+##### 3.3.2.3.5 响应主题
+
+响应主题的属性ID是**8 (0x08) Byte**。
+
+随后跟随 `UTF-8字符串` 作为响应消息的主题名。<span class="vcMarked">响应主题**必须**使用 `UTF-8字符串` 格式</span>，其定义参考 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.3.2-13]</span>。<span class="vcMarked">响应主题**必须不**包含通配符</span> <span class="vcReferred">[MQTT-3.3.2-14]</span>。响应主题在属性集中出现超过一次视为协议错误。响应主题的出现表示该消息是一个请求。
+
+参考 [4.10](#4-10-请求-响应) 了解更多关于 请求/响应 的信息。
+
+<span class="vcMarked">服务器**必须**向所有接收该应用消息的订阅者原封不动的转发响应主题</span> <span class="vcReferred">[MQTT-3.3.2-15]</span>。
+
+*非规范性评论*
+
+*带有响应主题的应用消息的接收者通过使用响应主题作为 PUBLISH 的主题名称来发送响应。如果请求消息包含关联数据，则响应方还应该将该关联数据作为响应消息的 PUBLISH 数据包中的属性。*
+
+##### 3.3.2.3.6 关联数据
+
+关联数据的属性ID是**9 (0x09) Byte**。
+
+随后跟随 `二进制数据`。关联数据是由发送方添加在请求消息里，用于在响应消息中确定响应消息和请求消息的关联关系。关联数据在属性集中出现超过一次视为协议错误。如果没有设置关联数据，表示请求者无需任何关联数据。
+
+<span class="vcMarked">服务器**必须**将关联数据原封不动的转发给接收应用消息的订阅者</span> <span class="vcReferred">[MQTT-3.3.2-16]</span>。关联数据的值仅对请求的发送者和响应的接收者有意义。
+
+*非规范性评论*
+
+*接受了包含响应主题和关联数据的应用消息的接收者，通过响应主题发送 PUBLISH 包作为响应。同时也应该在响应的 PUBLISH 包中原封不动的设置关联数据。*
+
+*非规范性评论*
+
+*如果响应中的关联数据内容改变会导致应用程序故障，那么此数据应该通过加密、哈希等手段来确保其改变可以被监测。*
+
+参考 [4.10](#4-10-请求-响应) 了解更多关于 请求/响应 的信息。
+
+##### 3.3.2.3.7 用户属性
+
+用户属性的属性ID是**38 (0x26) Byte**。
+
+随后跟随 `UTF-8字符串对`。用户属性可以出现多次，用来携带多个 键-值 对。同样的 键 允许出现超过一次。
+
+<span class="vcMarked">服务器**必须**将 PUBLISH 包中的所有用户属性原封不动的转发给客户端</span> <span class="vcReferred">[MQTT-3.3.2-17]</span>。<span class="vcMarked">服务器**必须**在转发应用消息时维护用户属性的顺序</span> <span class="vcReferred">[MQTT-3.3.2-18]</span>。
+
+*非规范性评论*
+
+*该属性旨在提供一种传输应用层键-值对的方法，其含义和解释只有负责发送和接收它们的应用程序了解。*
+
+##### 3.3.2.3.8 订阅ID
+
+订阅ID的属性ID是**11 (0x0B) Byte**。
+
+随后跟随 `变长整数` 表示订阅动作的ID。
+
+订阅ID的取值范围是 1 到 268435455。订阅ID的值为0视为协议错误。如果本次发布是匹配了多次重复订阅的发布，属性集中出现多次订阅ID也是合理的，此种情况下他们的顺序不重要。
+
+##### 3.3.2.3.9 内容类型
+
+内容类型的属性ID是**3 (0x03) Byte**。
+
+随后跟随 `UTF-8字符串` 描述了应用消息的内容类型。<span class="vcMarked">内容类型**必须**是 `UTF-8字符串` 格式</span>，其定义参考 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.3.2-19]</span>。
+
+内容格式在属性集中出现超过一次视为协议错误。内容格式的值由发送方和接收方定义。
+
+<span class="vcMarked">服务器**必须**将内容格式原封不动的转发给所有接收应用消息的订阅者</span> <span class="vcReferred">[MQTT-3.3.2-20]</span>。
+
+*非规范性评论*
+
+*这个UTF-8编码的字符串可以使用 MIME 类型字符串来描述应用消息的类型。当然，由于该字段由发送方和接收方负责定义和解释，MQTT不会检查该字段的内容或格式。*
+
+*非规范性示例*
+
+*图 3-9 展示了一个 PUBLISH 包的例子，其主题名为 “a/b”，其包ID为10，且没有属性集。*
+
+图 3-9 PUBLISH 包可变头非规范性示例
+
+<table>
+  <thead>
+    <tr>
+      <td></td><td>描述</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="10">主题名称</td>
+    </tr>
+    <tr>
+      <td>byte 1</td><td>长度高位（MSB）（0）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+    </tr>
+    <tr>
+      <td>byte 2</td><td>长度低位（LSB）（3）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td>
+    </tr>
+    <tr>
+      <td>byte 3</td><td>'a'（0x61）</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+#### 3.8.3.1 订阅选项
 
 # 4 操作行为
 
