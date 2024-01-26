@@ -36,6 +36,10 @@ tags:
     .vcReferred {
       color: var(--vc-referred);
     }
+    .vcTrans {
+      font-size: 0.8rem;
+      font-style: italic;
+    }
   </style>
 </head>
 
@@ -219,7 +223,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
       - 3.1.3.5 [用户名](#3-1-3-5-用户名)
       - 3.1.3.6 [密码](#3-1-3-6-密码)
     - 3.1.4 [CONNECT动作](#3-1-4-CONNECT动作)
-  - 3.2 [CONNACK – 连接回复](#3-2-CONNACK-–-连接回复)
+  - 3.2 [CONNACK - 连接回复](#3-2-CONNACK-连接回复)
     - 3.2.1 [CONNACK固定头](#3-2-1-CONNACK固定头)
     - 3.2.2 [CONNACK可变头](#3-2-2-CONNACK可变头)
       - 3.2.2.1 [连接回复标识](#3-2-2-1-连接回复标识)
@@ -245,7 +249,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.2.2.3.17 [认证方式](#3-2-2-3-17-认证方式)
         - 3.2.2.3.18 [认证数据](#3-2-2-3-18-认证数据)
     - 3.2.3 [CONNACK载荷](#3-2-3-CONNACK载荷)
-  - 3.3 [PUBLISH – 发布消息](#3-3-PUBLISH-发布消息)
+  - 3.3 [PUBLISH - 发布消息](#3-3-PUBLISH-发布消息)
     - 3.3.1 [PUBLISH 固定头](#3-3-1-PUBLISH-固定头)
       - 3.3.1.1 [重复标识](#3-3-1-1-重复标识)
       - 3.3.1.2 [QoS](#3-3-1-2-QoS)
@@ -266,7 +270,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.3.2.3.9 [内容类型](#3-3-2-3-9-内容类型)
     - 3.3.3 [PUBLISH载荷](#3-3-3-PUBLISH载荷)
     - 3.3.4 [PUBLISH动作](#3-3-4-PUBLISH动作)
-  - 3.4 [PUBACK – 发布回复](#3-4-PUBACK-–-发布回复)
+  - 3.4 [PUBACK - 发布回复](#3-4-PUBACK-发布回复)
     - 3.4.1 [PUBACK固定头](#3-4-1-PUBACK固定头)
     - 3.4.2 [PUBACK可变头](#3-4-2-PUBACK可变头)
       - 3.4.2.1 [PUBACK原因码](#3-4-2-1-PUBACK原因码)
@@ -276,7 +280,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.4.2.2.3 [用户属性](#3-4-2-2-3-用户属性)
     - 3.4.3 [PUBACK载荷](#3-4-3-PUBACK载荷)
     - 3.4.4 [PUBACK动作](#3-4-4-PUBACK动作)
-  - 3.5 [PUBREC – 发布签收（QoS 2 交付第一部分）](#3-5-PUBREC-–-发布签收（QoS-2-交付第一部分）)
+  - 3.5 [PUBREC - 发布签收（QoS 2 交付第一部分）](#3-5-PUBREC-发布签收（QoS-2-交付第一部分）)
     - 3.5.1 [PUBREC固定头](#3-5-1-PUBREC固定头)
     - 3.5.2 [PUBREC可变头](#3-5-2-PUBREC可变头)
       - 3.5.2.1 [PUBREC原因码](#3-5-2-1-PUBREC原因码)
@@ -286,7 +290,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.5.2.2.3 [用户属性](#3-5-2-2-3-用户属性)
     - 3.5.3 [PUBREC载荷](#3-5-3-PUBREC载荷)
     - 3.5.4 [PUBREC动作](#3-5-4-PUBREC动作)
-  - 3.6 [PUBREL – 发布释放（QoS-2-交付第二部分）](#3-6-PUBREL-–-发布释放（QoS-2-交付第二部分）)
+  - 3.6 [PUBREL - 发布释放（QoS-2-交付第二部分）](#3-6-PUBREL-发布释放（QoS-2-交付第二部分）)
     - 3.6.1 [PUBREL固定头](#3-6-1-PUBREL固定头)
     - 3.6.2 [PUBREL可变头](#3-6-2-PUBREL可变头)
       - 3.6.2.1 [PUBREL原因码](#3-6-2-1-PUBREL原因码)
@@ -296,7 +300,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.6.2.2.3 [用户属性](#3-6-2-2-3-用户属性)
     - 3.6.3 [PUBREL载荷](#3-6-3-PUBREL载荷)
     - 3.6.4 [PUBREL动作](#3-6-4-PUBREL动作)
-  - 3.7 [PUBCOMP – 发布完成（QoS-2-交付第三部分）](#3-7-PUBCOMP-–-发布完成（QoS-2-交付第三部分）)
+  - 3.7 [PUBCOMP - 发布完成（QoS-2-交付第三部分）](#3-7-PUBCOMP-发布完成（QoS-2-交付第三部分）)
     - 3.7.1 [PUBCOMP固定头](#3-7-1-PUBCOMP固定头)
     - 3.7.2 [PUBCOMP可变头](#3-7-2-PUBCOMP可变头)
       - 3.7.2.1 [PUBCOMP原因码](#3-7-2-1-PUBCOMP原因码)
@@ -316,31 +320,31 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 3.8.3 [SUBSCRIBE载荷](#3-8-3-SUBSCRIBE载荷)
       - 3.8.3.1 [订阅选项](#3-8-3-1-订阅选项)
     - 3.8.4 [SUBSCRIBE动作](#3-8-4-SUBSCRIBE动作)
-  - 3.9 SUBACK – Subscribe acknowledgement
-    - 3.9.1 SUBACK Fixed Header
-    - 3.9.2 SUBACK Variable Header
-      - 3.9.2.1 SUBACK Properties
-        - 3.9.2.1.1 Property Length
-        - 3.9.2.1.2 Reason String
-        - 3.9.2.1.3 User Property
-    - 3.9.3 SUBACK Payload
-  - 3.10 UNSUBSCRIBE – Unsubscribe request
-    - 3.10.1 UNSUBSCRIBE Fixed Header
-    - 3.10.2 UNSUBSCRIBE Variable Header
-      - 3.10.2.1 UNSUBSCRIBE Properties
-        - 3.10.2.1.1 Property Length
-        - 3.10.2.1.2 User Property
-    - 3.10.3 UNSUBSCRIBE Payload
-    - 3.10.4 UNSUBSCRIBE Actions
-  - 3.11 UNSUBACK – Unsubscribe acknowledgement
-    - 3.11.1 UNSUBACK Fixed Header
-    - 3.11.2 UNSUBACK Variable Header
-      - 3.11.2.1 UNSUBACK Properties
-        - 3.11.2.1.1 Property Length
-        - 3.11.2.1.2 Reason String
-        - 3.11.2.1.3 User Property
-    - 3.11.3 UNSUBACK Payload
-  - 3.12 PINGREQ – PING request
+  - 3.9 [SUBACK - 订阅回复](#3-9-SUBACK-–-订阅回复)
+    - 3.9.1 [SUBACK固定头](#3-9-1-SUBACK固定头)
+    - 3.9.2 [SUBACK可变头](#3-9-2-SUBACK可变头)
+      - 3.9.2.1 [SUBACK属性集](#3-9-2-1-SUBACK属性集)
+        - 3.9.2.1.1 [属性长度](#3-9-2-1-1-属性长度)
+        - 3.9.2.1.2 [原因字符串](#3-9-2-1-2-原因字符串)
+        - 3.9.2.1.3 [用户属性](#3-9-2-1-3-用户属性)
+    - 3.9.3 [SUBACK载荷](#3-9-3-SUBACK载荷)
+  - 3.10 [UNSUBSCRIBE - 取消订阅请求](#3-10-UNSUBSCRIBE-取消订阅请求)
+    - 3.10.1 [UNSUBSCRIBE固定头](#3-10-1-UNSUBSCRIBE固定头)
+    - 3.10.2 [UNSUBSCRIBE可变头](#3-10-2-UNSUBSCRIBE可变头)
+      - 3.10.2.1 [UNSUBSCRIBE属性集](#3-10-2-1-UNSUBSCRIBE属性集)
+        - 3.10.2.1.1 [属性长度](#3-10-2-1-1-属性长度)
+        - 3.10.2.1.2 [用户属性](#3-10-2-1-2-用户属性)
+    - 3.10.3 [UNSUBSCRIBE载荷](#3-10-3-UNSUBSCRIBE载荷)
+    - 3.10.4 [UNSUBSCRIBE动作](#3-10-4-UNSUBSCRIBE动作)
+  - 3.11 [UNSUBACK - 取消订阅回复](#3-11-UNSUBACK-取消订阅回复)
+    - 3.11.1 [UNSUBACK固定头](#3-11-1-UNSUBACK固定头)
+    - 3.11.2 [UNSUBACK可变头](#3-11-2-UNSUBACK可变头)
+      - 3.11.2.1 [UNSUBACK属性集](#3-11-2-1-UNSUBACK属性集)
+        - 3.11.2.1.1 [属性长度](#3-11-2-1-1-属性长度)
+        - 3.11.2.1.2 [原因字符串](#3-11-2-1-2-原因字符串)
+        - 3.11.2.1.3 [用户属性](#3-11-2-1-3-用户属性)
+    - 3.11.3 [UNSUBACK载荷](#3-11-3-UNSUBACK载荷)
+  - 3.12 [PINGREQ - PING请求](#3-12-PINGREQ-PING请求)
     - 3.12.1 PINGREQ Fixed Header
     - 3.12.2 PINGREQ Variable Header
     - 3.12.3 PINGREQ Payload
@@ -395,7 +399,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
     - 4.7.3 Topic semantic and usage
   - 4.8 [订阅](#4-8-订阅)
     - 4.8.1 Non‑shared Subscriptions
-    - 4.8.2 Shared Subscriptions
+    - 4.8.2 [共享订阅](#4-8-2-共享订阅)
   - 4.9 [流量控制](#4-9-流量控制)
   - 4.10 [请求 / 响应](#4-10-请求-响应)
     - 4.10.1 Basic Request Response (non-normative)
@@ -2037,7 +2041,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
  
 *如果客户端在认证完成前就发送了过多的数据，服务器可以限制从网络连接读取数据或关闭网络连接。建议将此作为避免拒绝服务攻击的一种方法。*
 
-## 3.2 CONNACK – 连接回复
+## 3.2 CONNACK - 连接回复
 
 CONNACK 包是由服务器发送用来响应客户端发送的 CONNECT 包的MQTT包。<span class="vcMarked">服务器**必须**在发送除 AUTH 外的其他任何MQTT包之前使用带有响应码 0x00（成功）的 CONNACK 包回复客户端</span> <span class="vcReferred">[MQTT-3.2.0-1]</span>。<span class="vcMarked">服务器**必须**不在一次网络连接中发送超过一个 CONNACK 包</span> <span class="vcReferred">[MQTT-3.2.0-2]</span>。
 
@@ -2665,7 +2669,7 @@ PUBLISH 包的接收者基于QoS等级的动作描述参考 [4.3](#4-3-QoS和协
 
 *服务器可以选择在其停发 QoS 1 和 QoS 2 的 PUBLISH 包时，同时停发 QoS 0 的 PUBLISH 包。*
 
-## 3.4 PUBACK – 发布回复
+## 3.4 PUBACK - 发布回复
 
 PUBACK 包是 QoS 1 的 PUBLISH 包的响应。
 
@@ -2754,7 +2758,7 @@ PUBACK 包没有载荷。
 
 这部分在 [4.3.2](#4-3-2-Qos-1：至少一次) 中描述。
 
-## 3.5 PUBREC – 发布签收（QoS 2 交付第一部分）
+## 3.5 PUBREC - 发布签收（QoS 2 交付第一部分）
 
 PUBREC 包是对 QoS 2 的 PUBLISH 包的响应。这是 QoS 2 协议交换的第二个包。
 
@@ -2819,7 +2823,7 @@ PUBREC 可变头按序包括下列字段：对应 PUBLISH 包的包ID、PUBREC �
 
 ##### 3.5.2.2.1 属性长度
 
-属性长度使采用 `变长整数` 编码的 PUBREC 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
+属性长度是采用 `变长整数` 编码的 PUBREC 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
 
 ##### 3.5.2.2.2 原因字符串
 
@@ -2843,7 +2847,7 @@ PUBREC 包没有载荷。
 
 这部分在 [4.3.3](#4-3-3-Qos-2：确保一次) 中描述。
 
-## 3.6 PUBREL – 发布释放（QoS 2 交付第二部分）
+## 3.6 PUBREL - 发布释放（QoS 2 交付第二部分）
 
 PUBREL 包是对 PUBREC 包的响应。这是 QoS 2 协议交换的第三个包。
 
@@ -2904,7 +2908,7 @@ PUBREL 可变头按序包括下列字段：对应 PUBLISH 包的包ID、PUBREL �
 
 ##### 3.6.2.2.1 属性长度
 
-属性长度使采用 `变长整数` 编码的 PUBREL 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
+属性长度是采用 `变长整数` 编码的 PUBREL 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
 
 ##### 3.6.2.2.2 原因字符串
 
@@ -2928,7 +2932,7 @@ PUBREL 包没有载荷。
 
 这部分在 [4.3.3](#4-3-3-Qos-2：确保一次) 中描述。
 
-## 3.7 PUBCOMP – 发布完成（QoS 2 交付第三部分）
+## 3.7 PUBCOMP - 发布完成（QoS 2 交付第三部分）
 
 PUBCOMP 包是对 PUBREL 包的响应。这是 QoS 2 协议交换的第四个包，也是最后一个包。
 
@@ -2986,7 +2990,7 @@ PUBREL 可变头按序包括下列字段：对应 PUBLISH 包的包ID、PUBCOMP 
 
 ##### 3.7.2.2.1 属性长度
 
-属性长度使采用 `变长整数` 编码的 PUBCOMP 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
+属性长度是采用 `变长整数` 编码的 PUBCOMP 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
 
 ##### 3.7.2.2.2 原因字符串
 
@@ -3029,7 +3033,7 @@ SUBSCRIBE 包由客户端发送到服务器，用来创建一个或多个订阅�
   </tbody>
 </table>
 
-<span class="vcMarked">PUBREL 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接</span> <span class="vcReferred">[MQTT-3.8.1-1]</span>。
+<span class="vcMarked">SUBSCRIBE 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接</span> <span class="vcReferred">[MQTT-3.8.1-1]</span>。
 
 **剩余长度**
 
@@ -3061,7 +3065,7 @@ SUBSCRIBE 可变头按序包括下列字段：包ID、属性集。[2.2.1](#2-2-1
 
 ##### 3.8.2.1.1 属性长度
 
-属性长度使采用 `变长整数` 编码的 SUBSCRIBE 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
+属性长度是采用 `变长整数` 编码的 SUBSCRIBE 可变头中的属性集长度。如果剩余长度的值小于 4，表示没有属性长度字段，其值视为 0。
 
 ##### 3.8.2.1.2 订阅ID
 
@@ -3209,23 +3213,304 @@ NL 表示非本地。
 
 *采用 QoS 2 订阅一个主题过滤器等同于宣布“我将使用该主题下所有发布消息的原始 QoS 值来接收消息”。这意味着发送者有责任决定被转发的应用消息的最大QoS等级，但是订阅者可以要求服务器将QoS降级到更适合其使用的级别。*
 
-The Subscription Identifiers are part of the Session State in the Server and are returned to the Client receiving a matching PUBLISH packet. They are removed from the Server’s Session State when the Server receives an UNSUBSCRIBE packet, when the Server receives a SUBSCRIBE packet from the Client for the same Topic Filter but with a different Subscription Identifier or with no Subscription Identifier, or when the Server sends Session Present 0 in a CONNACK packet.
+订阅ID是服务器中会话状态的一部分，并在接收到匹配的 PUBLISH 包时在转发时返回给客户端。订阅ID在下面三种情况下被删除或修改：当服务器接收到 UNSUBSCRIBE 包时，当服务器再次收到相同主题过滤器的 SUBSCRIBE 包，其中订阅ID不同或未设置时，当服务器发送 CONNACK，其中的会话展示值为 0 时。
 
-The Subscription Identifiers do not form part of the Client’s Session State in the Client. In a useful implementation, a Client will associate the Subscription Identifiers with other Client side state, this state is typically removed when the Client unsubscribes, when the Client subscribes for the same Topic Filter with a different identifier or no identifier, or when the Client receives Session Present 0 in a CONNACK packet.
+订阅ID并非是客户端会话状态的一部分。在一个有用的实现中，客户端会将订阅ID关联到其他的客户端侧状态，这个状态一般会在下面三种情况下被删除或修改：客户端取消订阅时，客户端再次订阅相同主题但使用不同的订阅ID或不使用订阅ID时，客户端接收到 CONNACK，且其中会话展示值为 0 时。
 
-The Server need not use the same set of Subscription Identifiers in the retransmitted PUBLISH packet. The Client can remake a Subscription by sending a SUBSCRIBE packet containing a Topic Filter that is identical to the Topic Filter of an existing Subscription in the current Session. If the Client remade a subscription after the initial transmission of a PUBLISH packet and used a different Subscription Identifier, then the Server is allowed to use the identifiers from the first transmission in any retransmission. Alternatively, the Server is allowed to use the new identifiers during a retransmission. The Server is not allowed to revert to the old identifier after it has sent a PUBLISH packet containing the new one.
+服务器不需要在重传的 PUBLISH 数据包中使用相同的订阅标识符集。 客户端可以通过发送包含主题过滤器的订阅数据包来重新创建订阅，该主题过滤器与当前会话中现有订阅的主题过滤器相同。 如果客户端在首次传输 PUBLISH 数据包后重新进行订阅并使用不同的订阅标识符，则允许服务器在任何重传中使用第一次传输中的标识符。 或者，允许服务器在重传期间使用新的标识符。 服务器在发送包含新标识符的 PUBLISH 数据包后，不允许恢复为旧标识符。
 
-Non-normative comment
+服务器无需在重传 PUBLISH 时保持相同的订阅ID。客户端可以通过发送和现有会话中订阅的主题过滤器完全相同的 SUBSCRIBE 包来重新订阅。如果客户端在服务器发送某个 PUBLISH 包后重新订阅了该主题并使用了不同的订阅ID，服务器可以使用第一次发送 PUBLISH 包时使用的订阅ID来进行重传。或者，服务器也可以使用新的订阅ID进行重传。但是服务器不允许在使用新的订阅ID发送 PUBLISH 包后再使用旧的订阅ID。
 
-Usage scenarios, for illustration of Subscription Identifiers.
+*非规范性评论*
 
-·         The Client implementation indicates via its programming interface that a publication matched more than one subscription. The Client implementation generates a new identifier each time a subscription is made. If the returned publication carries more than one Subscription Identifier, then the publication matched more than one subscription.
+*用于说明订阅ID的使用场景*
 
-·         The Client implementation allows the subscriber to direct messages to a callback associated with the subscription. The Client implementation generates an identifier which uniquely maps the identifier to the callback. When a publication is received it uses the Subscription Identifier to determine which callback is driven.
+- *客户端实现可以通过其编程接口意识到收到的某一次发布可能与其多次订阅匹配。客户端实现在每次订阅时创建一个新的订阅ID。当返回的发布消息携带多个订阅ID时，表示该消息匹配了多次订阅。*
 
-·         The Client implementation returns the topic string used to make the subscription to the application when it delivers the published message. To achieve this the Client generates an identifier which uniquely identifies the Topic Filter. When a publication is received the Client implementation uses the identifiers to look up the original Topic Filters and return them to the Client application.
+- *客户端实现可以在订阅中让订阅者将消息指向某个回调。客户端实现创建唯一的订阅ID并将其映射到回调。当收到发布时使用其中携带的订阅ID来决定调用哪个回调。*
 
-·         A gateway forwards publications received from a Server to Clients that have made subscriptions to the gateway. The gateway implementation maintains a map of each unique Topic Filter it receives to the set of ClientID, Subscription Identifier pairs that it also received. It generates a unique identifier for each Topic Filter that it forwards to the Server. When a publication is received, the gateway uses the Subscription Identifiers it received from the Server to look up the Client Identifier, Subscription Identifier pairs associated with them. It adds these to the PUBLISH packets it sends to the Clients. If the upstream Server sent multiple PUBLISH packets because the message matched multiple subscriptions, then this behavior is mirrored to the Clients.
+- *客户端实现可以在收到发布消息时返回订阅该消息的主题字符串。为了实现这一点，客户端生成一个唯一订阅ID和主题过滤器匹配。当收到应用消息时，客户都安时间使用订阅ID查找到原始的主题字符串，并返回给客户端应用程序。*
+
+- *网关将从服务器接收到的发布转发到已订阅网关的客户端时。网关实现可以维护一个包含客户端ID到订阅ID的映射。网关为其转发到服务器的每个主题过滤器生成唯一ID。当收到发布消息时，网关查找其收到的订阅ID用以匹配客户端ID。并将客户端ID添加到发送给客户端的 PUBLISH 包中。如果上游服务器因为消息匹配多个订阅而发送多个 PUBLISH 数据包，则此行为将镜像到客户端。*
+
+## 3.9 SUBACK - 订阅回复
+
+SUBACK 包由服务器发往客户端，用以确认 SUBSCRIBE 包的接收和处理。
+
+SUBACK 包包含一个原因码列表，其内容是对 SUBSCRIBE 中每个订阅请求的答复，要么是分配的最大QoS值，要么是错误返回。
+
+### 3.9.1 SUBACK固定头
+
+*图 3-22 SUBACK包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（9）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+**剩余长度**
+
+表示可变头和载荷的长度，采用 `变长整数` 编码。
+
+### 3.9.2 SUBACK可变头
+
+SUBACK 可变头按序包括下列字段：对应 SUBSCRIBE 包的包ID，属性集。
+
+#### 3.9.2.1 SUBACK属性集
+
+##### 3.9.2.1.1 属性长度
+
+属性长度是采用 `变长整数` 编码的 SUBACK 可变头中的属性集长度。
+
+##### 3.9.2.1.2 原因字符串
+
+原因字符串的属性ID是**31 (0x1F) Byte**。
+
+随后跟随 `UTF-8字符串` 表示此响应关联的原因。原因字符串是人类可读的用于诊断故障的字符串，**不应该**被接收方解析。
+
+服务器使用此字段向客户端传递额外的信息。<span class="vcMarked">如果添加此字段会导致 SUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段</span> <span class="vcReferred">[MQTT-3.9.2-1]</span>。原因字符串在属性集中出现超过一次视为协议错误。
+
+##### 3.9.2.1.3 用户属性
+
+用户属性的属性ID是**38 (0x26) Byte**。
+
+随后跟随 `UTF-8字符串对`。这个属性可以用于提供额外的诊断信息或者其他信息。<span class="vcMarked">如果添加此字段会导致 SUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段</span> <span class="vcReferred">[MQTT-3.9.2-2]</span>。用户属性可以出现多次用以发送多个键-值对。同样的键允许出现超过一次。
+
+图 3‑23 SUBACK 包可变头
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="8">包ID高位（MSB）</td></tr>
+    <tr><td>byte 2</td><td colspan="8">包ID低位（LSB）</td></tr>
+  </tbody>
+</table>
+
+<span class="vcTrans">译者认为这里缺失了属性长度</span>
+
+### 3.9.3 SUBACK载荷
+
+载荷中包含一组原因码列表。每个原因码回复 SUBSCRIBE 包中一个对应的主题过滤器。<span class="vcMarked">SUBACK 中原因码的顺序**必须**与 SUBSCRIBE 中主题过滤器的顺序匹配</span> <span class="vcReferred">[MQTT-3.9.3-1]</span>。
+
+表 3‑8 - 订阅原因码
+
+| 值 | Hex | 原因码名 | 描述 |
+| --- | --- | --- | --- |
+| 0 | 0x00 | 授予 QoS 0 | 订阅已被接收，向其发送的最大 QoS 值为 0。这个值可能会小于其请求时的值。 |
+| 1 | 0x01 | 授予 QoS 1 | 订阅已被接收，向其发送的最大 QoS 值为 1。这个值可能会小于其请求时的值。 |
+| 2 | 0x02 | 授予 QoS 2 | 订阅已被接收，服务器接收到的所有 QoS 值都会向其转发。 |
+| 128 | 0x80 | 未指定错误 | 订阅未被接收，服务器不愿透露原因或其他原因码不匹配。 |
+| 131 | 0x83 | 特定实现错误 | SUBSCRIBE 合法，但服务器未接收。 |
+| 135 | 0x87 | 未经授权 | 客户端未被授予创建此订阅的权力。 |
+| 143 | 0x8F | 主题过滤器不可用 | 主题过滤器格式正确，但不允许此客户端使用。 |
+| 145 | 0x91 | 包ID已被使用 | 所选的包ID已经在使用中。 |
+| 151 | 0x97 | 超限 | 超过了实现或管理员规定的限制。 |
+| 158 | 0x9E | 不支持共享订阅 | 服务器对此客户端不支持共享订阅。 |
+| 161 | 0xA1 | 不支持订阅ID | 服务器不支持订阅ID；订阅未被接收。 |
+| 162 | 0xA2 | 不支持通配符订阅 | 服务器不支持通配符订阅；订阅未被接收。 |
+
+<span class="vcMarked">服务器发送的 SUBACK 包**必须**对每个收到的主题过滤器使用上表列出的原因码进行回复</span> <span class="vcReferred">[MQTT-3.9.3-2]</span>。
+
+*非规范性评论*
+ 
+*SUBSCRIBE 包中的每个订阅主题总是会有一个对应的原因码。如果原因码的内容不是针对某个订阅主题的（例如 0x91（包ID已被使用）），此原因码需要被设置到对每一个订阅主题的回复上。*
+
+## 3.10 UNSUBSCRIBE - 取消订阅请求
+
+UBSUBSCRIBE 包由客户端发往服务器，用来取消对主题的订阅。
+
+### 3.10.1 UNSUBSCRIBE固定头
+
+*图 3‑28 UNSUBSCRIBE固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（10）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+<span class="vcMarked">UNSUBSCRIBE 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接</span> <span class="vcReferred">[MQTT-3.10.1-1]</span>。
+
+**剩余长度**
+
+表示可变头（2 bytes）和载荷的长度，采用 `变长整数` 编码。
+
+### 3.10.2 UNSUBSCRIBE可变头
+
+UNSUBSCRIBE 可变头按序包括下列字段：包ID，属性集。[2.2.1](#2-2-1-包ID) 提供了更多关于包ID的信息。属性集的编码规则和描述参考 [2.2.2](#2-2-2-属性集)。
+
+#### 3.10.2.1 UNSUBSCRIBE属性集
+
+##### 3.10.2.1.1 属性长度
+
+属性长度是采用 `变长整数` 编码的 UNSUBSCRIBE 可变头中的属性集长度。
+
+##### 3.10.2.1.2 用户属性
+
+用户属性的属性ID是**38 (0x26) Byte**。
+
+随后跟随 `UTF-8字符串对`。
+
+用户属性可以出现多次用以发送多个键-值对。同样的键允许出现超过一次。
+
+*非规范性评论*
+
+*UNSUBSCRIBE 中的用户属性可以被客户端用来向服务器发送一些订阅依赖的属性。这意味着这些属性并非本规范定义的。*
+
+### 3.10.3 UNSUBSCRIBE载荷
+
+UNSUBSCRIBE 的载荷中包含着一组客户端希望取消订阅的主题过滤器列表。<span class="vcMarked">UNSUBSCRIBE 中的主题过滤器**必须**是 `UTF-8字符串`</span> <span class="vcReferred">[MQTT-3.10.3-1]</span>，其定义参考 [1.5.4](#1-5-4-UTF-8字符串)，这些字符串逐个排放。
+
+<span class="vcMarked">UNSUBSCRIBE 包的载荷中**必须**至少包含一个主题过滤器</span> <span class="vcReferred">[MQTT-3.10.3-2]</span>。不携带载荷的 UNSUBSCRIBE 包视为协议错误。参考 [4.13](#4-13-错误处理) 了解关于错误处理的信息。
+
+*非规范性示例*
+
+*图 3.30 展示了 UNSUBSCRIBE 载荷中包含两个主题过滤器的示例。第一个是“a/b”，第二个是 “c/d”。*
+
+图 3‑30 - 载荷字节格式非规范性示例
+
+<table>
+  <thead>
+    <tr><td></td><td>描述</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="10">主题过滤器</td></tr>
+    <tr><td>byte 1</td><td>长度高字节（MSB）（0）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td>长度低字节（LSB）（3）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+    <tr><td>byte 3</td><td>'a'（0x61）</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+    <tr><td>byte 4</td><td>'/'（0x2F）</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td>byte 5</td><td>'b'（0x62）</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+    <tr><td colspan="10">主题过滤器</td></tr>
+    <tr><td>byte 7</td><td>长度高字节（MSB）（0）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 8</td><td>长度低字节（LSB）（3）</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+    <tr><td>byte 9</td><td>'c'（0x63）</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+    <tr><td>byte 10</td><td>'/'（0x2F）</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    <tr><td>byte 11</td><td>'d'（0x64）</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+### 3.10.4 UNSUBSCRIBE动作
+
+<span class="vcMarked">服务器**必须**逐字符的核对 UNSUBSCRIBE 包中提供的主题过滤器（无论其是否包含通配符）是否与其持有的当前客户端的订阅相同。如果任何过滤器被精确匹配，那么其拥有的订阅**必须**被删除</span> <span class="vcReferred">[MQTT-3.10.4-1]</span>，除此之外没有额外处理。
+
+当服务器接收到 UNSUBSCRIBE 时：
+
+- <span class="vcMarked">服务器**必须**停止向该主题过滤器添加新的发往客户端的消息</span> <span class="vcReferred">[MQTT-3.10.4-2]</span>。
+- <span class="vcMarked">服务器**必须**完成匹配该主题过滤器的，且已经开始发往客户端的 QoS 1 和 QoS 2 消息的交付</span> <span class="vcReferred">[MQTT-3.10.4-3]</span>。
+- 服务器**可以**继续向客户端交付一些现有缓存中的消息。
+
+<span class="vcMarked">服务器**必须**使用 UNSUBACK 包响应 UNSUBSCRIBE 请求</span> <span class="vcReferred">[MQTT-3.10.4-4]</span>。<span class="vcMarked">UNSUBACK 包**必须**和 UNSUBSCRIBE 包有相同的包ID。即使没有主题订阅被删除，服务器也**必须**使用 UNSUBACK 回复</span> <span class="vcReferred">[MQTT-3.10.4-5]</span>。
+
+<span class="vcMarked">如果服务器收到的 UNSUBSCIRIBE 包包含有多个主题过滤器，服务器**必须**按序处理就如同他按序逐个收到了 UNSUBSCRIBE 包，唯一不同是服务器仅需要使用一个 UNSUBACK 回复</span> <span class="vcReferred">[MQTT-3.10.4-6]</span>。
+
+如果主题过滤器表示一个共享订阅，此会话需要被从共享订阅中移除。如果此会话是共享订阅关联的唯一一个会话，共享订阅需要被删除。参考 [4.8.2](#4-8-2-共享订阅) 了解关于共享订阅处理的描述。
+
+## 3.11 UNSUBACK - 取消订阅回复
+
+UNSUBACK 包由服务器发往客户端，用于确认 UNSUBSCRIBE 包的接收和处理。
+
+### 3.11.1 UNSUBACK固定头
+
+*图 3-31 UNSUBACK包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（11）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+**剩余长度字段**
+
+表示可变头和载荷的长度，采用 `变长整数` 编码。
+
+### 3.11.2 UNSUBACK可变头
+
+UNSUBACK 可变头按序包括下列字段：与其回复的 UNSUBSCRIBE 对应的包ID，属性集。属性集的编码规则和描述参考 [2.2.2](#2-2-2-属性集)。
+
+图 3-32 UNSUBACK 包可变头
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="8">包ID高位（MSB）</td></tr>
+    <tr><td>byte 2</td><td colspan="8">包ID低位（LSB）</td></tr>
+  </tbody>
+</table>
+
+<span class="vcTrans">译者认为这里缺失了属性长度</span>
+
+#### 3.11.2.1 UNSUBACK属性集
+
+##### 3.11.2.1.1 属性长度
+
+属性长度是采用 `变长整数` 编码的 UNSUBACK 可变头中的属性集长度。
+ 
+
+##### 3.11.2.1.2 原因字符串
+
+原因字符串的属性ID是**31 (0x1F) Byte**。
+
+随后跟随 `UTF-8字符串` 表示此响应关联的原因。原因字符串是人类可读的用于诊断故障的字符串，**不应该**被接收方解析。
+
+服务器使用此字段向客户端传递额外的信息。<span class="vcMarked">如果添加此字段会导致 UNSUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段</span> <span class="vcReferred">[MQTT-3.11.2-1]</span>。原因字符串在属性集中出现超过一次视为协议错误。
+
+
+##### 3.11.2.1.3 用户属性
+
+用户属性的属性ID是**38 (0x26) Byte**。
+
+随后跟随 `UTF-8字符串对`。这个属性可以用于提供额外的诊断信息或者其他信息。<span class="vcMarked">如果添加此字段会导致 UNSUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段</span> <span class="vcReferred">[MQTT-3.11.2-2]</span>。用户属性可以出现多次用以发送多个键-值对。同样的键允许出现超过一次。
+
+### 3.11.3 UNSUBACK载荷
+
+载荷带有一个原因码列表。每个原因码和 UNSUBSCRIBE 包中的一个主题过滤器对应。<span class="vcMarked">UNSUBACK 包中的原因码顺序**必须**和 UNSUBSCRIBE 包中的主题过滤器顺序一致</span> <span class="vcReferred">[MQTT-3.11.3-1]</span>。
+
+表 3‑9 - 取消订阅原因码
+
+| 值 | Hex | 原因码名 | 描述 |
+| --- | --- | --- | --- |
+| 0 | 0x00 | Success | 订阅已被删除。 |
+| 17 | 0x11 | 没有存在的订阅 | 没有匹配到客户端使用的主题过滤器。 |
+| 2 | 0x02 | 授予 QoS 2 | 订阅已被接收，服务器接收到的所有 QoS 值都会向其转发。 |
+| 128 | 0x80 | 未指定错误 | 订阅未被接收，服务器不愿透露原因或其他原因码不匹配。 |
+| 131 | 0x83 | 特定实现错误 | UNSUBSCRIBE 合法，但服务器未接收。 |
+| 135 | 0x87 | 未经授权 | 客户端未被授予取消此订阅的权力。 |
+| 143 | 0x8F | 主题过滤器不可用 | 主题过滤器格式正确，但不允许此客户端使用。 |
+| 145 | 0x91 | 包ID已被使用 | 所选的包ID已经在使用中。 |
+
+*非规范性评论*
+ 
+*UNSUBSCRIBE 包中的每个主题过滤器总是会有一个对应的原因码。如果原因码的内容不是针对某个主题过滤器的（例如 0x91（包ID已被使用）），此原因码需要被设置到对每一个主题过滤器的回复上。*
+
+## 3.12 PINGREQ - PING请求
+
+PINGREQ 包由客户端发往服务器。可以用于：
+
+- 在没有其他 MQTT 包需要被发往服务器时，使用 PINGREQ 向服务器表明客户端依然在线。
+- 请求服务器的响应，用来确认服务器是否在线。
+- 测试网络连接，确保网络通讯正常。
+
+PINGREQ 包用于保活处理。参考 [3.1.2.10](#3-1-2-10-保活时间) 了解更多细节。
 
 # 4 操作行为
 
@@ -3244,6 +3529,8 @@ Usage scenarios, for illustration of Subscription Identifiers.
 ## 4.7 主题名和主题过滤器
 
 ## 4.8 订阅
+
+### 4.8.2 共享订阅
 
 ## 4.9 流量控制
 
