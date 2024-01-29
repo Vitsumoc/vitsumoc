@@ -345,18 +345,18 @@ Copyright © OASIS Open 2019. All Rights Reserved.
         - 3.11.2.1.3 [用户属性](#3-11-2-1-3-用户属性)
     - 3.11.3 [UNSUBACK载荷](#3-11-3-UNSUBACK载荷)
   - 3.12 [PINGREQ - PING请求](#3-12-PINGREQ-PING请求)
-    - 3.12.1 PINGREQ Fixed Header
-    - 3.12.2 PINGREQ Variable Header
-    - 3.12.3 PINGREQ Payload
-    - 3.12.4 PINGREQ Actions
-  - 3.13 PINGRESP – PING response
-    - 3.13.1 PINGRESP Fixed Header
-    - 3.13.2 PINGRESP Variable Header
-    - 3.13.3 PINGRESP Payload
-    - 3.13.4 PINGRESP Actions
-  - 3.14 DISCONNECT – Disconnect notification
-    - 3.14.1 DISCONNECT Fixed Header
-    - 3.14.2 DISCONNECT Variable Header
+    - 3.12.1 [PINGREQ固定头](#3-12-1-PINGREQ固定头)
+    - 3.12.2 [PINGREQ可变头](#3-12-2-PINGREQ可变头)
+    - 3.12.3 [PINGREQ载荷](#3-12-3-PINGREQ载荷)
+    - 3.12.4 [PINGREQ动作](#3-12-4-PINGREQ动作)
+  - 3.13 [PINGRESP - PING响应](#3-13-PINGRESP-PING响应)
+    - 3.13.1 [PINGRESP固定头](#3-13-1-PINGRESP固定头)
+    - 3.13.2 [PINGRESP可变头](#3-13-2-PINGRESP可变头)
+    - 3.13.3 [PINGRESP载荷](#3-13-3-PINGRESP载荷)
+    - 3.13.4 [PINGRESP动作](#3-13-4-PINGRESP动作)
+  - 3.14 [DISCONNECT - 断开通知](#3-14-DISCONNECT-断开通知)
+    - 3.14.1 [DISCONNECT固定头](#3-14-1-DISCONNECT固定头)
+    - 3.14.2 [DISCONNECT可变头](#3-14-2-DISCONNECT可变头)
       - 3.14.2.1 Disconnect Reason Code
       - 3.14.2.2 DISCONNECT Properties
         - 3.14.2.2.1 Property Length
@@ -464,7 +464,7 @@ Copyright © OASIS Open 2019. All Rights Reserved.
 
 ## 1.2 术语表
 
-本文档中的关键字 **必须(MUST)**，**必须不(MUST NOT)**，**需要(REQUIRED)**，**应该(SHALL)**，**不应该(SHALL NOT)**，**理应(SHOULD)**，**理应不(SHOULD NOT)**，**推荐(RECOMMENDED)**，**也许(MAY)**，和**可选(OPTIONAL)**按照IETF [RFC 2119](#1.3-RFC2119)的定义阐释，除非在此类关键字出现的地方明确被标记为非规范性。
+本文档中的关键字 **必须(MUST)**，**必须不(MUST NOT)**，**需要(REQUIRED)**，**应该(SHALL)**，**不应该(SHALL NOT)**，**理应(SHOULD)**，**理应不(SHOULD NOT)**，**推荐(RECOMMENDED)**，**可以(MAY)**，和**可选(OPTIONAL)**按照IETF [RFC 2119](#1.3-RFC2119)的定义阐释，除非在此类关键字出现的地方明确被标记为非规范性。
 
 **网络连接:**
 
@@ -3511,6 +3511,97 @@ PINGREQ 包由客户端发往服务器。可以用于：
 - 测试网络连接，确保网络通讯正常。
 
 PINGREQ 包用于保活处理。参考 [3.1.2.10](#3-1-2-10-保活时间) 了解更多细节。
+
+### 3.12.1 PINGREQ固定头
+
+*图 3.33 – PINGREQ 包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（12）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度（0）</td></tr>
+    <tr><td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+### 3.12.2 PINGREQ可变头
+
+PINGRESP 包没有可变头。
+
+### 3.12.3 PINGREQ载荷
+
+PINGREQ 包没有载荷。
+
+### 3.12.4 PINGREQ动作
+
+<span class="vcMarked">服务器**必须**发送 PINGRESP 包用来响应 PINGREQ 包</span> <span class="vcReferred">[MQTT-3.12.4-1]</span>。
+
+## 3.13 PINGRESP - PING响应
+
+PINGRESP 包由服务器发往客户端，用于响应 PINGREQ 包。他表示服务器处于可用状态。
+
+PINGRESP 包用于保活处理。参考 [3.1.2.10](#3-1-2-10-保活时间) 了解更多细节。
+
+### 3.13.1 PINGRESP固定头
+
+*图 3.34 – PINGRESP 包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（13）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度（0）</td></tr>
+    <tr><td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+### 3.13.2 PINGRESP可变头
+
+PINGRESP 包没有可变头。
+
+### 3.13.3 PINGRESP载荷
+
+PINGRESP 包没有载荷。
+
+### 3.13.3 PINGRESP动作
+
+客户端收到此包后无动作。
+
+## 3.14 DISCONNECT - 断开通知
+
+DISCONNECT 包是客户端或服务器发送的最后一个 MQTT 包。他表示了网络连接中断的原因。客户端或服务器**可以**在断开网络连接前发送 DISCONNECT 包。如果网络连接并非在客户端发送原因码 0x00（普通断开）的 DISCONNECT 后关闭，且连接持有遗嘱消息，遗嘱消息将被发布。参考 [3.1.2.5](#3-1-2-5-遗嘱标识) 了解更多细节。
+
+<span class="vcMarked">服务器**必须不**发送 DISCONNECT 包，除非在其发送了一个原因码小于 0x80 的 CONNACK 之后</span> <span class="vcReferred">[MQTT-3.14.0-1]</span>。
+
+### 3.14.1 DISCONNECT固定头
+
+*图 3.35 – DISCONNECT 包固定头*
+
+<table>
+  <thead>
+    <tr><td>Bit</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+  </thead>
+  <tbody>
+    <tr><td>byte 1</td><td colspan="4">MQTT包类型（14）</td><td colspan="4">保留</td></tr>
+    <tr><td></td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+    <tr><td>byte 2</td><td colspan="8">剩余长度</td></tr>
+  </tbody>
+</table>
+
+<span class="vcMarked">客户端或服务器必须确认保留字段值为 0。如果非 0，客户端或服务器发送一个带有原因码 0x81（格式错误的包）的 DISCONNECT 包，参考 [4.13](#4-13-错误处理) 中的描述</span> <span class="vcReferred">[MQTT-3.14.1-1]</span>。
+
+**剩余长度字段**
+
+表示可变头长度，采用 `变长整数` 编码。
+
+### 3.14.2 DISCONNECT可变头
 
 # 4 操作行为
 
