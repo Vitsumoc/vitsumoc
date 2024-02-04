@@ -1,5 +1,5 @@
 ---
-title: MQTT 5.0 中文文档(施工中)
+title: MQTT 5.0 中文文档
 date: 2024-01-06 10:14:39
 categories:
 - MQTT
@@ -440,8 +440,8 @@ Copyright © OASIS Open 2019. All Rights Reserved.
   - 7.1 [一致性条款](#7-1-一致性条款)
     - 7.1.1 [MQTT服务器一致性条款](#7-1-1-MQTT服务器一致性条款)
     - 7.1.2 [MQTT客户端一致性条款](#7-1-2-MQTT客户端一致性条款)
-- Appendix A. Acknowledgments
-- Appendix B. Mandatory normative statement (non-normative)
+- 附录 A. [致谢](#附录-A-致谢)
+- 附录 B. [强制性规范性声明（非规范性）](#附录-B-强制性规范性声明（非规范性）)
 - 附录 C. [MQTT v5.0 新特性汇总（非规范性）](#附录-C-MQTT-v5-0-新特性汇总（非规范性）)
 
 # 1 介绍
@@ -772,9 +772,9 @@ MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1
   </tbody>
 </table>
 
-<span class="vcMarked">在 UTF-8 编码字符串中的字符必须为 <a href="#1.3-Unicode">[Unicode]</a> 和 <a href="#1.3-RFC3629">[RFC3629]</a> 中所定义的，格式正确的字符编码。尤其不能使用U+D800 至 U+DFFF之间的编码</span> <span class="vcReferred">[MQTT-1.5.4-1]</span>。如果客户端或服务器接收到的 MQTT 包中包括了非法 UTF-8 编码，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+<span class="vcMarked">在 UTF-8 编码字符串中的字符**必须**为 <a href="#1.3-Unicode">[Unicode]</a> 和 <a href="#1.3-RFC3629">[RFC3629]</a> 中所定义的，格式正确的字符编码。**必须不**使用U+D800 至 U+DFFF之间的编码</span> <span class="vcReferred">[MQTT-1.5.4-1]</span>。如果客户端或服务器接收到的 MQTT 包中包括了非法 UTF-8 编码，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
-<span class="vcMarked">UTF-8 编码字符串必须不包含空字符 U+0000</span> <span class="vcReferred">[MQTT-1.5.4-2]</span>。如果一个接收者（服务器或客户端）接收的 MQTT 包其中有空字符 U+0000 ，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+<span class="vcMarked">UTF-8 编码字符串**必须**不包含空字符 U+0000</span> <span class="vcReferred">[MQTT-1.5.4-2]</span>。如果一个接收者（服务器或客户端）接收的 MQTT 包其中有空字符 U+0000 ，将其视为一个格式错误的包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 数据不应该包括下方列表中的 Unicode 码段，如果一个接收者（服务器或客户端）接受的 MQTT 包其中有此类字符，接收者可以将此包视为一个格式错误的包。这些是禁止使用的 Unicode 码段。参考 [5.4.9](#5-4-9-处理禁止的Unicode码段) 查看关于错误处理的信息。
 
@@ -782,7 +782,7 @@ MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1
 - U+007F..U+009F 控制字符
 - [Unicode](#1.3-Unicode) 规范中定义的非文本字符（例如 U+0FFFF）
 
-<span class="vcMarked">无论 UTF-8 编码序列 0xEF 0xBB 0xBF 出现在字符串的何处，他永远被解释为 U+FEFF (0宽无换行空格) 而且不能被数据包的接收者跳过或剥离</span> <span class="vcReferred">[MQTT-1.5.4-3]</span>。
+<span class="vcMarked">无论 UTF-8 编码序列 0xEF 0xBB 0xBF 出现在字符串的何处，他永远被解释为 U+FEFF (0宽无换行空格) 而且**必须**不能被数据包的接收者跳过或剥离</span> <span class="vcReferred">[MQTT-1.5.4-3]</span>。
 
 **非规范性示例**
 
@@ -914,7 +914,7 @@ MQTT包中使用的文本类型字段均采用 UTF-8 编码。UTF-8 [RFC3629](#1
 
 ### 1.5.5 变长整数
 
-变长整数中将一个字节的最大值视为 127，更大的值采用如下方式处理。每个字节中较低的七位用来存储数字的值，最高位用来表示是否有后续的字节。因此，每个字节都编码了128个可能的值和一个 “后续位”。变长整数的最大字节数是4。<span class="vcMarked">变长整数编码时必须使用能够表示数字值的最小长度来进行编码</span> <span class="vcReferred">[MQTT-1.5.5-1]</span>。表1-1 中展示了变长整数可以表示的值。
+变长整数中将一个字节的最大值视为 127，更大的值采用如下方式处理。每个字节中较低的七位用来存储数字的值，最高位用来表示是否有后续的字节。因此，每个字节都编码了128个可能的值和一个 “后续位”。变长整数的最大字节数是4。<span class="vcMarked">变长整数编码时**必须**使用能够表示数字值的最小长度来进行编码</span> <span class="vcReferred">[MQTT-1.5.5-1]</span>。表1-1 中展示了变长整数可以表示的值。
 
 表1-1 变长整数的值
 | 位数 | 最小值 | 最大值 |
@@ -970,7 +970,7 @@ while ((encodedByte AND 128) != 0)
 
 UT-8 字符串对包括两个 UTF-8 编码的字符串。这种数据类型用来存储 键-值 对。第一个字符串表示键，第二个字符串表示值。
 
-<span class="vcMarked">UTF-8字符串对中的两个字符串都必须遵守 UTF-8 字符串的需求</span> <span class="vcReferred">[MQTT-1.5.7-1]</span>。如果一个接收者（客户端或服务器）接收到的键值对没有遵守这些需求，则被视为一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+<span class="vcMarked">UTF-8字符串对中的两个字符串都**必须**遵守 UTF-8 字符串的需求</span> <span class="vcReferred">[MQTT-1.5.7-1]</span>。如果一个接收者（客户端或服务器）接收到的键值对没有遵守这些需求，则被视为一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 ## 1.6 安全性
 
@@ -1078,7 +1078,7 @@ MQTT 协议操作通过一系列的 MQTT 包交互来实现。本章用来描述
 
 ### 2.1.3 控制标识
 
-固定头第一个 byte 中剩下的四个bit \[3-0]包括了基于不同 MQTT 包类型的控制标识。<span class="vcMarked">当一个比特位被标记为 “保留” 时，他的意义被保留到未来使用而他的值必须按照下表设置</span> <span class="vcReferred">[MQTT-2.1.3-1]</span>。如果接收到的控制标志不符合规范，则被认为是一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+固定头第一个 byte 中剩下的四个bit \[3-0]包括了基于不同 MQTT 包类型的控制标识。<span class="vcMarked">当一个比特位被标记为 “保留” 时，他的意义被保留到未来使用而他的值**必须**按照下表设置</span> <span class="vcReferred">[MQTT-2.1.3-1]</span>。如果接收到的控制标志不符合规范，则被认为是一个格式错误的数据包。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 表2‑2 控制标志
 
@@ -1258,17 +1258,17 @@ RETAIN = PUBLISH 保留消息标识
 | DISCONNECT | 否 |
 | AUTH | 否 |
 
-<span class="vcMarked">当 PUBLISH 包的 QoS 值为 0 时，必须不包含 包ID 字段</span> <span class="vcReferred">[MQTT-2.2.1-2]</span>。
+<span class="vcMarked">当 PUBLISH 包的 QoS 值为 0 时，**必须不**包含 包ID 字段</span> <span class="vcReferred">[MQTT-2.2.1-2]</span>。
 
-<span class="vcMarked">每当客户端发送新的 SUBSCRIBE包，UNSUBSCRIBE包 或 QoS > 0 的 PUBLISH包，必须携带一个非零且当前未被使用的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-3]</span>。
+<span class="vcMarked">每当客户端发送新的 SUBSCRIBE 包，UNSUBSCRIBE 包 或 QoS > 0 的 PUBLISH 包，**必须**携带一个非零且当前未被使用的包ID</span> <span class="vcReferred">[MQTT-2.2.1-3]</span>。
 
-<span class="vcMarked">每当服务器发送新的 QoS > 0 的 PUBLISH包，必须携带一个非零且当前未被使用的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-4]</span>。
+<span class="vcMarked">每当服务器发送新的 QoS > 0 的 PUBLISH 包，**必须**携带一个非零且当前未被使用的包ID</span> <span class="vcReferred">[MQTT-2.2.1-4]</span>。
 
 包ID仅在发送者处理了对应的回复后可重新使用，定义如下。对于 QoS = 1 的 PUBLISH，对应的回复是 PUBACK；对于 QoS = 2 的PUBLISH，对应的回复是 PUBCOMP 或当原因码为 128 或更大时为 PUBREC。对于 SUBSCRIBE 或 UNSUBSCRIBE，对应的回复是 SUBACK 或 UNSUBACK。
 
 在一个会话中，客户端与服务器分别使用一个单独、统一的集合用作提供 PUBLISH、SUBSCRIBE 和 UNSUBSCRIBE 的包ID。包ID在任何时候都不能被多个命令使用。
 
-<span class="vcMarked">PUBACK，PUBREC，PUBREL 或 PUBCOMP 包必须携带和 PUBLISH 相同的 包ID</span> <span class="vcReferred">[MQTT-2.2.1-5]</span>。<span class="vcMarked">SUBACK 和 UNSUBACK 必须携带和其对应的 SUBSCRIBE 和 UNSUBSCRIBE 包相同的包ID</span> <span class="vcReferred">[MQTT-2.2.1-6]</span>。
+<span class="vcMarked">PUBACK，PUBREC，PUBREL 或 PUBCOMP 包**必须**携带和 PUBLISH 相同的包ID</span> <span class="vcReferred">[MQTT-2.2.1-5]</span>。<span class="vcMarked">SUBACK 和 UNSUBACK **必须**携带和其对应的 SUBSCRIBE 和 UNSUBSCRIBE 包相同的包ID</span> <span class="vcReferred">[MQTT-2.2.1-6]</span>。
 
 客户端与服务器各自独立的维护包ID分配。因此，客户端与服务器可以同时使用同样的包ID发送信息。
 
@@ -1292,7 +1292,7 @@ PUBACK 包ID=0x1234 ‒→
 
 #### 2.2.2.1 属性长度
 
-属性长度是一个变长整数。属性长度的值不包括自己所占用的字节数，但包括了后续所有属性占用的字节数。<span class="vcMarked">如果没有属性，必须明确通过一个0值的属性长度来表示</span> <span class="vcReferred">[MQTT-2.2.2-1]</span>。
+属性长度是一个变长整数。属性长度的值不包括自己所占用的字节数，但包括了后续所有属性占用的字节数。<span class="vcMarked">如果没有属性，**必须**通过一个 0 值的属性长度来明确表示</span> <span class="vcReferred">[MQTT-2.2.2-1]</span>。
 
 #### 2.2.2.2 属性
 
@@ -1448,9 +1448,9 @@ PUBACK 包ID=0x1234 ‒→
 
 ## 3.1 CONNECT - 连接请求
 
-<span class="vcMarked">当客户端和服务器的网络连接建立后，客户端向服务器发送的第一个数据包必须是 CONNECT 包</span> <span class="vcReferred">[MQTT-3.1.0-1]</span>。
+<span class="vcMarked">当客户端和服务器的网络连接建立后，客户端向服务器发送的第一个数据包**必须**是 CONNECT 包</span> <span class="vcReferred">[MQTT-3.1.0-1]</span>。
 
-一个客户端在一次网络连接中只能发送一个 CONNECT 包。<span class="vcMarked">服务器必须将客户端发送的第二个 CONNECT 包视为协议错误并关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.0-2]</span>。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+一个客户端在一次网络连接中只能发送一个 CONNECT 包。<span class="vcMarked">服务器**必须**将客户端发送的第二个 CONNECT 包视为协议错误并关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.0-2]</span>。参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 CONNECT 的载荷包含一个或更多的字段，包括唯一的客户端ID，遗嘱主题，遗嘱载荷，用户名和密码。除了客户端ID以外的字段都可以省略，他们的存在与否根据可变头中的标识确定。
 
@@ -1498,7 +1498,7 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 
 协议名是 UTF-8字符串表示的大写 “MQTT”，就像上图所示。这个字符串、他的位置和他的长度在未来的 MQTT 规范版本中永远不会改变。
 
-支持多种协议的服务器可以通过协议名称来判断收到的数据是否是 MQTT 数据。<span class="vcMarked">协议名称必须是 UTF-8字符串表示的 “MQTT”。如果服务器不想接收此连接，同时又想告知客户端服务器是一个 MQTT 服务器，可以发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-1]</span>。
+支持多种协议的服务器可以通过协议名称来判断收到的数据是否是 MQTT 数据。<span class="vcMarked">协议名称**必须**是 `UTF-8字符串`表示的 “MQTT”。如果服务器不想接收此连接，同时又想告知客户端服务器是一个 MQTT 服务器，**可以**发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-1]</span>。
  
 *非规范性评论*
 
@@ -1520,7 +1520,7 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 
 此处的单字节无符号值表示了客户端使用的协议的版本。MQTT 5.0 版本的协议版本的值应为 5（0x05）。
 
-支持多个协议版本的服务器可以通过协议版本字段来判断客户端使用何种版本的 MQTT 协议。<span class="vcMarked">如果客户端使用的协议版本不为 5 而且服务器不想接受此 CONNECT 包，服务器可以发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-2]</span>。
+支持多个协议版本的服务器可以通过协议版本字段来判断客户端使用何种版本的 MQTT 协议。<span class="vcMarked">如果客户端使用的协议版本不为 5 而且服务器不想接受此 CONNECT 包，服务器**可以**发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.2-2]</span>。
 
 #### 3.1.2.3 连接标识
 
@@ -1538,7 +1538,7 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
   </tbody>
 </table>
 
-<span class="vcMarked">服务器必须验证 CONNECT 包中的保留位的值是 0</span> <span class="vcReferred">[MQTT-3.1.2-3]</span>。如果保留位的值非 0，则视为一个格式错误的包，参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
+<span class="vcMarked">服务器**必须**验证 CONNECT 包中的保留位的值是 0</span> <span class="vcReferred">[MQTT-3.1.2-3]</span>。如果保留位的值非 0，则视为一个格式错误的包，参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
 #### 3.1.2.4 全新开始
 
@@ -1546,15 +1546,15 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 
 这个比特位指定了此连接是一个全新的会话还是一个已经存在会话的延续。参考 [4.1](#4-1-会话状态) 了解关于会话状态的定义。
 
-<span class="vcMarked">如果接收到全新开始值置为 1 的 CONNECT 包，客户端和服务器必须丢弃任何已经存在的会话并开始一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-4]</span>。因此，当 CONNECT 包中的全新开始值置为 1 时，对应的 CONNACK 包中的会话存在总是会被至为0。
+<span class="vcMarked">如果接收到全新开始值置为 1 的 CONNECT 包，客户端和服务器**必须**丢弃任何已经存在的会话并开始一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-4]</span>。因此，当 CONNECT 包中的全新开始值置为 1 时，对应的 CONNACK 包中的会话存在总是会被至为0。
 
-<span class="vcMarked">如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中已经存在和客户端ID关联的会话，服务器必须基于已经存在的会话状态恢复客户端的连接</span> <span class="vcReferred">[MQTT-3.1.2-5]</span>。<span class="vcMarked">如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中没有和客户端ID关联的会话，服务器必须创建一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-6]</span>。
+<span class="vcMarked">如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中已经存在和客户端ID关联的会话，服务器**必须**基于已经存在的会话状态恢复客户端的连接</span> <span class="vcReferred">[MQTT-3.1.2-5]</span>。<span class="vcMarked">如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中没有和客户端ID关联的会话，服务器**必须**创建一个新的会话</span> <span class="vcReferred">[MQTT-3.1.2-6]</span>。
 
 #### 3.1.2.5 遗嘱标识
 
 **位置：**连接标识字节中的比特位 2。
 
-<span class="vcMarked">如果遗嘱标识被置为 1，则表示遗嘱消息必须被存储在服务器中，并且关联到此会话</span> <span class="vcReferred">[MQTT-3.1.2-7]</span>。遗嘱消息由 CONNECT 载荷中的遗嘱属性集、遗嘱主题和遗嘱载荷组成。<span class="vcMarked">遗嘱消息必须在网络连接断开后的遗嘱延迟间隔时间过期后或会话结束时发布，除非由于服务器接收到一个带有 0x00（普通断开）原因码的 DISCONNECT 包从而删除了遗嘱消息，或是在遗嘱延迟间隔时间过期前接收了一个带有相同客户端ID的连接</span> <span class="vcReferred">[MQTT-3.1.2-8]</span>。
+<span class="vcMarked">如果遗嘱标识被置为 1，则表示遗嘱消息**必须**被存储在服务器中，并且关联到此会话</span> <span class="vcReferred">[MQTT-3.1.2-7]</span>。遗嘱消息由 CONNECT 载荷中的遗嘱属性集、遗嘱主题和遗嘱载荷组成。<span class="vcMarked">遗嘱消息**必须**在网络连接断开后的遗嘱延迟间隔时间过期后或会话结束时发布，除非由于服务器接收到一个带有 0x00（普通断开）原因码的 DISCONNECT 包从而删除了遗嘱消息，或是在遗嘱延迟间隔时间过期前接收了一个带有相同客户端ID的连接</span> <span class="vcReferred">[MQTT-3.1.2-8]</span>。
 
 遗嘱消息被发布的场景包括不限于：
 
@@ -1563,7 +1563,7 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 - 客户端在没有发送原因码为 0x00（普通断开）的 DISCONNECT 包的前提下断开网络连接
 - 服务器在没有收到原因码为 0x00（普通断开）的 DISCONNECT 包的前提下断开网络连接
 
-<span class="vcMarked">当遗嘱标识被置为 1 时，载荷中必须包括遗嘱属性集、遗嘱主题和遗嘱载荷字段</span> <span class="vcReferred">[MQTT-3.1.2-9]</span>。<span class="vcMarked">当服务器发布遗嘱后或服务器从客户端收到了原因码为 0x00（普通断开）的 DISCONNECT 包后，服务器必须从会话状态中删除遗嘱消息</span> <span class="vcReferred">[MQTT-3.1.2-10]</span>。
+<span class="vcMarked">当遗嘱标识被置为 1 时，载荷中**必须**包括遗嘱属性集、遗嘱主题和遗嘱载荷字段</span> <span class="vcReferred">[MQTT-3.1.2-9]</span>。<span class="vcMarked">当服务器发布遗嘱后或服务器从客户端收到了原因码为 0x00（普通断开）的 DISCONNECT 包后，服务器**必须**从会话状态中删除遗嘱消息</span> <span class="vcReferred">[MQTT-3.1.2-10]</span>。
 
 服务器应该在下列两种情况中的某一种先发生时发布遗嘱消息：网络连接断开后经过了遗嘱延迟间隔时间、会话结束。如果发生了服务器关闭或故障，服务器也许可以在随后的重启之后发布遗嘱消息。当此种情况发生时，服务器故障发生的时间和遗嘱消息发布的时间之间可能会有延迟。
 
@@ -1579,7 +1579,7 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 
 这两个比特位指定了发布遗嘱消息时使用的 QoS 等级。
 
-<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱QoS必须被置为 0（0x00）</span> <span class="vcReferred">[MQTT-3.1.2-11]</span>。
+<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱 QoS **必须**被置为 0（0x00）</span> <span class="vcReferred">[MQTT-3.1.2-11]</span>。
 
 <span class="vcMarked">当遗嘱标识被置为 1 时，遗嘱QoS的值可以是 0（0x00），1（0x01）或 2（0x02）</span> <span class="vcReferred">[MQTT-3.1.2-12]</span>。当值为 3（0x03）时视为格式错误的包，参考 [4.13](#4-13-错误处理) 查看关于错误处理的信息。
 
@@ -1589,19 +1589,19 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
 
 这个比特位指定了当遗嘱消息发布时是否会被保留。
 
-<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱保留消息的值必须被置为 0</span> <span class="vcReferred">[MQTT-3.1.2-13]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 0 时，服务器必须将遗嘱消息作为一个非保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-14]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 1 时，服务器必须将遗嘱消息作为一个保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-15]</span>。
+<span class="vcMarked">当遗嘱标识被置为 0 时，遗嘱保留消息的值**必须**被置为 0</span> <span class="vcReferred">[MQTT-3.1.2-13]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 0 时，服务器**必须**将遗嘱消息作为一个非保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-14]</span>。<span class="vcMarked">当遗嘱标识被置为 1 且遗嘱保留消息被置为 1 时，服务器**必须**将遗嘱消息作为一个保留消息发布</span> <span class="vcReferred">[MQTT-3.1.2-15]</span>。
 
 #### 3.1.2.8 用户名标识
 
 **位置：**连接标识字节中的比特位 7。
 
-<span class="vcMarked">当用户名标识被置为 0 时，载荷中必须不能存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-16]</span>。<span class="vcMarked">当用户名标识被置为 1 时，载荷中必须存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-17]</span>。
+<span class="vcMarked">当用户名标识被置为 0 时，载荷中**必须不**存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-16]</span>。<span class="vcMarked">当用户名标识被置为 1 时，载荷中**必须**存在用户名</span> <span class="vcReferred">[MQTT-3.1.2-17]</span>。
 
 #### 3.1.2.9 密码标识
 
 **位置：**连接标识字节中的比特位 6。
 
-<span class="vcMarked">当密码标识被置为 0 时，载荷中必须不能存在密码</span> <span class="vcReferred">[MQTT-3.1.2-18]</span>。<span class="vcMarked">当密码标识被置为 1 时，载荷中必须存在密码</span> <span class="vcReferred">[MQTT-3.1.2-19]</span>。
+<span class="vcMarked">当密码标识被置为 0 时，载荷中**必须不**存在密码</span> <span class="vcReferred">[MQTT-3.1.2-18]</span>。<span class="vcMarked">当密码标识被置为 1 时，载荷中**必须**存在密码</span> <span class="vcReferred">[MQTT-3.1.2-19]</span>。
 
 *非规范性评论*
 
@@ -1621,13 +1621,13 @@ CONNECT 包中的可变头按固定顺序提供下列字段：协议名、协议
   </tbody>
 </table>
 
-保活时间是一个表示时间间隔秒数的 2字节整数。他是允许客户端在发送一个 MQTT 包后到发送下一个数据包之间的最大时间间隔。客户端有责任确保两个 MQTT 包之间的时间间隔不超过保活时间。<span class="vcMarked">如果保活时间不为 0 且没有任何其他需要发送的数据包，客户端必须发送 PINGREQ 包</span> <span class="vcReferred">[MQTT-3.1.2-20]</span>。
+保活时间是一个表示时间间隔秒数的 2字节整数。他是允许客户端在发送一个 MQTT 包后到发送下一个数据包之间的最大时间间隔。客户端有责任确保两个 MQTT 包之间的时间间隔不超过保活时间。<span class="vcMarked">如果保活时间不为 0 且没有任何其他需要发送的数据包，客户端**必须**发送 PINGREQ 包</span> <span class="vcReferred">[MQTT-3.1.2-20]</span>。
 
-<span class="vcMarked">如果服务器在 CONNACK 中提供了服务器保活时间，则客户端必须采用服务器保活时间的值来替代自己发送的保活时间的值</span> <span class="vcReferred">[MQTT-3.1.2-21]</span>。
+<span class="vcMarked">如果服务器在 CONNACK 中提供了服务器保活时间，则客户端**必须**采用服务器保活时间的值来替代自己发送的保活时间的值</span> <span class="vcReferred">[MQTT-3.1.2-21]</span>。
 
 不论保活时间的值如何设置，客户端可以在任何时间发送 PINGREQ，并通过检查相应的 PINGRESP 来确认服务器与网络是否可用。
 
-<span class="vcMarked">如果保活时间为非零值且服务器在 1.5 倍的保活时间内没有收到来自客户端的任何 MQTT 包，服务器必须断开到客户端的网络连接并视为网络连接故障</span> <span class="vcReferred">[MQTT-3.1.2-22]</span>。
+<span class="vcMarked">如果保活时间为非零值且服务器在 1.5 倍的保活时间内没有收到来自客户端的任何 MQTT 包，服务器**必须**断开到客户端的网络连接并视为网络连接故障</span> <span class="vcReferred">[MQTT-3.1.2-22]</span>。
 
 如果客户端在发送 PINGREQ 的合理时间后依然没有收到 PINGRESP，客户端应断开到服务器的网络连接。
 
@@ -1657,7 +1657,7 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 
 如果会话过期间隔被设置为 0xFFFFFFFF (UINT_MAX)，表示会话不会过期。
 
-<span class="vcMarked">当会话过期间隔的值大于0时，客户端和服务器都必须在网络连接断开后存储会话状态</span> <span class="vcReferred">[MQTT-3.1.2-23]</span>。
+<span class="vcMarked">当会话过期间隔的值大于 0 时，客户端和服务器都**必须**在网络连接断开后存储会话状态</span> <span class="vcReferred">[MQTT-3.1.2-23]</span>。
 
 *非规范性评论*
 
@@ -1717,9 +1717,9 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 
 最大包尺寸表示 **MQTT 包完整的字节数**，其定义参考 [2.1.4](#2-1-4-剩余长度)。客户端使用最大包尺寸告知服务器，客户端不会处理超过此尺寸限制的信息。
 
-<span class="vcMarked">服务器必须不向客户端发送超过最大包尺寸的数据包</span> <span class="vcReferred">[MQTT-3.1.2-24]</span>。如果客户端收到了超过其最大包尺寸限制的包，这被视为一个协议错误，客户端需要使用带有原因码 0x95（包过大）的 DISCONNECT 包来中断连接，参考 [4.13](#4-13-错误处理) 的描述。
+<span class="vcMarked">服务器**必须不**向客户端发送超过最大包尺寸的数据包</span> <span class="vcReferred">[MQTT-3.1.2-24]</span>。如果客户端收到了超过其最大包尺寸限制的包，这被视为一个协议错误，客户端需要使用带有原因码 0x95（包过大）的 DISCONNECT 包来中断连接，参考 [4.13](#4-13-错误处理) 的描述。
 
-<span class="vcMarked">当一个包因超过最大包尺寸而无法发送，服务器必须将其丢弃，并视为发送成功</span> <span class="vcReferred">[MQTT-3.1.2-25]</span>。
+<span class="vcMarked">当一个包因超过最大包尺寸而无法发送，服务器**必须**将其丢弃，并视为发送成功</span> <span class="vcReferred">[MQTT-3.1.2-25]</span>。
 
 当某个包的尺寸大于共享订阅中的部分客户端的最大包尺寸，而又可以被另外的某些客户端接收时，服务器可以决定丢弃此包或者将其发送到可以接收此包的客户端。
 
@@ -1733,7 +1733,7 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 
 随后跟随 2字节整数 表示主题别名的最大值。在属性集中出现超过一次主题别名最大值视为协议错误。如果主题别名最大值没有设置，则采用默认值 0。
 
-主题别名最大值表示了客户端可以接受的来自服务器发送的主题别名的最大数量。客户端使用此值来约束他在本次连接中可以持有的主题别名数量。<span class="vcMarked">服务器必须不能发送一个主题别名的值大于客户端设置的主题别名最大值的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.1.2-26]</span>。主题别名最大值的值为 0 表示客户端在本次连接中不支持任何主题别名。<span class="vcMarked">如果主题别名最大值未设置或值为 0，服务器必须不向客户端发送主题别名</span> <span class="vcReferred">[MQTT-3.1.2-27]</span>。
+主题别名最大值表示了客户端可以接受的来自服务器发送的主题别名的最大数量。客户端使用此值来约束他在本次连接中可以持有的主题别名数量。<span class="vcMarked">服务器**必须不**发送一个主题别名的值大于客户端设置的主题别名最大值的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.1.2-26]</span>。主题别名最大值的值为 0 表示客户端在本次连接中不支持任何主题别名。<span class="vcMarked">如果主题别名最大值未设置或值为 0，服务器**必须不**向客户端发送主题别名</span> <span class="vcReferred">[MQTT-3.1.2-27]</span>。
 
 ##### 3.1.2.11.6 请求响应信息
 
@@ -1741,7 +1741,7 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 
 随后跟随一个值为 0 或 1 的字节。在属性集中出现超过一次请求响应信息，或其值不为 1 或 0，均视为协议错误。如果请求响应信息没有设置，则采用默认值 0。
 
-客户端通过此值请求服务器，希望服务器在 CONNACK 中回复响应信息。<span class="vcMarked">此值为 0 表示服务器必须不能在 CONNACK 中回复响应信息</span> <span class="vcReferred">[MQTT-3.1.2-28]</span>。此值为 1 表示服务器可以在 CONNACK 中回复响应信息。
+客户端通过此值请求服务器，希望服务器在 CONNACK 中回复响应信息。<span class="vcMarked">此值为 0 表示服务器**必须不**在 CONNACK 中回复响应信息</span> <span class="vcReferred">[MQTT-3.1.2-28]</span>。此值为 1 表示服务器可以在 CONNACK 中回复响应信息。
 
 *非规范性评论*
 
@@ -1757,7 +1757,7 @@ CONNECT 包可变头中的属性集长度，使用变长整数编码。
 
 客户端通过此值表示服务器是是否应该在故障时发送原因字符串或用户属性。
 
-<span class="vcMarked">如果请求问题信息的值为 0，服务器可以在 CONNACK 或 DISCONNECT 包中携带原因字符串或用户属性，但必须不在除 PUBLISH，CONNACK，DISCONNECT 之外的包中携带原因字符串或用户属性</span> <span class="vcReferred">[MQTT-3.1.2-29]</span>。如果请求问题信息的值为 0 且客户端接收到除 PUBLISH，CONNACK，DISCONNECT 之外的包中带有了原因字符串或用户属性，客户端使用带有原因码 0x82（协议错误）的 DISCONNECT 包断开连接，参考 [4.13](#4-13-错误处理) 了解更多信息。
+<span class="vcMarked">如果请求问题信息的值为 0，服务器可以在 CONNACK 或 DISCONNECT 包中携带原因字符串或用户属性，但**必须不**在除 PUBLISH，CONNACK，DISCONNECT 之外的包中携带原因字符串或用户属性</span> <span class="vcReferred">[MQTT-3.1.2-29]</span>。如果请求问题信息的值为 0 且客户端接收到除 PUBLISH，CONNACK，DISCONNECT 之外的包中带有了原因字符串或用户属性，客户端使用带有原因码 0x82（协议错误）的 DISCONNECT 包断开连接，参考 [4.13](#4-13-错误处理) 了解更多信息。
 
 如果请求问题信息的值为 1，服务器可以在任何允许的包中返回原因字符串或用户属性。
 
@@ -1781,7 +1781,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 如果没有设置认证方式，将不会执行增强认证。参考 [4.12](#4-12-增强认证)。
 
-<span class="vcMarked">如果客户端再 CONNECK 包中设置了认证方式，那么在其收到 CONNACK 包之前，客户端必须不能发送除了 AUTH 和 DISCONNECT 包之外的任何类型的包</span> <span class="vcReferred">[MQTT-3.1.2-30]</span>。
+<span class="vcMarked">如果客户端再 CONNECK 包中设置了认证方式，那么在其收到 CONNACK 包之前，客户端**必须不**发送除了 AUTH 和 DISCONNECT 包之外的任何类型的包</span> <span class="vcReferred">[MQTT-3.1.2-30]</span>。
 
 ##### 3.1.2.11.10 认证数据
 
@@ -1883,23 +1883,23 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 ### 3.1.3 CONNECT载荷
 
-<span class="vcMarked">CONNECT 中的载荷包含了一个或多个 长度 + 内容 格式的字段，这些字段的存在与否由可变头中的标志位决定。这些字段的顺序是固定的，如果存在的话，必须按照 客户端ID，遗嘱属性集，遗嘱主题，遗嘱载荷，用户名，密码 这样的顺序出现</span> <span class="vcReferred">[MQTT-3.1.3-1]</span>。
+<span class="vcMarked">CONNECT 中的载荷包含了一个或多个 长度 + 内容 格式的字段，这些字段的存在与否由可变头中的标志位决定。这些字段的顺序是固定的，如果存在的话，**必须**按照 客户端ID，遗嘱属性集，遗嘱主题，遗嘱载荷，用户名，密码 这样的顺序出现</span> <span class="vcReferred">[MQTT-3.1.3-1]</span>。
 
 #### 3.1.3.1 客户端ID
 
-客户端ID用来在服务器端区分不同的客户端。每个连向服务器的客户端都拥有一个唯一的客户端ID。<span class="vcMarked">客户端ID必须被客户端和服务器用于关联客户端和服务器之间的会话状态</span> <span class="vcReferred">[MQTT-3.1.3-2]</span>。参考 [4.1](#4-1-会话状态) 了解更多关于会话状态的信息。
+客户端ID用来在服务器端区分不同的客户端。每个连向服务器的客户端都拥有一个唯一的客户端ID。<span class="vcMarked">客户端ID**必须**被客户端和服务器用于关联客户端和服务器之间的会话状态</span> <span class="vcReferred">[MQTT-3.1.3-2]</span>。参考 [4.1](#4-1-会话状态) 了解更多关于会话状态的信息。
 
-<span class="vcMarked">客户端ID必须作为 CONNECT 包载荷中的第一个字段出现</span> <span class="vcReferred">[MQTT-3.1.3-3]</span>。
+<span class="vcMarked">客户端ID**必须**作为 CONNECT 包载荷中的第一个字段出现</span> <span class="vcReferred">[MQTT-3.1.3-3]</span>。
 
-<span class="vcMarked">客户端ID必须被编码为一个 UTF-8 字符串</span>，该数据类型的定义在 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.1.3-4]</span>。
+<span class="vcMarked">客户端ID**必须**被编码为一个 `UTF-8字符串`</span>，该数据类型的定义在 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.1.3-4]</span>。
 
-<span class="vcMarked">服务器必须允许客户端ID是长度为 1 到 23 个字节之间的 UTF-8 字符串，且仅包含下列字符：“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”</span> <span class="vcReferred">[MQTT-3.1.3-5]</span>。
+<span class="vcMarked">服务器**必须**允许客户端ID是长度为 1 到 23 个字节之间的 `UTF-8字符串`，且仅包含下列字符：“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ”</span> <span class="vcReferred">[MQTT-3.1.3-5]</span>。
 
 服务器可以允许客户端ID的长度超过23字节。服务器可以允许客户端ID的内容包含上述以外的内容。
 
-<span class="vcMarked">服务器可以允许客户端传递长度为0的客户端ID，当此情况发生时，服务器必须将此情况作为一个特殊情况对待，并为客户端分配一个唯一的客户端ID</span> <span class="vcReferred">[MQTT-3.1.3-6]</span>。<span class="vcMarked">服务器之后必须正常处理此 CONNECT 包，就如同客户端本身携带了这个唯一的客户端ID一样，而且必须在 CONNACK 包中返回这个分配的客户端ID</span> <span class="vcReferred">[MQTT-3.1.3-7]</span>。
+<span class="vcMarked">服务器**可以**允许客户端传递长度为 0 的客户端ID，当此情况发生时，服务器**必须**将此情况作为一个特殊情况对待，并为客户端分配一个唯一的客户端ID</span> <span class="vcReferred">[MQTT-3.1.3-6]</span>。<span class="vcMarked">服务器之后**必须**正常处理此 CONNECT 包，就如同客户端本身携带了这个唯一的客户端ID一样，而且**必须**在 CONNACK 包中返回这个分配的客户端ID</span> <span class="vcReferred">[MQTT-3.1.3-7]</span>。
 
-<span class="vcMarked">如果服务器拒绝了客户端ID，服务器可以使用一个带有原因码 0x85（客户端ID不可用）的 CONNACK 包作为对客户端 CONNECT 包的响应，如同 [4.13](#4-13-错误处理) 中描述的那样，之后服务器必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.3-8]</span>。
+<span class="vcMarked">如果服务器拒绝了客户端ID，服务器**可以**使用一个带有原因码 0x85（客户端ID不可用）的 CONNACK 包作为对客户端 CONNECT 包的响应，如同 [4.13](#4-13-错误处理) 中描述的那样，之后服务器**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.3-8]</span>。
 
 *非规范性评论*
 
@@ -1919,7 +1919,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 随后跟随 4字节整数，表示遗嘱延迟间隔时间，单位为秒。遗嘱延迟间隔在属性集中出现超过一次视为协议错误。如果遗嘱延迟间隔未设置，默认值为0，表示遗嘱发布前没有间隔时间。
 
-服务器在遗嘱延迟间隔结束或是会话结束时发布遗嘱，这两种条件以先触发的为准。<span class="vcMarked">如果在遗嘱延迟间隔结束前，该会话被新的网络连接延续，服务器必须不不发遗嘱</span> <span class="vcReferred">[MQTT-3.1.3-9]</span>。
+服务器在遗嘱延迟间隔结束或是会话结束时发布遗嘱，这两种条件以先触发的为准。<span class="vcMarked">如果在遗嘱延迟间隔结束前，该会话被新的网络连接延续，服务器**必须不**发送遗嘱</span> <span class="vcReferred">[MQTT-3.1.3-9]</span>。
 
 *非规范性评论*
 
@@ -1980,7 +1980,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 随后跟随 UTF-8字符串对。用户属性允许出现多次来表示多个键值对。同样的键允许出现多次。
 
-<span class="vcMarked">服务器必须在发布遗嘱消息时维持用户属性的顺序</span> <span class="vcReferred">[MQTT-3.1.3-10]</span>。
+<span class="vcMarked">服务器**必须**在发布遗嘱消息时维持用户属性的顺序</span> <span class="vcReferred">[MQTT-3.1.3-10]</span>。
 
 *非规范性评论*
 
@@ -1988,7 +1988,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 #### 3.1.3.3 遗嘱主题
 
-如果遗嘱标识被置为 1，载荷中的下一个字段会是遗嘱主题。<span class="vcMarked">遗嘱主题必须是一个 UTF-8字符串</span>，参考 [1.5.4](#1-5-4-UTF-8字符串) 中的定义<span class="vcReferred">[MQTT-3.1.3-11]</span>。
+如果遗嘱标识被置为 1，载荷中的下一个字段会是遗嘱主题。<span class="vcMarked">遗嘱主题**必须**是一个 `UTF-8字符串`</span>，参考 [1.5.4](#1-5-4-UTF-8字符串) 中的定义<span class="vcReferred">[MQTT-3.1.3-11]</span>。
 
 #### 3.1.3.4 遗嘱载荷
 
@@ -1996,7 +1996,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 #### 3.1.3.5 用户名
 
-如果用户名标识被置为 1，载荷中的下一个字段会是用户名。<span class="vcMarked">用户名必须是一个 UTF-8字符串</span>，参考 [1.5.4](#1-5-4-UTF-8字符串) 中的定义<span class="vcReferred">[MQTT-3.1.3-12]</span>。用户名可以被服务器用作认证和授权。
+如果用户名标识被置为 1，载荷中的下一个字段会是用户名。<span class="vcMarked">用户名**必须**是一个 `UTF-8字符串`</span>，参考 [1.5.4](#1-5-4-UTF-8字符串) 中的定义<span class="vcReferred">[MQTT-3.1.3-12]</span>。用户名可以被服务器用作认证和授权。
 
 #### 3.1.3.6 密码
 
@@ -2007,19 +2007,19 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 请注意，服务器可以在同一 TCP 端口或其他网络端点上支持多个协议（包括其他版本的 MQTT 协议）。如果服务器确定协议是 MQTT v5.0，则它会按如下方式验证连接尝试。
 
 1. 如果服务器在客户端的网络连接建立后的一段合理时间内没有收到 CONNECT 包，服务器应该关闭网络连接。
-2. <span class="vcMarked">服务器必须验证 CONNECT 包的格式符合 [3.1](#3-1-CONNECT-连接请求) 中的描述，如不符合则关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.4-1]</span>。服务器可以参考 4.13 在关闭网络连接前使用带有 0x80 或更高值的原因码的 CONNACK 通知客户端。
-3. <span class="vcMarked">服务器可以检查 CONNECT 包中的内容是否满足更进一步的限制要求，并且应该进行认证和授权检查。如果其中任何检查失败，服务器必须关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.4-2]</span>。在关闭网络连接前，服务器可以参考 [3.2](#3-2-CONNACK-–-连接回复) 和 [4.13](#4-13-错误处理) 发送一个带有 0x80 或更高值的原因码的符合情况的 CONNACK 包。
+2. <span class="vcMarked">服务器**必须**验证 CONNECT 包的格式符合 [3.1](#3-1-CONNECT-连接请求) 中的描述，如不符合则关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.4-1]</span>。服务器可以参考 4.13 在关闭网络连接前使用带有 0x80 或更高值的原因码的 CONNACK 通知客户端。
+3. <span class="vcMarked">服务器**可以**检查 CONNECT 包中的内容是否满足更进一步的限制要求，并且**应该**进行认证和授权检查。如果其中任何检查失败，服务器**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.1.4-2]</span>。在关闭网络连接前，服务器可以参考 [3.2](#3-2-CONNACK-–-连接回复) 和 [4.13](#4-13-错误处理) 发送一个带有 0x80 或更高值的原因码的符合情况的 CONNACK 包。
 
 如果验证成功，服务器施行下列动作。
 
-1. <span class="vcMarked">如果客户端ID代表了一个已经连接到服务器的客户端，服务器参考 [4.13](#4-13-错误处理) 发送一个带有原因码 0x8E（会话被接管）的 DISCONNECT 包到当前已有连接的客户端，且必须关闭当前已有连接客户端的网络连接</span> <span class="vcReferred">[MQTT-3.1.4-3]</span>。如果已有连接的客户端包含遗嘱，遗嘱的发布情况参考 3.1.2.5。
+1. <span class="vcMarked">如果客户端ID代表了一个已经连接到服务器的客户端，服务器参考 [4.13](#4-13-错误处理) 发送一个带有原因码 0x8E（会话被接管）的 DISCONNECT 包到当前已有连接的客户端，且**必须**关闭当前已有连接客户端的网络连接</span> <span class="vcReferred">[MQTT-3.1.4-3]</span>。如果已有连接的客户端包含遗嘱，遗嘱的发布情况参考 3.1.2.5。
 
 *非规范性评论*
 
 *如果已有连接的遗嘱延迟间隔值为0且存在遗嘱消息，遗嘱消息会因为网络连接断开的原因发布。当已有连接的会话过期间隔值为0，或是新连接的全新开始标识被置为 1时，如果已有连接存在遗嘱消息，那么遗嘱消息会被发布，因为原有会话已经在接管时结束。*
 
-2.  <span class="vcMarked">服务器必须参考 [3.1.2.4](#3-1-2-4-全新开始) 中的描述处理全新开始标识</span> <span class="vcReferred">[MQTT-3.1.4-4]</span>。
-3.  <span class="vcMarked">服务器必须使用带有原因码为 0x00（成功）的 CONNACK 回复 CONNECT 包</span> <span class="vcReferred">[MQTT-3.1.4-5]</span>。
+2.  <span class="vcMarked">服务器**必须**参考 [3.1.2.4](#3-1-2-4-全新开始) 中的描述处理全新开始标识</span> <span class="vcReferred">[MQTT-3.1.4-4]</span>。
+3.  <span class="vcMarked">服务器**必须**使用带有原因码为 0x00（成功）的 CONNACK 回复 CONNECT 包</span> <span class="vcReferred">[MQTT-3.1.4-5]</span>。
 
 *非规范性评论*
 
@@ -2027,7 +2027,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 4. 启动消息传递和保活监控。
 
-客户端可以在发送 CONNECT 包之后立刻发送其他 MQTT 包；客户端无需等待接收到来自服务器的 CONNACK 包。<span class="vcMarked">如果服务器决绝了 CONNECT，服务器必须不处理客户端在 CONNECT 包之后发送的任何除了 AUTH 以外的包</span> <span class="vcReferred">[MQTT-3.1.4-6]</span>。
+客户端可以在发送 CONNECT 包之后立刻发送其他 MQTT 包；客户端无需等待接收到来自服务器的 CONNACK 包。<span class="vcMarked">如果服务器拒绝了 CONNECT，服务器**必须不**处理客户端在 CONNECT 包之后发送的任何除了 AUTH 以外的包</span> <span class="vcReferred">[MQTT-3.1.4-6]</span>。
 
 *非规范性评论*
 
@@ -2043,7 +2043,7 @@ CONNECT 包中的用户属性可以用来从客户端向服务器发送连接过
 
 ## 3.2 CONNACK - 连接确认
 
-CONNACK 包是由服务器发送用来响应客户端发送的 CONNECT 包的MQTT包。<span class="vcMarked">服务器**必须**在发送除 AUTH 外的其他任何MQTT包之前使用带有响应码 0x00（成功）的 CONNACK 包回复客户端</span> <span class="vcReferred">[MQTT-3.2.0-1]</span>。<span class="vcMarked">服务器**必须**不在一次网络连接中发送超过一个 CONNACK 包</span> <span class="vcReferred">[MQTT-3.2.0-2]</span>。
+CONNACK 包是由服务器发送用来响应客户端发送的 CONNECT 包的MQTT包。<span class="vcMarked">服务器**必须**在发送除 AUTH 外的其他任何MQTT包之前使用带有响应码 0x00（成功）的 CONNACK 包回复客户端</span> <span class="vcReferred">[MQTT-3.2.0-1]</span>。<span class="vcMarked">服务器**必须不**在一次网络连接中发送超过一个 CONNACK 包</span> <span class="vcReferred">[MQTT-3.2.0-2]</span>。
 
 如果客户端没有在合理的时间内收到来自服务器的 CONNACK 包，客户端**应该**断开网络连接。一个“合理”的时间取决于应用程序的类型和通信基础设施。
 
@@ -2074,7 +2074,7 @@ CONNACK 包中的可变头按序包括了下列字段：连接回复标识，连
 
 #### 3.2.2.1 连接回复标识
 
-<span class="vcMarked">Byte 1 是 “连接回复标识”。Bits 7-1 是保留字段，**必须**被置为0</span> <span class="vcReferred">[MQTT-3.2.2-1]</span>。
+<span class="vcMarked">Byte 1 是 “连接回复标识”。Bits 7-1 是保留字段，**必须**被置为 0</span> <span class="vcReferred">[MQTT-3.2.2-1]</span>。
 
 Bit 0 是会话展示标识。
 
@@ -2090,7 +2090,7 @@ Bit 0 是会话展示标识。
 
 如果客户端从服务器接收到的会话展示的值不符合预期，客户端按照如下步骤继续：
 
-- <span class="vcMarked">如果客户端不持有会话状态，且接收到的会话展示值为1，客户端**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.2.2-4]</span>。如果客户端想要使用新的会话重启，客户端可以将全新开始标识置为 1 然后重新连接。
+- <span class="vcMarked">如果客户端不持有会话状态，且接收到的会话展示值为 1，客户端**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.2.2-4]</span>。如果客户端想要使用新的会话重启，客户端可以将全新开始标识置为 1 然后重新连接。
 - <span class="vcMarked">如果客户端持有会话状态且收到的会话展示值为 0，如果客户端继续使用此网络连接，客户端**必须**丢弃会话状态</span> <span class="vcReferred">[MQTT-3.2.2-5]</span>。
 
 <span class="vcMarked">如果服务器使用非 0 原因码的 CONNACK 包，服务器**必须**将会话展示的值置为 0</span> <span class="vcReferred">[MQTT-3.2.2-6]</span>。
@@ -2170,7 +2170,7 @@ Bit 0 是会话展示标识。
 
 <span class="vcMarked">如果服务器不支持 QoS 1 或 QoS 2 的 PUBLISH，服务器**必须**发送一个带有其可以支持的最大QoS的 CONNACK 包</span> <span class="vcReferred">[MQTT-3.2.2-9]</span>。<span class="vcMarked">一个不支持 QoS 1 或 QoS 2 PUBLISH 的服务器**必须**依然接收包含 QoS 0、1 或 2 的 SUBSCRIBE 包</span> <span class="vcReferred">[MQTT-3.2.2-10]</span>。
 
-<span class="vcMarked">如果客户端从服务器接收了最大QoS，客户端**必须不**发送QoS等级超过最大QoS的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.2.2-11]</span>。服务器收到了超过已指定最大QoS等级的 PUBLISH 包视为协议错误。这种情况下需使用带有原因码 0x9B（不支持的 QoS）的 DISCONNECT 断开连接，参考 [4.13](#4-13-错误处理) 错误处理。
+<span class="vcMarked">如果客户端从服务器接收了最大QoS，客户端**必须不**发送 QoS 等级超过最大QoS的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.2.2-11]</span>。服务器收到了超过已指定最大QoS等级的 PUBLISH 包视为协议错误。这种情况下需使用带有原因码 0x9B（不支持的 QoS）的 DISCONNECT 断开连接，参考 [4.13](#4-13-错误处理) 错误处理。
 
 <span class="vcMarked">如果服务器收到包含超过其能力的遗嘱QoS的 CONNECT 数据包，服务器**必须**拒绝连接。服务器**应该**回复带有原因码 0x9B（不支持的 QoS）的 CONNACK 包，参考 [4.13](#4-13-错误处理) 错误处理，且随后**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.2.2-12]</span>。
 
@@ -2186,7 +2186,7 @@ Bit 0 是会话展示标识。
 
 <span class="vcMarked">如果服务器接收到的 CONNECT 包中包含遗嘱消息，且遗嘱保留消息的值为 1，同时服务器不支持保留消息，服务器**必须**拒绝此连接请求。服务器**应该**发送带有原因码 0x9A（不支持保留消息）的 CONNACK 且随后**必须**关闭网络连接</span> <span class="vcReferred">[MQTT-3.2.2-13]</span>。
 
-<span class="vcMarked">一个收到了服务器发送的保留消息可用值为 0 的客户端，**必须不**发送带有百六消息标识为 1 的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.2.2-14]</span>。如果服务器收到了此种包，视为协议错误。服务器**应该**发送带有原因码为 0x9A（不支持保留消息）的 DISCONNECT 包，参考 [4.13](#4-13-错误处理)。
+<span class="vcMarked">一个收到了服务器发送的保留消息可用值为 0 的客户端，**必须不**发送带有保留消息标识为 1 的 PUBLISH 包</span> <span class="vcReferred">[MQTT-3.2.2-14]</span>。如果服务器收到了此种包，视为协议错误。服务器**应该**发送带有原因码为 0x9A（不支持保留消息）的 DISCONNECT 包，参考 [4.13](#4-13-错误处理)。
 
 ##### 3.2.2.3.6 最大包尺寸
 
@@ -2224,7 +2224,7 @@ Bit 0 是会话展示标识。
 
 随后跟随 `UTF-8字符串` 表示本次响应的原因。原因字符串是一个被设计用来诊断问题的人类可读的字符串，原因字符串**不应该**被客户端解析。
 
-服务器使用本字段向客户端提供课外的信息。<span class="vcMarked">如果因为添加原因字符串会导致CONNACK的包尺寸超过了客户端限制的最大包尺寸，服务器**必须不**发送此属性</span> <span class="vcReferred">[MQTT-3.2.2-19]</span>。原因字符串在属性出现超过一次视为协议错误。
+服务器使用本字段向客户端提供课外的信息。<span class="vcMarked">如果因为添加原因字符串会导致 CONNACK 的包尺寸超过了客户端限制的最大包尺寸，服务器**必须不**发送此属性</span> <span class="vcReferred">[MQTT-3.2.2-19]</span>。原因字符串在属性出现超过一次视为协议错误。
 
 *非规范性评论*
 
@@ -2234,7 +2234,7 @@ Bit 0 是会话展示标识。
 
 用户属性的属性ID是**38 (0x26) Byte**。
 
-随后跟随 `UTF-8字符串对`。这个属性可以用来向客户端提供包括诊断消息在内的扩展信息。<span class="vcMarked">如果添加改属性会导致 CONNACK 的包尺寸大于客户端设置的最大包尺寸，服务器**必须不**添加此属性</span> <span class="vcReferred">[MQTT-3.2.2-20]</span>。用户属性可以出现多次，用来携带多个 键-值 对。同样的 键 允许出现超过一次。
+随后跟随 `UTF-8字符串对`。这个属性可以用来向客户端提供包括诊断消息在内的扩展信息。<span class="vcMarked">如果添加该属性会导致 CONNACK 的包尺寸大于客户端设置的最大包尺寸，服务器**必须不**添加此属性</span> <span class="vcReferred">[MQTT-3.2.2-20]</span>。用户属性可以出现多次，用来携带多个 键-值 对。同样的 键 允许出现超过一次。
 
 本属性的内容和含义不由本规范定义。CONNACK 的接收者在接收到本属性后**可以**选择忽略。
 
@@ -2413,7 +2413,7 @@ PUBLISH 可变头按顺序包含下列字段：主题名称，包ID，属性集�
 
 主题名称决定了载荷发布的信息通道。
 
-<span class="vcMarked">主题名称**必须**作为 PUBLISH 包可变头的第一个字段。他**必须**采用`UTF-8字符串`编码</span>，定义参考 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.3.2-1]</span>。
+<span class="vcMarked">主题名称**必须**作为 PUBLISH 包可变头的第一个字段。他**必须**采用 `UTF-8字符串` 编码</span>，定义参考 [1.5.4](#1-5-4-UTF-8字符串) <span class="vcReferred">[MQTT-3.3.2-1]</span>。
 
 <span class="vcMarked">PUBLISH 包中的主题名称**必须不**包含通配符</span> <span class="vcReferred">[MQTT-3.3.2-2]</span>。
 
@@ -3113,7 +3113,7 @@ SUBSCRIBE 包的载荷内含一个主题过滤器列表，指定了客户端想�
 
 保留消息处理的值为 3 视为协议错误。
 
-订阅选项中的 Bit 6 和 Bit 7 被保留以后使用。<span class="vcMarked">服务器必须将载荷中保留字段值非 0 的 SUBSCRIBE 包视为格式错误的包</span> <span class="vcReferred">[MQTT-3.8.3-5]</span>。
+订阅选项中的 Bit 6 和 Bit 7 被保留以后使用。<span class="vcMarked">服务器**必须**将载荷中保留字段值非 0 的 SUBSCRIBE 包视为格式错误的包</span> <span class="vcReferred">[MQTT-3.8.3-5]</span>。
 
 *非规范性评论*
 
@@ -3183,7 +3183,7 @@ NL 表示非本地。
 
 ### 3.8.4 SUBSCRIBE动作
 
-<span class="vcMarked">当服务器从客户端收到 SUBSCRIBE 包，服务器**必须**使用 SUBACK 响应</span> <span class="vcReferred">[MQTT-3.8.4-1]</span>。<span class="vcMarked">SUBACK 中的包ID必须和其对应的 SUBSCRIBE 包中的包ID一致</span> <span class="vcReferred">[MQTT-3.8.4-2]</span>。
+<span class="vcMarked">当服务器从客户端收到 SUBSCRIBE 包，服务器**必须**使用 SUBACK 响应</span> <span class="vcReferred">[MQTT-3.8.4-1]</span>。<span class="vcMarked">SUBACK 中的包ID**必须**和其对应的 SUBSCRIBE 包中的包ID一致</span> <span class="vcReferred">[MQTT-3.8.4-2]</span>。
 
 服务器允许在发送 SUBACK 之前就转发订阅所匹配的 PUBLISH 包。
 
@@ -3484,6 +3484,8 @@ UNSUBACK 可变头按序包括下列字段：与其回复的 UNSUBSCRIBE 对应�
 ### 3.11.3 UNSUBACK载荷
 
 载荷带有一个原因码列表。每个原因码和 UNSUBSCRIBE 包中的一个主题过滤器对应。<span class="vcMarked">UNSUBACK 包中的原因码顺序**必须**和 UNSUBSCRIBE 包中的主题过滤器顺序一致</span> <span class="vcReferred">[MQTT-3.11.3-1]</span>。
+
+无符号一字节的取消订阅原因码参见下表。<span class="vcMarked">服务器发送的 UNSUBACK 包**必须**对每个收到的主题过滤器使用下表之一的原因码</span> <span class="vcReferred">[MQTT-3.11.3-2]</span>。
 
 表 3‑9 - 取消订阅原因码
 
@@ -4018,10 +4020,10 @@ QoS 2 消息的可变头中带有包ID。章节 [2.2.1](#2-2-1-包ID) 提供了�
 
 在实现第 [4.3](#4-3-QoS和协议流程) 中定义的协议流时，以下这些规则适用于客户端
 
-- 当客户端重传 PUBLISH 包时，其必须按照原始 PUBLISH 包的顺序发送（包括 QoS 1 和 QoS 2 消息）[MQTT-4.6.0-1]。
-- 客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBACK 包（QoS 1 消息）[MQTT-4.6.0-2]。
-- 客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBREC 包（QoS 2 消息）[MQTT-4.6.0-3]。
-- 客户端**必须**按照接收 PUBREC 包的顺序发送 PUBREL 包（QoS 2 消息）[MQTT-4.6.0-4]。
+- <span class="vcMarked">当客户端重传 PUBLISH 包时，其必须按照原始 PUBLISH 包的顺序发送（包括 QoS 1 和 QoS 2 消息）</span> <span class="vcReferred">[MQTT-4.6.0-1]</span>。
+- <span class="vcMarked">客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBACK 包（QoS 1 消息）</span> <span class="vcReferred">[MQTT-4.6.0-2]</span>。
+- <span class="vcMarked">客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBREC 包（QoS 2 消息）</span> <span class="vcReferred">[MQTT-4.6.0-3]</span>。
+- <span class="vcMarked">客户端**必须**按照接收 PUBREC 包的顺序发送 PUBREL 包（QoS 2 消息）</span> <span class="vcReferred">[MQTT-4.6.0-4]</span>。
 
 有序主题指的是客户端可以确定接收到该主题下的同一客户端发送的相同 QoS 的消息，其接收顺序和发送方的发送顺序是相同的。<span class="vcMarked">当服务器处理发布到有序主题的消息时，服务器**必须**保证其对消费者发送的 PUBLISH 包（对于相同主题和相同 QoS）的顺序和服务器从客户端接收这些包时相同</span> <span class="vcReferred">[MQTT-4.6.0-5]</span>。这是对上面列出规则的补充。
 
@@ -4274,7 +4276,7 @@ MQTT 服务器转发请求消息中的响应主题和关联数据，以及响应
 
 *非规范性评论*
 
-*服务器引用中的名称通常表示主机名、DNS 名称 [RFC1035](#1.4-RFC1035)、SRV 名称 [RFC2782](#1.4-RFC2782) 或文字 IP 地址。冒号分隔符后面的值通常是十进制的端口号。如果端口信息来自名称解析（例如使用 SRV）或者是默认的，无需携带端口号。*
+*服务引用中的名称通常表示主机名、DNS 名称 [RFC1035](#1.4-RFC1035)、SRV 名称 [RFC2782](#1.4-RFC2782) 或文字 IP 地址。冒号分隔符后面的值通常是十进制的端口号。如果端口信息来自名称解析（例如使用 SRV）或者是默认的，无需携带端口号。*
 
 *非规范性评论*
 
@@ -4339,7 +4341,7 @@ Non-normative example showing a SCRAM challenge
 
 ### 4.12.1 重新认证
 
-<span class="vcMarked">如果客户端在 CONNECT 包中提供了认证方法，则可以在收到 CONNACK 后随时启动重新认证。通过发送原因码为 0x19（重新认证）的 AUTH 包来实现。客户端必须将认证方法设置为与最初用于认证网络连接的认证方法相同的值</span> <span class="vcReferred">[MQTT-4.12.1-1]</span>。如果认证方法要求客户端先发送数据，则此 AUTH 数据包通过认证数据属性携带第一份数据。
+<span class="vcMarked">如果客户端在 CONNECT 包中提供了认证方法，则可以在收到 CONNACK 后随时启动重新认证。通过发送原因码为 0x19（重新认证）的 AUTH 包来实现。客户端**必须**将认证方法设置为与最初用于认证网络连接的认证方法相同的值</span> <span class="vcReferred">[MQTT-4.12.1-1]</span>。如果认证方法要求客户端先发送数据，则此 AUTH 数据包通过认证数据属性携带第一份数据。
 
 服务器通过发送原因码为 0x00（成功）的 AUTH 包来响应此重新认证请求，表示重新认证已完成，或原因码为 0x18（继续认证）来表示需要更多认证数据。客户端可以通过发送原因码为 0x18（继续认证）的 AUTH 数据包来响应并提供额外的认证数据。此流程像初始认证一样继续进行，直到重新认证完成或重新认证失败。
 
@@ -4660,7 +4662,7 @@ MQTT 规范定义了 MQTT 客户端实现和 MQTT 服务器实现的一致性。
   - [第三章 - MQTT包](#3-MQTT包)
   - [第四章 - 操作行为](#4-操作行为)
   - [第六章 - 使用WebSocket作为传输层](#6-使用WebSocket作为传输层)
-- 它不需要使用规范之外定义的任何扩展与任何其他符合标准的实现进行互操作。
+- 不需要使用规范之外定义的任何扩展即可与任何其他符合标准的实现进行互操作。
 
 ### 7.1.2 MQTT客户端一致性条款
 
@@ -4668,31 +4670,374 @@ MQTT 规范定义了 MQTT 客户端实现和 MQTT 服务器实现的一致性。
 
 MQTT 客户端仅在满足以下所有陈述时才符合本规范：
 
-**控制包格式：**客户端发送的所有 MQTT 控制包的格式必须与第 2 章和第 3 章描述的格式相匹配。
-**行为要求：**客户端必须满足以下章节中已标识的 必须 级别要求，但仅适用于客户端的除外：
-第一章 - 简介
-第二章 - MQTT 控制包格式
-第三章 - MQTT 控制包
-第四章 - 操作行为
-第六章 - 使用 WebSocket 作为网络传输
-**扩展限制：**客户端不得强制使用规范之外定义的任何扩展与任何其他符合标准的实现进行互操作。
+1. 客户端发送的所有 MQTT 包的格式必须与[第 2 章](#2-MQTT包格式) 和 [第 3 章](#3-MQTT包)描述的格式相匹配。
+2. 客户端必须满足以下章节中已标识的**必须**级别要求，但仅适用于服务器的除外：
+  - [第一章 - 简介](#1-介绍)
+  - [第二章 - MQTT包格式](#2-MQTT包格式)
+  - [第三章 - MQTT包](#3-MQTT包)
+  - [第四章 - 操作行为](#4-操作行为)
+  - [第六章 - 使用WebSocket作为传输层](#6-使用WebSocket作为传输层)
+3. 不需要使用规范之外定义的任何扩展即可与任何其他符合标准的实现进行互操作。
 
-1.     The format of all MQTT Control Packets that the Client sends matches the format described in Chapter 2 and Chapter 3.
+# 附录 A. 致谢
 
-2.     It satisfies the MUST level requirements in the following chapters that are identified except for those that only apply to the Server:
+MQTT 技术委员会 (TC) 特别感谢 MQTT 协议的最初发明者 Andy Stanford-Clark 博士和 Arlen Nipper，以及他们对标准化过程的持续支持。
 
-·         Chapter 1 - Introduction
+技术委员会感谢 Brian Raymor (前微软员工)，他在 5.0 版本标准的大部分开发过程中担任 MQTT 技术委员会的联合主席。
 
-·         Chapter 2 - MQTT Control Packet format
+以下个人是 OASIS 技术委员会在创建本标准期间的成员，他们的贡献得到了热烈的认可：
 
-·         Chapter 3 - MQTT Control Packets
-
-·         Chapter 4 - Operational behavior
-
-·         Chapter 6 - Using WebSocket as a network transport
-
-3.     It does not require the use of any extensions defined outside of the specification in order to interoperate with any other conformant implementation.
+参与者：
+- Senthil Nathan Balasubramaniam (Infiswift)
+- Dr. Andrew Banks, 编辑 (IBM)
+- Ken Borgendale, 编辑 (IBM)
+- Ed Briggs, 编辑 (微软)
+- Raphael Cohn (个人)
+- Richard Coppen, 主席 (IBM)
+- William Cox (个人)
+- Ian Craggs , 秘书 (IBM)
+- Konstantin Dotchkoff (微软)
+- Derek Fu (IBM)
+- Rahul Gupta, 编辑 (IBM)
+- Stefan Hagen (个人)
+- David Horton (Solace Systems)
+- Alex Kritikos (Software AG, Inc.)
+- Jonathan Levell (IBM)
+- Shawn McAllister (Solace Systems)
+- William McLane (TIBCO Software Inc.)
+- Peter Niblett (IBM)
+- Dominik Obermaier (dc-square GmbH)
+- Nicholas O'Leary (IBM)
+- Brian Raymor (微软)
+- Andrew Schofield (IBM)
+- Tobias Sommer (Cumulocity)
+- Joe Speed (IBM)
+- Dr Andy Stanford-Clark (IBM)
+- Allan Stockdill-Mander (IBM)
+- Stehan Vaillant (Cumulocity)
  
+有关对 MQTT 早期版本做出贡献的人员列表，请参考 MQTT v3.1.1 规范 [MQTTV311](#1.4-MQTTV311) 的附录 A。
 
+# 附录 B. 强制性规范性声明（非规范性）
+
+本附录是非规范性的，是作为本文档主体中编号的一致性声明的方便摘要而提供的。有关一致性要求的明确列表，请参阅[第 7 章](#7-一致性)。
+
+| 规范性声明编号 | 规范性声明 |
+| --- | --- |
+| [MQTT-1.5.4-1] | 在 UTF-8 编码字符串中的字符**必须**为 [Unicode] 和 [RFC3629] 中所定义的，格式正确的字符编码。**必须不**使用U+D800 至 U+DFFF之间的编码 |
+| [MQTT-1.5.4-2] | UTF-8 编码字符串**必须**不包含空字符 U+0000 |
+| [MQTT-1.5.4-3] | 无论 UTF-8 编码序列 0xEF 0xBB 0xBF 出现在字符串的何处，他永远被解释为 U+FEFF (0宽无换行空格) 而且**必须**不能被数据包的接收者跳过或剥离 |
+| [MQTT-1.5.5-1] | 变长整数编码时**必须**使用能够表示数字值的最小长度来进行编码 |
+| [MQTT-1.5.7-1] | UTF-8字符串对中的两个字符串都**必须**遵守 UTF-8 字符串的需求 |
+| [MQTT-2.1.3-1] | 当一个比特位被标记为 “保留” 时，他的意义被保留到未来使用而他的值**必须**按照下表设置 |
+| [MQTT-2.2.1-2] | 当 PUBLISH 包的 QoS 值为 0 时，**必须不**包含 包ID 字段 |
+| [MQTT-2.2.1-3] | 每当客户端发送新的 SUBSCRIBE 包，UNSUBSCRIBE 包 或 QoS > 0 的 PUBLISH 包，**必须**携带一个非零且当前未被使用的包ID |
+| [MQTT-2.2.1-4] | 每当服务器发送新的 QoS > 0 的 PUBLISH 包，**必须**携带一个非零且当前未被使用的包ID |
+| [MQTT-2.2.1-5] | PUBACK，PUBREC，PUBREL 或 PUBCOMP 包**必须**携带和 PUBLISH 相同的包ID |
+| [MQTT-2.2.1-6] | SUBACK 和 UNSUBACK **必须**携带和其对应的 SUBSCRIBE 和 UNSUBSCRIBE 包相同的包ID |
+| [MQTT-2.2.2-1] | 如果没有属性，**必须**通过一个 0 值的属性长度来明确表示 |
+| [MQTT-3.1.0-1] | 当客户端和服务器的网络连接建立后，客户端向服务器发送的第一个数据包**必须**是 CONNECT 包 |
+| [MQTT-3.1.0-2] | 服务器**必须**将客户端发送的第二个 CONNECT 包视为协议错误并关闭网络连接 |
+| [MQTT-3.1.2-1] | 协议名称**必须**是 `UTF-8字符串`表示的 “MQTT”。如果服务器不想接收此连接，同时又想告知客户端服务器是一个 MQTT 服务器，**可以**发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器**必须**关闭网络连接 |
+| [MQTT-3.1.2-2] | 如果客户端使用的协议版本不为 5 而且服务器不想接受此 CONNECT 包，服务器**可以**发送一个带有 0x84（协议版本不支持）原因码的 CONNACK，随后服务器**必须**关闭网络连接 |
+| [MQTT-3.1.2-3] | 服务器**必须**验证 CONNECT 包中的保留位的值是 0 |
+| [MQTT-3.1.2-4] | 如果接收到全新开始值置为 1 的 CONNECT 包，客户端和服务器**必须**丢弃任何已经存在的会话并开始一个新的会话 |
+| [MQTT-3.1.2-5] | 如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中已经存在和客户端ID关联的会话，服务器**必须**基于已经存在的会话状态恢复客户端的连接 |
+| [MQTT-3.1.2-6] | 如果服务器接收到的 CONNECT 包中的全新开始被置为 0 并且服务器中没有和客户端ID关联的会话，服务器**必须**创建一个新的会话 |
+| [MQTT-3.1.2-7] | 如果遗嘱标识被置为 1，则表示遗嘱消息**必须**被存储在服务器中，并且关联到此会话 |
+| [MQTT-3.1.2-8] | 遗嘱消息**必须**在网络连接断开后的遗嘱延迟间隔时间过期后或会话结束时发布，除非由于服务器接收到一个带有 0x00（普通断开）原因码的 DISCONNECT 包从而删除了遗嘱消息，或是在遗嘱延迟间隔时间过期前接收了一个带有相同客户端ID的连接 |
+| [MQTT-3.1.2-9] | 当遗嘱标识被置为 1 时，服务器需采用连接标志中的遗嘱 QoS 和遗嘱保留消息字段，载荷中**必须**包括遗嘱属性集、遗嘱主题和遗嘱载荷字段 |
+| [MQTT-3.1.2-10] | 当服务器发布遗嘱后或服务器从客户端收到了原因码为 0x00（普通断开）的 DISCONNECT 包后，服务器**必须**从会话状态中删除遗嘱消息 |
+| [MQTT-3.1.2-11] | 当遗嘱标识被置为 0 时，遗嘱 QoS **必须**被置为 0（0x00） |
+| [MQTT-3.1.2-12] | 当遗嘱标识被置为 1 时，遗嘱QoS的值可以是 0（0x00），1（0x01）或 2（0x02） |
+| [MQTT-3.1.2-13] | 当遗嘱标识被置为 0 时，遗嘱保留消息的值**必须**被置为 0 |
+| [MQTT-3.1.2-14] | 当遗嘱标识被置为 1 且遗嘱保留消息被置为 0 时，服务器**必须**将遗嘱消息作为一个非保留消息发布 |
+| [MQTT-3.1.2-15] | 当遗嘱标识被置为 1 且遗嘱保留消息被置为 1 时，服务器**必须**将遗嘱消息作为一个保留消息发布 |
+| [MQTT-3.1.2-16] | 当用户名标识被置为 0 时，载荷中**必须不**存在用户名 |
+| [MQTT-3.1.2-17] | 当用户名标识被置为 1 时，载荷中**必须**存在用户名 |
+| [MQTT-3.1.2-18] | 当密码标识被置为 0 时，载荷中**必须不**存在密码 |
+| [MQTT-3.1.2-19] | 当密码标识被置为 1 时，载荷中**必须**存在密码 |
+| [MQTT-3.1.2-20] | 如果保活时间不为 0 且没有任何其他需要发送的数据包，客户端**必须**发送 PINGREQ 包 |
+| [MQTT-3.1.2-21] | 如果服务器在 CONNACK 中提供了服务器保活时间，则客户端**必须**采用服务器保活时间的值来替代自己发送的保活时间的值 |
+| [MQTT-3.1.2-22] | 如果保活时间为非零值且服务器在 1.5 倍的保活时间内没有收到来自客户端的任何 MQTT 包，服务器**必须**断开到客户端的网络连接并视为网络连接故障 |
+| [MQTT-3.1.2-23] | 当会话过期间隔的值大于 0 时，客户端和服务器都**必须**在网络连接断开后存储会话状态 |
+| [MQTT-3.1.2-24] | 服务器**必须不**向客户端发送超过最大包尺寸的数据包 |
+| [MQTT-3.1.2-25] | 当一个包因超过最大包尺寸而无法发送，服务器**必须**将其丢弃，并视为发送成功 |
+| [MQTT-3.1.2-26] | 服务器**必须不**发送一个主题别名的值大于客户端设置的主题别名最大值的 PUBLISH 包 |
+| [MQTT-3.1.2-27] | 如果主题别名最大值未设置或值为 0，服务器**必须不**向客户端发送主题别名 |
+| [MQTT-3.1.2-28] | 此值为 0 表示服务器**必须不**在 CONNACK 中回复响应信息 |
+| [MQTT-3.1.2-29] | 如果请求问题信息的值为 0，服务器可以在 CONNACK 或 DISCONNECT 包中携带原因字符串或用户属性，但**必须不**在除 PUBLISH，CONNACK，DISCONNECT 之外的包中携带原因字符串或用户属性 |
+| [MQTT-3.1.2-30] | 如果客户端再 CONNECK 包中设置了认证方式，那么在其收到 CONNACK 包之前，客户端**必须不**发送除了 AUTH 和 DISCONNECT 包之外的任何类型的包 |
+| [MQTT-3.1.3-1] | CONNECT 中的载荷包含了一个或多个 长度 + 内容 格式的字段，这些字段的存在与否由可变头中的标志位决定。这些字段的顺序是固定的，如果存在的话，**必须**按照 客户端ID，遗嘱属性集，遗嘱主题，遗嘱载荷，用户名，密码 这样的顺序出现 |
+| [MQTT-3.1.3-2] | 客户端ID**必须**被客户端和服务器用于关联客户端和服务器之间的会话状态 |
+| [MQTT-3.1.3-3] | 客户端ID**必须**作为 CONNECT 包载荷中的第一个字段出现 |
+| [MQTT-3.1.3-4] | 客户端ID**必须**被编码为一个 `UTF-8字符串` |
+| [MQTT-3.1.3-5] | 服务器**必须**允许客户端ID是长度为 1 到 23 个字节之间的 `UTF-8字符串`，且仅包含下列字符：“0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ” |
+| [MQTT-3.1.3-6] | 服务器**可以**允许客户端传递长度为 0 的客户端ID，当此情况发生时，服务器**必须**将此情况作为一个特殊情况对待，并为客户端分配一个唯一的客户端ID |
+| [MQTT-3.1.3-7] | 服务器之后**必须**正常处理此 CONNECT 包，就如同客户端本身携带了这个唯一的客户端ID一样，而且**必须**在 CONNACK 包中返回这个分配的客户端ID |
+| [MQTT-3.1.3-8] | 如果服务器拒绝了客户端ID，服务器**可以**使用一个带有原因码 0x85（客户端ID不可用）的 CONNACK 包作为对客户端 CONNECT 包的响应，如同 [4.13] 中描述的那样，之后服务器**必须**关闭网络连接 |
+| [MQTT-3.1.3-9] | 如果在遗嘱延迟间隔结束前，该会话被新的网络连接延续，服务器**必须不**发送遗嘱 |
+| [MQTT-3.1.3-10] | 服务器**必须**在发布遗嘱消息时维持用户属性的顺序 |
+| [MQTT-3.1.3-11] | 遗嘱主题**必须**是一个 `UTF-8字符串` |
+| [MQTT-3.1.3-12] | 用户名**必须**是一个 `UTF-8字符串` |
+| [MQTT-3.1.4-1] | 服务器**必须**验证 CONNECT 包的格式符合 [3.1] 中的描述，如不符合则关闭网络连接 |
+| [MQTT-3.1.4-2] | 服务器**可以**检查 CONNECT 包中的内容是否满足更进一步的限制要求，并且**应该**进行认证和授权检查。如果其中任何检查失败，服务器**必须**关闭网络连接 |
+| [MQTT-3.1.4-3] | 如果客户端ID代表了一个已经连接到服务器的客户端，服务器参考 [4.13] 发送一个带有原因码 0x8E（会话被接管）的 DISCONNECT 包到当前已有连接的客户端，且**必须**关闭当前已有连接客户端的网络连接 |
+| [MQTT-3.1.4-4] | 服务器**必须**参考 [3.1.2.4] 中的描述处理全新开始标识 |
+| [MQTT-3.1.4-5] | 服务器**必须**使用带有原因码为 0x00（成功）的 CONNACK 回复 CONNECT 包 |
+| [MQTT-3.1.4-6] | 如果服务器拒绝了 CONNECT，服务器**必须不**处理客户端在 CONNECT 包之后发送的任何除了 AUTH 以外的包 |
+| [MQTT-3.2.0-1] | 服务器**必须**在发送除 AUTH 外的其他任何MQTT包之前使用带有响应码 0x00（成功）的 CONNACK 包回复客户端 |
+| [MQTT-3.2.0-2] | 服务器**必须不**在一次网络连接中发送超过一个 CONNACK 包 |
+| [MQTT-3.2.2-1] | Byte 1 是 “连接回复标识”。Bits 7-1 是保留字段，**必须**被置为 0 |
+| [MQTT-3.2.2-2] | 如果服务器接收连接的全新开始标识被置为 1，服务器**必须**在带有 0x00（成功）的原因码的 CONNACK 包中将会话展示置为 0 |
+| [MQTT-3.2.2-3] | 如果服务器接收到的连接中全新开始位被置为 0，且服务器持有对此客户端ID的会话状态，服务器**必须**在 CONNACK 包中将会话展示标识置为 1，其他情况下，服务器都**必须**在 CONNACK 包中将会话展示标识置为 0。这两种情况下服务器都**必须**在 CONNACK 中使用原因码 0x00（成功） |
+| [MQTT-3.2.2-4] | 如果客户端不持有会话状态，且接收到的会话展示值为 1，客户端**必须**关闭网络连接 |
+| [MQTT-3.2.2-5] | 如果客户端持有会话状态且收到的会话展示值为 0，如果客户端继续使用此网络连接，客户端**必须**丢弃会话状态 |
+| [MQTT-3.2.2-6] | 如果服务器使用非 0 原因码的 CONNACK 包，服务器**必须**将会话展示的值置为 0 |
+| [MQTT-3.2.2-7] | 如果服务器发送的 CONNACK 包带有一个值为 128 或更高的原因码，服务器**必须**随后关闭网络连接 |
+| [MQTT-3.2.2-8] | 服务器发送的 CONNACK **必须**使用下述之一的原因码 |
+| [MQTT-3.2.2-9] | 如果服务器不支持 QoS 1 或 QoS 2 的 PUBLISH，服务器**必须**发送一个带有其可以支持的最大QoS的 CONNACK 包 |
+| [MQTT-3.2.2-10] | 一个不支持 QoS 1 或 QoS 2 PUBLISH 的服务器**必须**依然接收包含 QoS 0、1 或 2 的 SUBSCRIBE 包 |
+| [MQTT-3.2.2-11] | 如果客户端从服务器接收了最大QoS，客户端**必须不**发送QoS等级超过最大QoS的 PUBLISH 包 |
+| [MQTT-3.2.2-12] | 如果服务器收到包含超过其能力的遗嘱QoS的 CONNECT 数据包，服务器**必须**拒绝连接。服务器**应该**回复带有原因码 0x9B（不支持的 QoS）的 CONNACK 包，参考 [4.13] 错误处理，且随后**必须**关闭网络连接 |
+| [MQTT-3.2.2-13] | 如果服务器接收到的 CONNECT 包中包含遗嘱消息，且遗嘱保留消息的值为 1，同时服务器不支持保留消息，服务器**必须**拒绝此连接请求。服务器**应该**发送带有原因码 0x9A（不支持保留消息）的 CONNACK 且随后**必须**关闭网络连接 |
+| [MQTT-3.2.2-14] | 一个收到了服务器发送的保留消息可用值为 0 的客户端，**必须不**发送带有保留消息标识为 1 的 PUBLISH 包 |
+| [MQTT-3.2.2-15] | 客户端**必须不**向服务器发送超过最大包尺寸的数据包 |
+| [MQTT-3.2.2-16] | 如果客户端使用长度为 0 的客户端ID连接，服务器**必须**使用带有分配的客户端ID的 CONNACK 回复。分配的客户端ID**必须**是一个当前所有会话都没有使用的全新ID |
+| [MQTT-3.2.2-17] | 客户端**必须不**能发送一个主题别名的值大于服务器设置的主题别名最大值的 PUBLISH 包 |
+| [MQTT-3.2.2-18] | 如果主题别名最大值未设置或值为 0，客户端**必须不**向服务器发送主题别名 |
+| [MQTT-3.2.2-19] | 如果因为添加原因字符串会导致 CONNACK 的包尺寸超过了客户端限制的最大包尺寸，服务器**必须不**发送此属性 |
+| [MQTT-3.2.2-20] | 如果添加该属性会导致 CONNACK 的包尺寸大于客户端设置的最大包尺寸，服务器**必须不**添加此属性 |
+| [MQTT-3.2.2-21] | 如果服务器在 CONNACK 中发送了服务器保活时间，客户端**必须**使用此值代替其在 CONNECT 中发送的保活时间 |
+| [MQTT-3.2.2-22] | 如果服务器没有设置服务器保活时间，服务器**必须**使用客户端在 CONNECT 包中设置的保活时间 |
+| [MQTT-3.3.1-1] | 当客户端或服务器尝试重传 PUBLISH 包时，他们**必须**把重复标志置为 1 |
+| [MQTT-3.3.1-2] | 对于 QoS 0 的消息，重复标识**必须**被置为 0 |
+| [MQTT-3.3.1-3] | 转发的 PUBLISH 包的重复标识独立于接收的 PUBLISH 包，此值仅被本次转发包是否为重传独立决定 |
+| [MQTT-3.3.1-4] | PUBLISH 包**必须不**能将 QoS 的两个 bit 都设置为 1 |
+| [MQTT-3.3.1-5] | 当客户端向服务器发送的 PUBLISH 包中的保留消息被置为 1 时，服务器**必须**在此主题下保存此应用消息，替换任何已经存在的消息 |
+| [MQTT-3.3.1-6] | 如果载荷为空，服务器照常处理，只不过该同名主题下现有的保留消息**必须**被移除，未来的订阅者也不会再收到保留消息 |
+| [MQTT-3.3.1-7] | 带有空载荷的保留消息**必须不**被服务器作为保留消息存储 |
+| [MQTT-3.3.1-8] | 如果客户端发送到服务器的 PUBLISH 包中的保留消息值为 0，服务器**必须不**将该消息作为保留消息存储且**必须不**删除或替换已经存在的保留消息 |
+| [MQTT-3.3.1-9] | 如果保留消息处理值为 0，服务器**必须**将匹配订阅主题过滤器的保留消息发送给客户端 |
+| [MQTT-3.3.1-10] | 如果保留消息处理值为 1，当该订阅之前不存在时，服务器**必须**将匹配订阅主题过滤器的保留消息发送给客户端，反之当该订阅之前存在时，服务器**必须不**发送保留消息 |
+| [MQTT-3.3.1-11] | 如果保留消息处理值为 2，服务器**必须不**发送保留消息 |
+| [MQTT-3.3.1-12] | 如果保留消息引用发布的值为 0，服务器**必须**在转发应用消息时将保留消息值置为 0，无论其收到的 PUBLISH 包中的保留消息值如何设置 |
+| [MQTT-3.3.1-13] | 如果保留消息引用发布的值为 1，服务器**必须**使用和收到的 PUBLISH 包中保留消息值相同的保留消息值 |
+| [MQTT-3.3.2-1] | 主题名称**必须**作为 PUBLISH 包可变头的第一个字段。他**必须**采用 `UTF-8字符串` 编码 |
+| [MQTT-3.3.2-2] | PUBLISH 包中的主题名称**必须不**包含通配符 |
+| [MQTT-3.3.2-3] | 服务器发往客户端的 PUBLISH 包中的主题名称必须匹配订阅者的主题过滤器 |
+| [MQTT-3.3.2-4] | 服务器**必须**将载荷格式标识原封不动的发送给所有应用消息的接收者 |
+| [MQTT-3.3.2-5] | 当该字段存在时，此四字节的值表示以秒为单位的应用消息生命时间。如果消息过期间隔已经超时，且服务器尚未设法开始向前传递到匹配的订阅者，服务器**必须**删除面向该订阅者的该消息的副本 |
+| [MQTT-3.3.2-6] | 客户端发送给服务器的 PUBLISH 包中的消息过期间隔**必须**被设置为服务器接收的消息过期间隔的值减去消息在服务器中等待的时间 |
+| [MQTT-3.3.2-7] | 接收者**必须不**能将主题别名从一个网络连接转发到另一个网络连接 |
+| [MQTT-3.3.2-8] | 发送者**必须不**能发送一个包含主题别名值为 0 的 PUBLISH 包 |
+| [MQTT-3.3.2-9] | 客户端**必须不**发送包含主题别名值超过服务器 CONNACK 中设置的主题别名最大值的 PUBLISH 包 |
+| [MQTT-3.3.2-10] | 客户端**必须**接收所有大于 0 且小于或等于其 CONNECT 包中设置的主题别名最大值的主题别名 |
+| [MQTT-3.3.2-11] | 服务器**必须不**发送包含主题别名值超过客户端 CONNECT 包中设置的主题别名最大值的 PUBLISH 包 |
+| [MQTT-3.3.2-12] | 服务器**必须**接收所有大于 0 且小于等于其 CONNACK 包中设置的主题别名最大值的主题别名 |
+| [MQTT-3.3.2-13] | 响应主题**必须**使用 `UTF-8字符串` 格式 |
+| [MQTT-3.3.2-14] | 响应主题**必须不**包含通配符 |
+| [MQTT-3.3.2-15] | 服务器**必须**向所有接收该应用消息的订阅者原封不动的转发响应主题 |
+| [MQTT-3.3.2-16] | 服务器**必须**将关联数据原封不动的转发给接收应用消息的订阅者 |
+| [MQTT-3.3.2-17] | 服务器**必须**将 PUBLISH 包中的所有用户属性原封不动的转发给客户端 |
+| [MQTT-3.3.2-18] | 服务器**必须**在转发应用消息时维护用户属性的顺序 |
+| [MQTT-3.3.2-19] | 内容类型**必须**是 `UTF-8字符串` 格式 |
+| [MQTT-3.3.2-20] | 服务器**必须**将内容格式原封不动的转发给所有接收应用消息的订阅者 |
+| [MQTT-3.3.4-1] | PUBLISH 包的接收者**必须**使用 PUBLISH 包中 QoS 对应的方式响应此包 |
+| [MQTT-3.3.4-2] | 在这种情况下服务器**必须**使用这些重叠订阅中最高的 QoS 等级来发布此数据 |
+| [MQTT-3.3.4-3] | 如果客户端在重叠订阅时设置了订阅ID，服务器**必须**在为该订阅发布消息时将订阅ID放入消息中 |
+| [MQTT-3.3.4-4] | 如果服务器发送该消息的单一副本，服务器**必须**将所有包含订阅ID的订阅动作的订阅ID放入 PUBLISH 包中，他们的顺序不重要 |
+| [MQTT-3.3.4-5] | 如果服务器发送该消息的多个副本，服务器**必须**在每个副本中放入对应订阅动作的订阅ID |
+| [MQTT-3.3.4-6] | 从客户端发往服务器的 PUBLISH 包**必须不**携带订阅ID |
+| [MQTT-3.3.4-7] | 当客户端没有接收到足够的 PUBACK、PUBCOMP 或带有大于等于 128 原因码的 PUBREC 时，客户端**必须不**发送QoS 1 或 QoS 2 的 PUBLISH 包导致其需接收的返回数量超过接收最大值 |
+| [MQTT-3.3.4-8] | 客户端不能延迟任何包的发送，除了因未收到接受回复而达到接收最大值因此未能发送的 PUBLISH 包 |
+| [MQTT-3.3.4-9] | 当服务器没有接收到足够的 PUBACK、PUBCOMP 或带有大于等于 128 原因码的 PUBREC 时，服务器**必须不**发送QoS 1 或 QoS 2 的 PUBLISH 包导致其需接收的返回数量超过接收最大值 |
+| [MQTT-3.3.4-10] | 服务器不能延迟任何包的发送，除了因未收到接受回复而达到接收最大值因此未能发送的 PUBLISH 包 |
+| [MQTT-3.4.2-1] | 客户端或服务器发送的 PUBACK 包**必须**采用上述之一的 PUBACK 原因码 |
+| [MQTT-3.4.2-2] | 如果添加此字段会导致 PUBACK 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.4.2-3] | 如果添加此字段会导致 PUBACK 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.5.2-1] | 客户端或服务器发送的 PUBREC 包**必须**采用上述之一的 PUBREC 原因码 |
+| [MQTT-3.5.2-2] | 如果添加此字段会导致 PUBREC 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.5.2-3] | 如果添加此字段会导致 PUBREC 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.6.1-1] | PUBREL 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接 |
+| [MQTT-3.6.2-1] | 客户端或服务器发送的 PUBREL 包**必须**采用上述之一的 PUBREL 原因码 |
+| [MQTT-3.6.2-2] | 如果添加此字段会导致 PUBREL 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.6.2-3] | 如果添加此字段会导致 PUBREL 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.7.2-1] | 客户端或服务器发送的 PUBCOMP 包**必须**采用上述之一的 PUBCOMP 原因码 |
+| [MQTT-3.7.2-2] | 如果添加此字段会导致 PUBCOMP 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.7.2-3] | 如果添加此字段会导致 PUBCOMP 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.8.1-1] | SUBSCRIBE 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接 |
+| [MQTT-3.8.3-1] | 主题过滤器**必须**是一个 `UTF-8字符串` |
+| [MQTT-3.8.3-2] | 载荷**必须**至少包含一个主题过滤器和订阅选项对 |
+| [MQTT-3.8.3-3] | 订阅选项中的 Bit 2 表示非本地选项。如果其值为 1，服务器**必须不**将应用消息转发给与发布者客户端ID相同的订阅者 |
+| [MQTT-3.8.3-4] | 在共享订阅中非本地选项值为 1 视为协议错误 |
+| [MQTT-3.8.3-5] | 服务器**必须**将载荷中保留字段值非 0 的 SUBSCRIBE 包视为格式错误的包 |
+| [MQTT-3.8.4-1] | 当服务器从客户端收到 SUBSCRIBE 包，服务器**必须**使用 SUBACK 响应 |
+| [MQTT-3.8.4-2] | SUBACK 中的包ID**必须**和其对应的 SUBSCRIBE 包中的包ID一致 |
+| [MQTT-3.8.4-3] | 如果服务器接收到一个 SUBSCRIBE 包，其中包含的主题过滤器和现在会话中的一个订阅完全相同，服务器**必须**使用新订阅取代现有的订阅 |
+| [MQTT-3.8.4-4] | 如果他的保留消息处理选项值为 0，且主题过滤器中现在有匹配的保留消息，服务器**必须**重新发送，但是服务器**必须不**能因为订阅的替换导致应用消息的丢失 |
+| [MQTT-3.8.4-5] | 如果一个服务器接受的 SUBSCRIBE 包包含有多个订阅主题，服务器**必须**像接收了多个独立的 SUBSCRIBE 包一个逐个处理，唯一的不同是服务器将所有订阅请求的响应放入一个 SUBACK 包中回复 |
+| [MQTT-3.8.4-6] | 服务器发往客户端的 SUBACK **必须**为每一个 主题过滤器/订阅选项 对提供一个原因码 |
+| [MQTT-3.8.4-7] | 这个原因码**必须**提供服务器为此次订阅分配的最大QoS或是指明本次订阅失败 |
+| [MQTT-3.8.4-8] | 发送给订阅者的应用消息中的QoS**必须**是原始 PUBLISH 包中的QoS和服务器分配的最大QoS两者中的较小值 |
+| [MQTT-3.9.2-1] | 如果添加此字段会导致 SUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段 |
+| [MQTT-3.9.2-2] | 如果添加此字段会导致 SUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段 |
+| [MQTT-3.9.3-1] | SUBACK 中原因码的顺序**必须**与 SUBSCRIBE 中主题过滤器的顺序匹配 |
+| [MQTT-3.9.3-2] | 服务器发送的 SUBACK 包**必须**对每个收到的主题过滤器使用上表列出的原因码进行回复 |
+| [MQTT-3.10.1-1] | UNSUBSCRIBE 包固定头中的 Bit 3、2、1、0 为保留字段，其值必须被分别设置为 0、0、1、0。服务器**必须**将其他值视为格式错误的包并关闭网络连接 |
+| [MQTT-3.10.3-1] | UNSUBSCRIBE 中的主题过滤器**必须**是 `UTF-8字符串` |
+| [MQTT-3.10.3-2] | UNSUBSCRIBE 包的载荷中**必须**至少包含一个主题过滤器 |
+| [MQTT-3.10.4-1] | 服务器**必须**逐字符的核对 UNSUBSCRIBE 包中提供的主题过滤器（无论其是否包含通配符）是否与其持有的当前客户端的订阅相同。如果任何过滤器被精确匹配，那么其拥有的订阅**必须**被删除 |
+| [MQTT-3.10.4-2] | 服务器**必须**停止向该主题过滤器添加新的发往客户端的消息 |
+| [MQTT-3.10.4-3] | 服务器**必须**完成匹配该主题过滤器的，且已经开始发往客户端的 QoS 1 和 QoS 2 消息的交付 |
+| [MQTT-3.10.4-4] | 服务器**必须**使用 UNSUBACK 包响应 UNSUBSCRIBE 请求 |
+| [MQTT-3.10.4-5] | UNSUBACK 包**必须**和 UNSUBSCRIBE 包有相同的包ID。即使没有主题订阅被删除，服务器也**必须**使用 UNSUBACK 回复 |
+| [MQTT-3.10.4-6] | 如果服务器收到的 UNSUBSCIRIBE 包包含有多个主题过滤器，服务器**必须**按序处理就如同他按序逐个收到了 UNSUBSCRIBE 包，唯一不同是服务器仅需要使用一个 UNSUBACK 回复 |
+| [MQTT-3.11.2-1] | 如果添加此字段会导致 UNSUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段 |
+| [MQTT-3.11.2-2] | 如果添加此字段会导致 UNSUBACK 的尺寸大于客户端的最大包尺寸，服务器**必须不**添加此字段 |
+| [MQTT-3.11.3-1] | UNSUBACK 包中的原因码顺序**必须**和 UNSUBSCRIBE 包中的主题过滤器顺序一致 |
+| [MQTT-3.11.3-2] | 服务器发送的 UNSUBACK 包**必须**对每个收到的主题过滤器使用下表之一的原因码 |
+| [MQTT-3.12.4-1] | 服务器**必须**发送 PINGRESP 包用来响应 PINGREQ 包 |
+| [MQTT-3.14.0-1] | 服务器**必须不**发送 DISCONNECT 包，除非在其发送了一个原因码小于 0x80 的 CONNACK 之后 |
+| [MQTT-3.14.1-1] | 客户端或服务器必须确认保留字段值为 0。如果非 0，客户端或服务器发送一个带有原因码 0x81（格式错误的包）的 DISCONNECT 包，参考 [4.13] 中的描述 |
+| [MQTT-3.14.2-1] | 客户端或服务器发送的 DISCONNECT 包**必须**使用上表之一的断开原因码 |
+| [MQTT-3.14.2-2] | 服务器发送的 DISCONNECT 包中**必须不**包括会话过期间隔 |
+| [MQTT-3.14.2-3] | 如果添加此字段会导致 DISCONNECT 的尺寸大于接收者的最大包尺寸，发送者**必须不**添加此字段 |
+| [MQTT-3.14.2-4] | 如果添加此字段会导致 DISCONNECT 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-3.14.4-1] | 发送 DISCONNECT 后，发送方**必须不**在此网络连接中再发送任何 MQTT 包 |
+| [MQTT-3.14.4-2] | 发送 DISCONNECT 后，发送方**必须**关闭网络连接 |
+| [MQTT-3.14.4-3] | 当接收到带有原因码 0x00（成功） 的 DISCONNECT 包后，服务器**必须**不发送改连接的遗嘱消息，并丢弃 |
+| [MQTT-3.15.1-1] | AUTH 包固定头中的 Bit 3、2、1、0 的内容保留且值必须为 0。客户端或服务器**必须**将任何其他值视为格式错误的包并断开网络连接 |
+| [MQTT-3.15.2-1] | AUTH 包的发送者**必须**使用下表之一的认证原因码 |
+| [MQTT-3.15.2-2] | 如果添加此字段会导致 AUTH 的尺寸大于接收者的最大包尺寸，发送者**必须不**添加此字段 |
+| [MQTT-3.15.2-3] | 如果添加此字段会导致 AUTH 的尺寸大于接收方的最大包尺寸，发送方**必须不**添加此字段 |
+| [MQTT-4.1.0-1] | 客户端和服务器**必须不**在网络连接打开时丢弃会话状态 |
+| [MQTT-4.2.0-1] | 客户端或服务器**必须**支持使用一种或多种底层传输协议，这些协议提供从客户端到服务器以及服务器到客户端的有序、无损的字节流。 |
+| [MQTT-4.1.0-2] | 服务器**必须**在网络连接关闭且会话过期间隔到期后丢弃会话状态 |
+| [MQTT-4.3.1-1] | 在 QoS 0 交付协议中，发送方**必须**发送 QoS 0 且重复标志值为 0 的 PUBLISH 包 |
+| [MQTT-4.3.2-1] | 在 QoS 1 交付协议中，发送方**必须**在每次发布新消息时选择一个未被使用的包ID |
+| [MQTT-4.3.2-2] | 在 QoS 1 交付协议中，发送方**必须**发送包含此包ID，且重复标志值为 0 的 PUBLISH 包 |
+| [MQTT-4.3.2-3] | 在 QoS 1 交付协议中，发送方**必须**将此 PUBLISH 包视为 “未回复的” 直到从接收方收到了正确的 PUBACK |
+| [MQTT-4.3.2-4] | 在 QoS 1 交付协议中，接收方**必须**使用包含 PUBLISH 包中包ID的 PUBACK 包进行响应，拥有收到的消息的所有权 |
+| [MQTT-4.3.2-5] | 在 QoS 1 交付协议中，接收方在发送 PUBACK 包后，接收方**必须**将到来的带有相同包ID的 PUBLISH 包视为新的应用消息，无论其重复标志如何设置 |
+| [MQTT-4.3.3-1] | 在 QoS 2 交付协议中，发送方**必须**在发布新消息时分配一个未使用的包ID |
+| [MQTT-4.3.3-2] | 在 QoS 2 交付协议中，发送方**必须**发送 QoS 2，重复标志值为 0，携带此包ID的 PUBLISH 包 |
+| [MQTT-4.3.3-3] | 在 QoS 2 交付协议中，发送方**必须**在收到接收方发来的对应的 PUBREC 之前将此 PUBLISH 包视为 “未回复的” |
+| [MQTT-4.3.3-4] | 在 QoS 2 交付协议中，发送方**必须**在收到接收方发来的原因码小于 0x80 的 PUBREC 后，发送 PUBREL 包。此 PUBREL 包**必须**包含和原始 PUBLISH 包相同的包ID |
+| [MQTT-4.3.3-5] | 在 QoS 2 交付协议中，发送方**必须**在收到接收方发来的对应 PUBCOMP 之前将此 PUBREL 包视为 “未回复的” |
+| [MQTT-4.3.3-6] | 在 QoS 2 交付协议中，发送方**必须不**在发送 PUBREL 之后重发 PUBLISH 包 |
+| [MQTT-4.3.3-7] | 在 QoS 2 交付协议中，发送方**必须不**在发送 PUBLISH 包之后使此应用消息过期 |
+| [MQTT-4.3.3-8] | 在 QoS 2 交付协议中，接收方**必须**使用和收到 PUBLISH 包相同的包ID的 PUBREC 包响应，拥有收到的消息的所有权 |
+| [MQTT-4.3.3-9] | 在 QoS 2 交付协议中，接收方如果已经使用带有 0x80 或更大值的原因码的 PUBREC 包回复，接收方**必须**将后续带有相同包ID的 PUBLISH 包视为新应用消息 |
+| [MQTT-4.3.3-10] | 在 QoS 2 交付协议中，接收方直到收到对应的 PUBREL 包为止，接收方**必须**使用 PUBREC 回复后续任何带有相同包ID的 PUBLISH 包。在此情形下**必须不**把重复的包转发给更进一步的消息使用者 |
+| [MQTT-4.3.3-11] | 在 QoS 2 交付协议中，接收方**必须**使用和收到 PUBREL 包相同的包ID的 PUBCOMP 包响应 PUBREL 包 |
+| [MQTT-4.3.3-12] | 在 QoS 2 交付协议中，接收方发送 PUBCOMP 包之后，接收方**必须**将后续带有相同包ID的 PUBLISH 包视为新应用消息发送 PUBCOMP 包之后，接收方**必须**将后续带有相同包ID的 PUBLISH 包视为新应用消息 |
+| [MQTT-4.3.3-13] | 在 QoS 2 交付协议中，接收方即使消息已经过期，也**必须**继续 QoS 2 的响应动作 |
+| [MQTT-4.4.0-1] | 当客户端使用全新开始值为 0 重连且存在会话时，客户端和服务器都**必须**使用原始的包ID重传所有未确认的 PUBLISH 包（其 QoS > 0）和 PUBREL 包。这是客户端或服务器**需要**重传消息的唯一场景。客户端和服务器**必须不**在其他任何时间重传消息 |
+| [MQTT-4.4.0-2] | 如果接收到的 PUBACK 或 PUBREC 包含 0x80 或更大的原因代码，则相应的 PUBLISH 数据包将被视为已确认，且**必须不**被重传 |
+| [MQTT-4.5.0-1] | 当服务器得到输入应用消息的所有权时，他**必须**把消息放入所有匹配订阅的客户端的会话状态 |
+| [MQTT-4.5.0-2] | 无论何种情况，客户端**必须**按照匹配的 QoS 规则确认其收到包，无论客户端对包中的消息内容选择处理还是丢弃 |
+| [MQTT-4.6.0-1] | 当客户端重传 PUBLISH 包时，其必须按照原始 PUBLISH 包的顺序发送（包括 QoS 1 和 QoS 2 消息） |
+| [MQTT-4.6.0-2] | 客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBACK 包（QoS 1 消息） |
+| [MQTT-4.6.0-3] | 客户端**必须**按照接收 PUBLSIH 包的顺序发送 PUBREC 包（QoS 2 消息） |
+| [MQTT-4.6.0-4] | 客户端**必须**按照接收 PUBREC 包的顺序发送 PUBREL 包（QoS 2 消息） |
+| [MQTT-4.6.0-5] | 当服务器处理发布到有序主题的消息时，服务器**必须**保证其对消费者发送的 PUBLISH 包（对于相同主题和相同 QoS）的顺序和服务器从客户端接收这些包时相同 |
+| [MQTT-4.6.0-6] | 默认情况下，服务器在转发非共享订阅上的消息时**必须**将每个主题视为有序主题。 |
+| [MQTT-4.7.0-1] | 通配符可以在主题过滤器中使用，但**必须不**在主题名称中使用 |
+| [MQTT-4.7.1-1] | 多级通配符**必须**单独使用或在主题级别分隔符后使用。在任意情况下他都**必须**是主题过滤器中的最后一个字符 |
+| [MQTT-4.7.1-2] | 当他被使用时，他**必须**占据过滤器中一个完整的级别 |
+| [MQTT-4.7.2-1] | 服务器**必须不**将以通配符（# 或 +）开始的主题过滤器与以 $ 开头的主题名匹配 |
+| [MQTT-4.7.3-1] | 所有的主题名称和主题过滤器**必须**至少包含一个字符 |
+| [MQTT-4.7.3-2] | 主题名称和主题过滤器中必须不能包括 null 字符（Unicode U+0000） |
+| [MQTT-4.7.3-3] | 主题名称和主题过滤器是 `UTF-8字符串`；**必须不**超过 65535 字节 |
+| [MQTT-4.7.3-4] | 当进行订阅匹配时，服务器**必须不**对主题名称或主题过滤器执行任何标准化处理，或对无法识别的字符进行任何修改或替换 |
+| [MQTT-4.8.2-1] | 共享订阅的主题过滤器**必须**以 $share/ 开始且**必须**包括至少一字符的共享名称 |
+| [MQTT-4.8.2-2] | 共享名称**必须不**包含字符 '/'、'+'、'#'，但**必须**在其后跟随 '/' 字符。此 '/' 字符后**必须**跟随主题过滤器 |
+| [MQTT-4.8.2-3] | 服务器**必须**遵守客户端订阅时授予的 QoS 等级 |
+| [MQTT-4.8.2-4] | 服务器**必须**在客户端重新连接时完成该消息的交付 |
+| [MQTT-4.8.2-5] | 如果该客户端的会话在其重连成功前终止了，服务器**必须不**将此应用消息发送给其他的订阅客户端 |
+| [MQTT-4.8.2-6] | 如果客户端使用带有 0x80 或更大原因码的 PUBACK 或 PUBREC 响应来自服务器的 PUBLISH 包，服务器**必须**丢弃应用消息，并且不再尝试将消息发给其他订阅者 |
+| [MQTT-4.9.0-1] | 客户端或服务器**必须**将其发送配额初始化为不超过接收最大值的非零值 |
+| [MQTT-4.9.0-2] | 每当客户端或服务器发送 QoS > 0 的 PUBLISH 包，降低配额。如果发送配额值达到 0，客户端或服务器**必须不**再发送任何 QoS > 0 的 PUBLISH 包 |
+| [MQTT-4.9.0-3] | 即使配额值为 0，客户端和服务器**必须**继续处理和响应其他类型的 MQTT 包 |
+| [MQTT-4.12.0-1] | 如果服务器不支持客户端提供的认证方式，服务器**可以**发送带有原因码 0x8C（认证方式错误）或原因码 0x87（未经授权）的 CONNACK 包，并**必须**关闭网络连接，参考 [4.13] 中的描述 |
+| [MQTT-4.12.0-2] | 如果服务器需要额外信息来完成认证，他可以向客户端发送一个 AUTH 数据包。此数据包**必须**包含原因码 0x18（继续认证） |
+| [MQTT-4.12.0-3] | 客户端通过发送另一个 AUTH 包来响应来自服务器的 AUTH 包。此包必须包含原因码 0x18（继续认证） |
+| [MQTT-4.12.0-4] | 服务器可以在认证过程的任何点拒绝认证。他**可以**根据 [4.13] 的描述发送一个原因码为 0x80 或以上的 CONNACK 数据包，并**必须**关闭网络连接 |
+| [MQTT-4.12.0-5] | 如果初始 CONNECT 包包含认证方法，则所有 AUTH 包和任何成功的 CONNACK 包都必须包含和 CONNECT 包中相同值的 认证方法 |
+| [MQTT-4.12.0-6] | 如果客户端没有在 CONNECT 包中包含认证方法，则服务器**必须不**发送 AUTH 包，也**必须不**在 CONNACK 包中包含认证方法 |
+| [MQTT-4.12.0-7] | 如果客户端没有在 CONNECT 包中包含认证方法，则客户端**必须不**向服务器发送 AUTH 包 |
+| [MQTT-4.12.1-1] | 如果客户端在 CONNECT 包中提供了认证方法，则可以在收到 CONNACK 后随时启动重新认证。通过发送原因码为 0x19（重新认证）的 AUTH 包来实现。客户端**必须**将认证方法设置为与最初用于认证网络连接的认证方法相同的值 |
+| [MQTT-4.12.1-2] | 如果重新认证失败，客户端或服务器**应该**带有合适原因码的 DISCONNECT 包，且**必须**断开网络连接，参考 [4.13] 中的描述 |
+| [MQTT-4.13.1-1] | 当服务器检测到格式错误的包或协议错误，且给出了规范中的原因码后，他**必须**断开网络连接 |
+| [MQTT-4.13.2-1] | CONNACK 和 DISCONNECT 包允许使用原因码为 0x80 或更高来指示网络连接将被关闭。如果指定了 0x80 或更高的原因码，则无论是否发送了 CONNACK 或 DISCONNECT 包，都**必须**关闭网络连接 |
+| [MQTT-6.0.0-1] | MQTT 包**必须**在 WebSocket 二进制数据帧中发送。 如果收到任何其他类型的数据帧，接收方**必须**关闭网络连接 |
+| [MQTT-6.0.0-2] | 单个 WebSocket 数据帧可以包含多个或部分 MQTT 包。 接收方不得假定 MQTT 包与 WebSocket 帧边界对齐 |
+| [MQTT-6.0.0-3] | 客户端**必须**在其提供的 WebSocket 子协议列表中包含“mqtt” |
+| [MQTT-6.0.0-4] | 服务器选择并返回的 WebSocket 子协议名称**必须**为“mqtt” |
 
 # 附录 C. MQTT v5.0 新特性汇总（非规范性）
+
+下列新特性被引入了 MQTT v5.0
+
+- 会话过期机制
+将 Clean Session 拆分为全新开始会话和会话过期间隔，全新开始会话指示是否应在不使用现有会话的情况下启动会话，会话过期间隔指示断开连接后保留会话的时间长短。会话过期间隔可以在断开连接时修改。将全新开始会话设置为 1 且将会话过期间隔设置为 0 等同于在 MQTT v3.1.1 中将 Clean Session 设置为 1。
+
+- 消息过期
+允许发布消息时设置过期时间。
+
+- 所有 ACK 的原因码
+将所有响应包都改为带有原因码的包。包括 CONNACK，PUBACK，PUBREL，PUBCOMP，SUBACK，UNSUBACK，DISCONNECT 和 AUTH。这使得调用者可以判断请求的函数是否成功。
+
+- 所有 ACK 的原因字符串
+将所有响应包都改为带有原因码的包，同时也允许带原因字符串。这被设计用于问题定位，且不应被接收者解析。
+
+- 服务器断开
+允许服务器发送 DISCONNECT 包以指示断开的原因。
+
+- 载荷格式和内容类型
+允许在发布消息时指定有效负载格式（二进制、文本）和 MIME 样式内容类型，这些被转发到消息的接收者。
+
+- 请求/响应
+在 MQTT 中形式化请求/响应模式，并提供响应主题和关联数据属性，以允许将响应消息路由回请求的发布者。另外，添加客户端从服务器获取有关如何构建响应主题的配置信息的功能。
+
+- 共享订阅
+添加共享订阅支持，实现消费者对订阅的负载均衡。
+
+- 订阅ID
+允许在 SUBSCRIBE 上指定数字订阅标识符，并在传递消息时在消息上返回该标识符。 这允许客户端确定哪个或哪些订阅导致消息被传递。
+
+- 主题别名
+通过允许主题名称映射为整数来减少 MQTT 数据包开销的大小。客户端和服务器独立指定它们允许的主题别名数量。
+
+- 流量控制
+允许客户端和服务器独立指定它们允许的未完成可靠消息的数量（QoS>0）。发送方通过暂停发送使未处理消息总量低于此配额。这用于限制可靠消息的速率，并限制“正在处理”的消息数量。
+
+- 用户属性
+将用户属性添加到大多数包中。PUBLISH 上的用户属性包含在消息中，并由客户端应用程序定义。PUBLISH 和遗嘱属性集上的用户属性由服务器转发给消息的接收者。 CONNECT、SUBSCRIBE 和 UNSUBSCRIBE 数据包上的用户属性由服务器实现定义。 CONNACK、PUBACK、PUBREC、PUBREL、PUBCOMP、SUBACK、UNSUBACK 和 AUTH 数据包上的用户属性由发送方定义，并且对于发送方实现而言是唯一的。MQTT 未定义用户属性的含义。
+
+- 最大包尺寸
+允许客户端和服务器各自独立选择能支持的最大包尺寸。会话的对端发送超过尺寸的包是一种错误。
+
+- 可选的服务器特性
+定义一组服务器不允许的功能，且提供了一种机制让服务器向客户端指定这些功能。可以使用这种方式选择的功能包括：最大QoS，保留消息可用，通配符订阅可用，订阅ID可用，共享订阅。当服务器宣称这些特性不可用后服务器使用这些功能是一种错误。
+
+在早期版本的 MQTT 中，服务器通过声明客户端无权限来避免这些未实现的功能。此功能允许这种可选行为被声明，并在客户端仍使用这些功能时添加对应的原因码。
+
+- 增强认证
+提供了一种启用挑战/响应式身份验证（包括双向认证）的机制。如果客户端和服务器都支持，则允许使用 SASL 风格的身份验证，并且客户端可以在连接中重新进行身份验证。
+
+- 订阅选项
+提供订阅选项，主要用于消息桥接应用程序。包括不发送源于自身的消息（非本地）（noLocal），如何处理保留消息（保留消息处理）。
+
+- 遗嘱延迟
+添加了指定连接结束和发送遗嘱消息之间延迟的功能。此功能旨在当会话的连接重新建立时不发送遗嘱消息。这允许短暂中断连接而无需通知其他人。
+
+- 服务端保活
+允许服务器指定希望客户端用作保活的值。这使服务器可以设置允许的最大保活时间，并确保客户端遵守该时间。
+
+- 分配客户端ID
+如果客户端ID是服务器分配的，返回分配的ID，这也解除了服务器分配的 ClientID 只能与 Clean Session=1 连接一起使用的限制。
+
+- 服务器引用
+允许服务器在 CONNACK 或 DISCONNECT 上指定要使用的备用服务器，可以用作重定向或进行服务配置。
