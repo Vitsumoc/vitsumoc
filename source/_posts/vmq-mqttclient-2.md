@@ -14,7 +14,7 @@ tags:
 
 <!-- more -->
 
-两个仓库分别是 [vmq](https://github.com/vitsumoc/vmq) 和 [vmq-test-gui](https://github.com/vitsumoc/vmq-test-gui)
+两个仓库分别是 [vmq](https://github.com/vitsumoc/vmq) 和 [vmq-tool](https://github.com/vitsumoc/vmq-tool)
 
 # 最初的vmq
 
@@ -27,11 +27,11 @@ func HelloVmq() string {
 }
 ```
 
-现在只是一个 Hello World，但是以后他可以是一个创建连接的函数、创建客户端的函数、执行订阅的函数等等。总之原理是一样的，这是一个可以被 vmq-test-gui 调用的函数。
+现在只是一个 Hello World，但是以后他可以是一个创建连接的函数、创建客户端的函数、执行订阅的函数等等。总之原理是一样的，这是一个可以被 vmq-tool 调用的函数。
 
-# 最初的gui
+# 最初的vmq-tool
 
-接下来是 vmq-test-gui 项目，既然是 gui，意味着需要一个图形化库来显示窗口，我没有这方面的经验，凭感觉选择了 [fyne](https://fyne.io/)。
+接下来是 vmq-tool 项目，既然是 gui，意味着需要一个图形化库来显示窗口，我没有这方面的经验，凭感觉选择了 [fyne](https://fyne.io/)。
 
 参考 fyne 中的 Hello World 示例，只不过是把 vmq 塞进去：
 
@@ -62,6 +62,6 @@ func main() {
 
 我比较喜欢用需求来推动软件的功能，因为我觉得合理的软件设计是很难凭空产生的，但是合理的需求是易于理解和提出的，一旦有了合理的需求，那么能够实现需求的设计就可以视为合理的软件设计。
 
-对于 vmq 也是一样，vmq-test-gui 就是 vmq 的需求方，我们的开发总是会从 gui 开始，先做出需要功能的界面，再在 vmq 中实现功能。
+对于 vmq 也是一样，vmq-tool 就是 vmq 的需求方，我们的开发总是会从 gui 开始，先做出需要功能的界面，再在 vmq 中实现功能。
 
 图形化界面开发会有一些难度，fyne 的学习应该也会有一些成本，但这些都会是值得的。

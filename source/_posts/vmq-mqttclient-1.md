@@ -38,7 +38,7 @@ vmq 是一个从零开始的，纯 golang 编写的 MQTT 客户端。好吧，�
 
 老实说，我现在也不知道 vmq 将来会如何。也许有一天我无法继续坚持，vmq 在诞生之前就消失了、也可能我完成了 vmq，然后在我的项目中不断的使用，最后成为了我们公司的基础库之一、也有可能 vmq 被更多人使用，我的虚荣心获得了极大的满足。总之现在谈论这些实在是为时尚早，此时此刻的 vmq 只是一个计划。
 
-此刻的 vmq 将由三个部分组成，[vmq](https://github.com/vitsumoc/vmq) 是我即将要实现的 MQTT 客户端，[vmq-test-gui](https://github.com/vitsumoc/vmq-test-gui) 是配套的图形化测试工具，[此博客](https://vitsumoc.github.io/) 中的系列文档则是对实现过程的教学。
+此刻的 vmq 将由三个部分组成，[vmq](https://github.com/vitsumoc/vmq) 是我即将要实现的 MQTT 客户端，[vmq-tool](https://github.com/vitsumoc/vmq-tool) 是配套的图形化测试工具，[此博客](https://vitsumoc.github.io/) 中的系列文档则是对实现过程的教学。
 
 vmq 预期会出一个教学版本，只对 MQTT 协议做最基本的支持，例如建立连接、断开、订阅、发布、会话等此类最基本的功能，此后的功能实现不会再有按步骤的教学博文，但仍会有一些讨论和总结性质的博文。
 
