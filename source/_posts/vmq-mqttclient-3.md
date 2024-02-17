@@ -19,6 +19,24 @@ tags:
 
 指引中已经非常详细的介绍，我也不必将内容复述一遍，我将我的示例实现放到这个[仓库](https://github.com/vitsumoc/learn-fyne)中，这仅仅是一个记录，没有任何创造性的内容。
 
+```go main.go
+	firstApp() // 基础的程序、窗口
+	demo() // fyne 官方示例
+	appLoop() // 窗口和主循环
+	updateContent() // 内容更新
+	windows() // 窗口管理
+	guiTest() // 图形化程序测试
+    //07build.bat // 打包选项 构建源文件
+	painter() // 手动绘制
+	layout() // 布局能力
+	shortcuts() // 窗口快捷键 组件快捷键
+	preferences() // 首选项存取
+	sysTray() // 系统托盘
+	dataBinding() // 数据绑定
+	drawing() // 图形绘制
+	animation() // 动画
+```
+
 # 接下来
 
 既然已经掌握了 fyne 的基本用法，接下来就到了实现 原型图/需求 的时候了，从最基础的连接管理开始，看上去是个不错的主意。
