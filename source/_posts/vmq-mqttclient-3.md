@@ -19,7 +19,7 @@ tags:
 
 指引中已经非常详细的介绍，我也不必将内容复述一遍，我将我的示例实现放到这个[仓库](https://github.com/vitsumoc/learn-fyne)中，这仅仅是一个记录，没有任何创造性的内容。
 
-```go main.go
+```go 示例列表
 	firstApp() // 基础的程序、窗口
 	demo() // fyne 官方示例
 	appLoop() // 窗口和主循环
@@ -35,6 +35,19 @@ tags:
 	dataBinding() // 数据绑定
 	drawing() // 图形绘制
 	animation() // 动画
+	layoutBox() // box 布局
+	layoutGrid() // 网格布局
+	layoutGridWarp() // 自适应网格布局
+	layoutBorder() // 盒子布局
+	layoutForm() // 表单布局
+	layoutCenter() // 居中布局
+	layoutMax() // 占满布局
+	appTab() // 标签页
+	fWidgets() // 各种组件
+	fForm() // 表单
+	fToolBar() // 工具栏
+	fContainer() // 容器（列表 表格 树
+	fDataBinding() // 数据绑定详细
 ```
 
 # 接下来
