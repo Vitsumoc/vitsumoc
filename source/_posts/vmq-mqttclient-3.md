@@ -48,6 +48,12 @@ tags:
 	fToolBar() // 工具栏
 	fContainer() // 容器（列表 表格 树
 	fDataBinding() // 数据绑定详细
+	customLayout() // 自定义布局
+	customWidget() // 自定义组件
+	// 31 打包静态资源
+	customTheme() // 自定义主题
+	extendingWidgets() // 扩展现有组件
+	fNumericalEntry() // 自定义数字输入组件
 ```
 
 # 接下来
