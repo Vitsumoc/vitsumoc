@@ -1,5 +1,6 @@
 ---
 title: Matplotlib入门笔记
+url: pythonMatplotlib
 date: 2023-11-29 15:40:57
 categories:
 - python

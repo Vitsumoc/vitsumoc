@@ -1,5 +1,6 @@
 ---
 title: AI入门笔记（1）——简介与历史
+url: AiForBeginners-1
 date: 2023-11-24 09:42:38
 categories:
 - AI学习

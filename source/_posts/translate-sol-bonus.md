@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 特别篇：重构与事件循环"
+url: translate-sol-bonus
 date: 2024-01-03 09:14:03
 categories:
 - MQTT

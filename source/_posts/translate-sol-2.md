@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 第二部分：网络"
+url: translate-sol-2
 date: 2023-12-19 17:13:46
 categories:
 - MQTT

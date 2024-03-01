@@ -1,5 +1,6 @@
 ---
 title: AI入门笔记（2）——知识表示与专家系统
+url: AiForBeginners-2
 date: 2023-11-24 15:33:38
 categories:
 - AI学习

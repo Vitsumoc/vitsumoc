@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 第五部分：主题树"
+url: translate-sol-5
 date: 2023-12-28 10:43:27
 categories:
 - MQTT

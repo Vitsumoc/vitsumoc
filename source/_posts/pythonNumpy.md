@@ -1,5 +1,6 @@
 ---
 title: Numpy入门笔记
+url: pythonNumpy
 date: 2023-11-28 09:13:53
 categories:
 - python

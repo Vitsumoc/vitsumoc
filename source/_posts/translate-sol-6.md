@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 第六部分：处理器"
+url: translate-sol-6
 date: 2023-12-29 08:56:57
 categories:
 - MQTT

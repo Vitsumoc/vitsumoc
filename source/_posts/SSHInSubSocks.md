@@ -1,5 +1,6 @@
 ---
 title: 使用SSH包装Socks5代理
+url: SSHInSubSocks
 date: 2023-11-22 17:38:25
 categories:
 - 网络编程
@@ -29,7 +30,7 @@ subSocks项目的代码结构非常漂亮，添加SSH包装非常便捷。
 
 golang已经提供了SSH的官方实现，参考[文档](https://pkg.go.dev/golang.org/x/crypto/ssh)。并且提供了使用SSH进行远程Shell的示例。
 
-之后需要对SSH的[通讯过程](/2023/11/20/SSH.html)，```Session``` ```Channel``` ```Request```等等各种概念有基础的了解。
+之后需要对SSH的[通讯过程](/SSH.html)，```Session``` ```Channel``` ```Request```等等各种概念有基础的了解。
 
 使用ssh包中的代码，在服务端使用TCP链接，创建SSH服务器，等待客户端链接后获取Channel，将Channel包装为Stripper。
 

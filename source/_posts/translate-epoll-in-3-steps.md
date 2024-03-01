@@ -1,5 +1,6 @@
 ---
 title: "[翻译]通过三个步骤简单理解epoll"
+url: translate-epoll-in-3-steps
 date: 2023-12-20 15:46:49
 categories:
 - 网络编程

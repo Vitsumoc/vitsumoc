@@ -1,5 +1,6 @@
 ---
 title: Jupyter入门笔记
+url: pythonJupyter
 date: 2023-11-30 14:29:43
 categories:
 - python

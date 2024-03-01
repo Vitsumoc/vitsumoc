@@ -1,5 +1,6 @@
 ---
 title: vmq-从零开始的MQTT客户端-4-连接管理原型
+url: vmq-mqttclient-4
 date: 2024-02-21 15:51:06
 categories:
 - vmq

@@ -1,5 +1,6 @@
 ---
 title: vmq-从零开始的MQTT客户端-3-fyne
+url: vmq-mqttclient-3
 date: 2024-02-15 13:42:26
 categories:
 - vmq

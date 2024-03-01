@@ -1,5 +1,6 @@
 ---
 title: AI入门笔记（3）——感知器
+url: AiForBeginners-3
 date: 2023-12-01 09:32:11
 categories: 
 - AI学习

@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 第四部分：数据结构"
+url: translate-sol-4
 date: 2023-12-27 10:08:27
 categories:
 - MQTT

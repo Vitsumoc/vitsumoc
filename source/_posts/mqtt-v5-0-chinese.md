@@ -1,5 +1,6 @@
 ---
 title: MQTT 5.0 中文文档
+url: mqtt-v5-0-chinese
 date: 2024-01-06 10:14:39
 categories:
 - MQTT

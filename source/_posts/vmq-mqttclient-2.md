@@ -1,5 +1,6 @@
 ---
 title: vmq-从零开始的MQTT客户端-2-框架
+url: vmq-mqttclient-2
 date: 2024-02-05 15:21:20
 categories:
 - vmq

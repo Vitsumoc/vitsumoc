@@ -1,5 +1,6 @@
 ---
 title: 在golang中使用lua
+url: golua
 date: 2023-12-05 11:25:15
 categories:
 - 小玩具

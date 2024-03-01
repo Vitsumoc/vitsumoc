@@ -1,5 +1,6 @@
 ---
 title: go标准库：log
+url: golang-log
 date: 2024-02-29 15:55:29
 categories:
 - golang

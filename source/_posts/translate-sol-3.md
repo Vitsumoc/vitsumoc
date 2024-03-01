@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Sol - 从零开始的MQTT broker - 第三部分：服务"
+url: translate-sol-3
 date: 2023-12-22 09:44:08
 categories:
 - MQTT

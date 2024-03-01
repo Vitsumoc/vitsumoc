@@ -1,5 +1,6 @@
 ---
 title: vmq-从零开始的MQTT客户端-1-简介
+url: vmq-mqttclient-1
 date: 2024-02-04 16:43:01
 categories:
 - vmq
