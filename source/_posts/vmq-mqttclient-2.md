@@ -246,4 +246,20 @@ func (mvi *MQTT_VAR_INT) ToValue() int {
 
 这里我没有列出所有数据表示实现的源码，因为这些代码大体相似，只是细节不同，您可以在仓库中自行查看。
 
-有了基础数据，接下来就可以组织 MQTT 包，
+有了基础数据，接下来就可以组织 MQTT 包，此时我们的项目结构是这样的：
+
+```text
+vmq/
+ ├── types/
+ │    ├── mqttbin.go
+ │    ├── mqttbyte.go
+ │    ├── mqttu16.go
+ │    ├── mqttu32.go
+ │    ├── mqttutf8.go
+ │    ├── mqttutf8pair.go
+ │    ├── mqttvarint.go
+ │    ├── types_test.go
+ │    └── types.go
+ ├── go.mod
+ └── vmq.go
+```
