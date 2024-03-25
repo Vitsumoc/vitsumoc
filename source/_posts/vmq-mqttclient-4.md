@@ -8,7 +8,7 @@ tags:
 - vmq
 - MQTT
 - 网络编程
-- golang
+- Go
 ---
 
 实现了 `CONNECT` 包后，可以按照相似的方法实现其他几个重要的数据包，例如： `CONNACK` `DISCONNECT` `SUBSCRIBE` `SUBACK` `PUBLISH`，有了这些包就可以进行基础的 MQTT 通信了。

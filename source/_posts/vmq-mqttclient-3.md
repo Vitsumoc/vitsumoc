@@ -8,7 +8,7 @@ tags:
 - vmq
 - MQTT
 - 网络编程
-- golang
+- Go
 ---
 
 MQTT 5 定义了 15 种控制包，CONNECT 是其中的第一种，他也很适合作为我们实现的起点。
@@ -61,7 +61,7 @@ type PROPERTIES struct {
 }
 ```
 
-MQTT 中的属性集类似于 golang 中的 map，使用键值对的方式存放一组属性。和 golang 中的 map 的主要区别是属性集中有一种被称为 `用户属性` 的特殊属性，他的键可以重复出现多次，因此我使用一个列表来存储用户属性。
+MQTT 中的属性集类似于 Go 中的 map，使用键值对的方式存放一组属性。和 Go 中的 map 的主要区别是属性集中有一种被称为 `用户属性` 的特殊属性，他的键可以重复出现多次，因此我使用一个列表来存储用户属性。
 
 这里还可以发现，在 `Properties map[*t.MQTT_BYTE]t.MQTT_TYPE` 中，我将所有的 `MQTT基本类型` 作为了一个接口 `t.MQTT_TYPE`，这个接口的定义是这样的：
 
@@ -106,7 +106,7 @@ PROPERTIES 包含了这些方法：
 | `func (p *PROPERTIES) ToStream(output io.Writer) (int, error)` | 将 PROPERTIES 写入字节流 |
 | `func (p *PROPERTIES) calLength()` | 内部使用，计算 `PropertyLength` 的值 |
 
-在 `SetProperty` 函数中，`MQTT_PROPERTY_KEY` 是参考[文档](/mqtt-v5-0-chinese.html#2-2-2-2-属性)定义的属性键枚举，v1 和 v2 是属性的值，这里接收的值是 golang 中的基本类型，例如当键对应的值类型为 `4字节整数` 时，这里接收的值类型就是 `uint32`。v2 只在键是 `PROPERTY_USER_PROPERTY` 时有意义，因为此时的值应该是两个 `string`。
+在 `SetProperty` 函数中，`MQTT_PROPERTY_KEY` 是参考[文档](/mqtt-v5-0-chinese.html#2-2-2-2-属性)定义的属性键枚举，v1 和 v2 是属性的值，这里接收的值是 Go 中的基本类型，例如当键对应的值类型为 `4字节整数` 时，这里接收的值类型就是 `uint32`。v2 只在键是 `PROPERTY_USER_PROPERTY` 时有意义，因为此时的值应该是两个 `string`。
 
 而 CONNECT 只有两个方法、构造和序列化：
 

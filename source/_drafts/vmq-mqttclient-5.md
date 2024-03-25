@@ -8,7 +8,7 @@ tags:
 - vmq
 - MQTT
 - 网络编程
-- golang
+- Go
 ---
 
 要实现 CONNECT 包，就要先实现 MQTT 固定头，要实现固定头，就要先实现变长整数编码的剩余长度（RemainingLength）。很好，从如此细微的一个地方着手，非常符合本系列的一贯精神，总是从最简单的地方开始，始终让项目处在易于理解易于控制的状态中。
@@ -152,7 +152,7 @@ func (rl remainingLength) toValue() int {
 
 # 测试
 
-实话实说我不是很擅长做测试，但是索性 golang 提供了我这种小白也可以理解的测试包，在这里我尽量测试了所有的功能和错误类型：
+实话实说我不是很擅长做测试，但是索性 Go 提供了我这种小白也可以理解的测试包，在这里我尽量测试了所有的功能和错误类型：
 
 ```go remaininglength_test.go
 package vmq

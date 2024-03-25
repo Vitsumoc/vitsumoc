@@ -3,9 +3,9 @@ title: go轻量级事件库：gookit-event
 url: gookit-event
 date: 2024-01-04 17:08:00
 categories:
-- golang
+- Go
 tags:
-- golang
+- Go
 - 库
 ---
 
