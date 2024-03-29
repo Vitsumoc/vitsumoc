@@ -30,16 +30,16 @@ tags:
   - [For](#For)
   - [Switch](#Switch)
   - [Type switch](#Type-switch)
-- [Functions]
-  - [Multiple return values]
-  - [Named result parameters]
-  - [Defer]
-- [Data]
-  - [Allocation with new]
-  - [Constructors and composite literals]
-  - [Allocation with make]
-  - [Arrays]
-  - [Slices]
+- [函数](#函数)
+  - [多返回值](#多返回值)
+  - [命名结果参数](#命名结果参数)
+  - [Defer](#Defer)
+- [数据](#数据)
+  - [通过new分配](#通过new分配)
+  - [构造器与复合字面量](#构造器与复合字面量)
+  - [通过make分配](#通过make分配)
+  - [数组](#数组)
+  - [切片](#切片)
   - [Two-dimensional slices]
   - [Maps]
   - [Printing]
@@ -493,3 +493,341 @@ case *int:
     fmt.Printf("pointer to integer %d\n", *t) // t has type *int
 }
 ```
+
+# 函数
+
+## 多返回值
+
+Go 中的一个特殊特性是函数和方法可以返回多个值。这种形式可以用于改进 C 程序中的几个笨拙的惯用方法：例如通过返回 -1 来表示 EOF 或是修改一个使用指针传入的参数。
+
+在 C 语言中，write 错误通过一个负数来表示，而错误代码隐藏在 volatile 变量中。在 Go 中， Write 可以同时返回计数和错误：“你写入了一些字节，但没有完全写入，因为你的磁盘满了”。在 os 包中的 Write 方法的方法签名是：
+
+```go
+func (file *File) Write(b []byte) (n int, err error)
+```
+
+正如文档所说，当 n != len(b) 时，函数返回了已经写入的字节数和一个非 nil 的 error。这是一个通用的风格，查看关于错误处理的章节了解更多例子。
+
+一个类似的可以用来替代传递指针作为参数的方法是，通过返回一个值来模拟引用参数。这里是一个简单的函数，用来从字节切片的某个定位开始抓取数字，并返回数字和数字后的定位。
+
+```go
+func nextInt(b []byte, i int) (int, int) {
+    for ; i < len(b) && !isDigit(b[i]); i++ {
+    }
+    x := 0
+    for ; i < len(b) && isDigit(b[i]); i++ {
+        x = x*10 + int(b[i]) - '0'
+    }
+    return x, i
+}
+```
+
+您可以通过这样的方式使用，扫描切片 b 中的数字：
+
+```go
+    for i := 0; i < len(b); {
+        x, i = nextInt(b, i)
+        fmt.Println(x)
+    }
+```
+
+## 命名结果参数
+
+在 Go 函数中返回的结果“参数”可以被命名并像其他常规变量一样使用，就像输入参数一样。当被命名时，他们会在函数开始时被初始化为其对应类型的0值；如果函数执行不带参数的返回，那么这些结果参数的当前值会被用作返回值。
+
+命名不是强制性的，但是他们会让代码更加简短和清晰：他们是文档的一种。如果我们将 nextInt 函数的返回结果命名，那么返回的 int 的含义将变得显而易见。
+
+```go
+func nextInt(b []byte, pos int) (value, nextPos int) {
+```
+
+因为命名的返回值已经和不带参数的 return 绑定在了一起，他们可以用来简化和澄清代码。这里是使用命名结果参数的 io.ReadFull：
+
+```go
+func ReadFull(r Reader, buf []byte) (n int, err error) {
+    for len(buf) > 0 && err == nil {
+        var nr int
+        nr, err = r.Read(buf)
+        n += nr
+        buf = buf[nr:]
+    }
+    return
+}
+```
+
+## Defer
+
+Go 中的 defer 语句可以在当前执行的函数返回前执行一次函数调用（ *deferred* 函数）。这是一个不寻常但有效的方案，可以用来处理类似与在任何函数执行路径下的资源关闭问题。典型的例子是解锁一个 mutex 或关闭一个文件。
+
+```go
+// Contents returns the file's contents as a string.
+func Contents(filename string) (string, error) {
+    f, err := os.Open(filename)
+    if err != nil {
+        return "", err
+    }
+    defer f.Close()  // f.Close will run when we're finished.
+
+    var result []byte
+    buf := make([]byte, 100)
+    for {
+        n, err := f.Read(buf[0:])
+        result = append(result, buf[0:n]...) // append is discussed later.
+        if err != nil {
+            if err == io.EOF {
+                break
+            }
+            return "", err  // f will be closed if we return here.
+        }
+    }
+    return string(result), nil // f will be closed if we return here.
+}
+```
+
+Deferring 例如对 Close 函数的调用有两个好处。其一， 他确保了你不会忘记关闭这个文件，尤其是你之后再为函数添加返回路径时。其二，他意
+味着 close 的位置与 open 在一起，这比将他放在函数的末尾要清晰的多。
+
+deferred 函数的参数（或是 deferred 方法的接收者）是在 *defer* 执行时计算的，而非是在函数被调用时计算。除了无需担心在函数执行过程中的变量值改变外，这也意味着一个 defer 语句可以创建多个延迟执行的函数。这是一个愚蠢的例子。
+
+```go
+for i := 0; i < 5; i++ {
+    defer fmt.Printf("%d ", i)
+}
+```
+
+Deferred 函数按照后进先出的顺序执行，因此这段代码会在函数返回时打印 4 3 2 1 0。一个更合理的例子是通过程序跟踪函数调用的简单方法。我们可以写一些类似这样的简单跟踪例程：
+
+```go
+func trace(s string)   { fmt.Println("entering:", s) }
+func untrace(s string) { fmt.Println("leaving:", s) }
+
+// Use them like this:
+func a() {
+    trace("a")
+    defer untrace("a")
+    // do something....
+}
+```
+
+我们可以利用 deferred 函数是在 defer 运行时计算参数这一事实来做的更好。tracing 例程可以用来设置 untracing 例程的参数。下面是例子：
+
+```go
+func trace(s string) string {
+    fmt.Println("entering:", s)
+    return s
+}
+
+func un(s string) {
+    fmt.Println("leaving:", s)
+}
+
+func a() {
+    defer un(trace("a"))
+    fmt.Println("in a")
+}
+
+func b() {
+    defer un(trace("b"))
+    fmt.Println("in b")
+    a()
+}
+
+func main() {
+    b()
+}
+```
+
+输出
+
+```text
+entering: b
+in b
+entering: a
+in a
+leaving: a
+leaving: b
+```
+
+对于在其他编程语言中习惯了块级资源管理的程序员来说，defer 也许看起来有些特殊，但是他最有趣也是最强大的的应用恰恰来自于他是基于函数而非基于块的事实。在 panic 与 recover 章节我们会看到这种可能性的例子。
+
+# 数据
+
+## 通过new分配
+
+Go 中有两个分配关键字，内置函数 new 和 make。他们做不同的事情而且用于不同的类型，这可能会令人困惑，但是规则实际上很简单。让我们先从 new 开始。这是一个内建的用于分配内存的函数，但与一些其他编程语言中的同名函数不同，他并不会初始化内存，而只是将内存值置零。也就是说，new(T) 分配了一块零值的内存用来放置类型 T 并返回他的指针，一个类型为 *T 的值。在 Go 术语中，他返回了一个指向新分配的零值 T 的
+指针。
+
+由于 new 返回的内存值总是 0，因此在设计您的数据结构时，将 0 值作为一个合理的初始化值就非常有帮助。这意味着数据结构的使用者可以通过 new 来创建他并立刻使用。例如 bytes.Buffer 的文档表示“零值的 Buffer 是一个可以被使用的空 buffer”。类似的，sync.Mutex 也没有显式的构造函数或是初始化方法。取而代之的是，零值的 sync.Mutex 被定义为一个未锁定的 mutex。
+
+零值有效的设计方式是可以传递的，考虑下述类型声明。
+
+```go
+type SyncedBuffer struct {
+    lock    sync.Mutex
+    buffer  bytes.Buffer
+}
+```
+
+类型为 SyncedBuffer 的值也可以在被分配或声明后立即使用。在下面的片段里，p 和 v 都可以在无需更多参数的情况下正确使用。
+
+```go
+p := new(SyncedBuffer)  // type *SyncedBuffer
+var v SyncedBuffer      // type  SyncedBuffer
+```
+
+## 构造器与复合字面量(composite literals)
+
+有些情况下无法通过零值初始化，这时就需要构造器，例如这个 os 包中的例子。
+
+```go
+func NewFile(fd int, name string) *File {
+    if fd < 0 {
+        return nil
+    }
+    f := new(File)
+    f.fd = fd
+    f.name = name
+    f.dirinfo = nil
+    f.nepipe = 0
+    return f
+}
+```
+
+这里有很多的赋值操作。我们可以简单的使用复合字面量，这是一种在每次执行时创建一个新实例的表达式。
+
+```go
+func NewFile(fd int, name string) *File {
+    if fd < 0 {
+        return nil
+    }
+    f := File{fd, name, nil, 0}
+    return &f
+}
+```
+
+请注意，与 C 不同，返回局部变量的地址是完全可行的；在函数返回后与变量关联的存储依然存在。实际上，每次获取复合字面量地址时都会分配一个新的实例，因此我们可以合并最后两行。
+
+```go
+    return &File{fd, name, nil, 0}
+```
+
+复合字面量中的字段必须按序且全部存在。然而，通过使用 field:value 对标记元素，初始值设定可以以任何顺序出现，缺失的字段保留位各自的零值。因此我们可以
+
+```go
+    return &File{fd: fd, name: name}
+```
+
+作为一个有限的情况，如果复合字面量没有包括任何字段，他会创建当前类型的零值对象。表达式 new(File) 和 &File{} 是等效的。
+
+复合字面量也可以用来创建数组、切片和 maps，其中的字段标签被视为索引或 map 中的键。在这些示例中，只要 Enone、Eio、Einval 的值不同，无论他们的值如何，初始化都会生效。
+
+```go
+a := [...]string   {Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+s := []string      {Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+m := map[int]string{Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+```
+
+## 通过make分配
+
+回到内存分配的话题。内置函数 make(T, args) 提供了一个与 new(T) 不同的用途。他只用来创建切片、maps 和 channels，而且他返回一个已经被初始化的（非零值）的 T 的值（而非 *T）。区别的原因是这三种类型在底层都是对必须被初始化的某种数据结构的引用。例如切片，由三个元素组成，指向数据的指针（数据是内置的数组）、长度和容量，在这些元素被初始化前，切片的值是 nil。对于切片、maps 和 channels，make 初始化了他们内部的数据结构而且提供了可用的值。对于，
+
+```go
+make([]int, 10, 100)
+```
+
+分配了一个长度为 100 int 的数组，随后创建切片结构，长度为 10，容量为 100，指向数组最初的 10 个元素。（在创建切片时，可以不手动指定容量；参考切片章节了解更多信息）。相反，new([]int) 返回一个新分配的，值为零的切片结构的指针，也就是一个指向 nil 切片值的指针。
+
+这些例子阐明了 new 和 make 的区别。
+
+```go
+var p *[]int = new([]int)       // allocates slice structure; *p == nil; rarely useful
+var v  []int = make([]int, 100) // the slice v now refers to a new array of 100 ints
+
+// Unnecessarily complex:
+var p *[]int = new([]int)
+*p = make([]int, 100, 100)
+
+// Idiomatic:
+v := make([]int, 100)
+```
+
+请记住，make 用于 maps，切片和 channels，并不返回指针。如果想要显式的获得指针，需要使用 new 或是显式的获取变量的地址。
+
+## 数组
+
+数组在进行详细的内存规划时很有用，而且有时候可以用来避免分配动作，但是大部分时候他们还是用于作为切片的一部分使用，也就是下一个章节的主题。为了给下一个主题打下基础，这里简单介绍一下数组。
+
+这里有一些 Go 中数组和 C 中数组的主要区别。在 Go 中，
+
+- 数组是值，将一个数组赋值给另一个会复制所有的元素。
+- 特别是，将数组传递给函数，他会收到数组的副本，而不是数组的指针。
+- 数组的尺寸使其类型的一部分。[10]int 和 [20]int 是不同的类型。
+
+使用值传递可能会有用，但是开销也很大；如果你想要和 C 相似的表现方式和效率，你可以传递一个数组的指针。
+
+```go
+func Sum(a *[3]float64) (sum float64) {
+    for _, v := range *a {
+        sum += v
+    }
+    return
+}
+
+array := [...]float64{7.0, 8.5, 9.1}
+x := Sum(&array)  // Note the explicit address-of operator
+```
+
+但是这也不是 Go 中的惯用方式，Go 程序员使用切片。
+
+## 切片
+
+切片封装了数组，提供了一个更加通用、强大、方便的处理序列数据的接口。除了例如变换矩阵这种有显式的维度的情况外，在 Go 中大部分关于顺序数据的编程都是通过切片而非数组完成的。
+
+切片持有了对其下层数组的引用，如果你将一个切片赋值给另一个，他们将会引用同一个数组。如果函数使用切片作为参数，则调用者可以看到函数对切片中元素的修改，类似于传递了下层数组的指针。因此，Read 函数可以接收切片作为参数，而非指针和计数；切片中的长度设置了要读取数据内容的上线。这里是 os 包中 File 类型的 Read 方法的方法签名：
+
+```go
+func (f *File) Read(buf []byte) (n int, err error)
+```
+
+该方法返回读取的字节数和可能的错误值。如果要读取一个 buffer 的前32个字节，可以对 buffer 进行切片（此处为动词）。
+
+```go
+    n, err := f.Read(buf[0:32])
+```
+
+Such slicing is common and efficient. In fact, leaving efficiency aside for the moment, the following snippet would also read the first 32 bytes of the buffer.
+
+```go
+    var n int
+    var err error
+    for i := 0; i < 32; i++ {
+        nbytes, e := f.Read(buf[i:i+1])  // Read one byte.
+        n += nbytes
+        if nbytes == 0 || e != nil {
+            err = e
+            break
+        }
+    }
+```
+
+The length of a slice may be changed as long as it still fits within the limits of the underlying array; just assign it to a slice of itself. The capacity of a slice, accessible by the built-in function cap, reports the maximum length the slice may assume. Here is a function to append data to a slice. If the data exceeds the capacity, the slice is reallocated. The resulting slice is returned. The function uses the fact that len and cap are legal when applied to the nil slice, and return 0.
+
+```go
+func Append(slice, data []byte) []byte {
+    l := len(slice)
+    if l + len(data) > cap(slice) {  // reallocate
+        // Allocate double what's needed, for future growth.
+        newSlice := make([]byte, (l+len(data))*2)
+        // The copy function is predeclared and works for any slice type.
+        copy(newSlice, slice)
+        slice = newSlice
+    }
+    slice = slice[0:l+len(data)]
+    copy(slice[l:], data)
+    return slice
+}
+```
+
+We must return the slice afterwards because, although Append can modify the elements of slice, the slice itself (the run-time data structure holding the pointer, length, and capacity) is passed by value.
+
+The idea of appending to a slice is so useful it's captured by the append built-in function. To understand that function's design, though, we need a little more information, so we'll return to it later.
