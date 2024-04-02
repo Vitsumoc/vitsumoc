@@ -1,5 +1,6 @@
 ---
 title: "[翻译]Effective Go"
+url: effective_go
 date: 2024-03-25 15:22:03
 categories:
 - Go
@@ -40,23 +41,23 @@ tags:
   - [通过make分配](#通过make分配)
   - [数组](#数组)
   - [切片](#切片)
-  - [Two-dimensional slices]
-  - [Maps]
-  - [Printing]
-  - [Append]
-- [Initialization]
-  - [Constants]
-  - [Variables]
-  - [The init function]
-- [Methods]
-  - [Pointers vs. Values]
-- [Interfaces and other types]
-  - [Interfaces]
-  - [Conversions]
-  - [Interface conversions and type assertions]
+  - [二维切片](#二维切片)
+  - [Maps](#Maps)
+  - [打印](#打印)
+  - [Append](#Append)
+- [初始化](#初始化)
+  - [常量](#常量)
+  - [变量](#变量)
+  - [init函数](#init函数)
+- [方法](#方法)
+  - [指针或是值](#指针或是值)
+- [接口和其他类型](#接口和其他类型)
+  - [接口](#接口)
+  - [转换](#转换)
+  - [接口转换与类型断言](#接口转换与类型断言)
   - [Generality]
   - [Interfaces and methods]
-- [The blank identifier](#占位1)
+- [空标识符](#空标识符)
   - [The blank identifier in multiple assignment]
   - [Unused imports and variables]
   - [Import for side effect]
@@ -361,7 +362,7 @@ for _, value := range array {
 }
 ```
 
-空标识有很多种用法，就像[后续章节](#占位1)中描述的这样。
+空标识有很多种用法，就像[后续章节](#空标识符)中描述的这样。
 
 对于字符串，range 为您做了更多的事情，通过解析 UTF-8 来分解各个 Unicode 码。错误的编码消耗一个 byte 并使用 rune U+FFFD 代替（rune 是 Go 中称呼和使用单个 Unicode 码点的术语。参考[language specification](https://go.dev/ref/spec)了解更多）。对于下面的循环
 
@@ -789,13 +790,13 @@ x := Sum(&array)  // Note the explicit address-of operator
 func (f *File) Read(buf []byte) (n int, err error)
 ```
 
-该方法返回读取的字节数和可能的错误值。如果要读取一个 buffer 的前32个字节，可以对 buffer 进行切片（此处为动词）。
+该方法返回读取的字节数和可能的错误值。如果想要将前 32 个字节的内容读取到一个大容量的 buffer（名为 buf）中，可以对这个 buffer 进行切片（此处为动词）。
 
 ```go
     n, err := f.Read(buf[0:32])
 ```
 
-Such slicing is common and efficient. In fact, leaving efficiency aside for the moment, the following snippet would also read the first 32 bytes of the buffer.
+这种切片是常见且高效的。事实上，暂且不考虑执行效率，下面的代码片段也可以将前 32 个字节读取到 buffer 中。
 
 ```go
     var n int
@@ -810,7 +811,7 @@ Such slicing is common and efficient. In fact, leaving efficiency aside for the 
     }
 ```
 
-The length of a slice may be changed as long as it still fits within the limits of the underlying array; just assign it to a slice of itself. The capacity of a slice, accessible by the built-in function cap, reports the maximum length the slice may assume. Here is a function to append data to a slice. If the data exceeds the capacity, the slice is reallocated. The resulting slice is returned. The function uses the fact that len and cap are legal when applied to the nil slice, and return 0.
+切片的长度可以在其底层数据限制的范围内任意修改；只要切取他自身的一部分并赋值即可。切片的容量可以通过内建函数 cap 访问，报告了切片可用的最大长度。这里是一个向切片添加数据的函数。如果数据超出了容量限制，切片会采用重新分配的内存。最终采用的结果是函数返回的切片。设计这个函数时巧妙利用了如下事实：对 nil 切片使用 len 和 cap 操作是合法的，且会返回 0。
 
 ```go
 func Append(slice, data []byte) []byte {
@@ -828,6 +829,566 @@ func Append(slice, data []byte) []byte {
 }
 ```
 
-We must return the slice afterwards because, although Append can modify the elements of slice, the slice itself (the run-time data structure holding the pointer, length, and capacity) is passed by value.
+最后我们必须返回切片，因为虽然 Append 可以改变切片中的元素，但切片本身（运行时的数据结构，包括指针，长度和容量）是按值传递的。
 
-The idea of appending to a slice is so useful it's captured by the append built-in function. To understand that function's design, though, we need a little more information, so we'll return to it later.
+向切片添加元素是一个常用操作，因此内建函数 append 实现了这一功能。为了理解这个函数的设计，我们需要掌握更多的信息，因此我们会在稍后讨论他。
+
+## 二维切片
+
+Go 中的数组和切片是一维的。为了等效的实现二维数组或二维切片，必须定义 数组的数组 或是 切片的切片，类似于：
+
+```go
+type Transform [3][3]float64  // A 3x3 array, really an array of arrays.
+type LinesOfText [][]byte     // A slice of byte slices.
+```
+
+因为切片的长度是可变的，因此每个内部切片的长度不同是可能的。这是一个很常见的情况，如果我们的 文本行 的例子：每一行都有独立的长度。
+
+```go
+text := LinesOfText{
+    []byte("Now is the time"),
+    []byte("for all good gophers"),
+    []byte("to bring some fun to the party."),
+}
+```
+
+有时需要分配二维切片，例如在处理逐行像素扫描时。有两种方式可以实现这一目标。一种是为每个切片独立进行分配；另一种是分配一个独立的数组，然后将各个切片指向其中不同的区域。使用哪一种方式取决于您的应用程序。如果您的切片可能会增大或缩小，那应该独立分配切片，避免覆盖到下一行的内容；如果不是，单次分配一个数据来使用可能会更高效。作为参考，这里提供了两种方式的简单实现。第一种，每次一行的方式：
+
+```go
+// Allocate the top-level slice.
+picture := make([][]uint8, YSize) // One row per unit of y.
+// Loop over the rows, allocating the slice for each row.
+for i := range picture {
+    picture[i] = make([]uint8, XSize)
+}
+```
+
+现在是单次分配，切为多行：
+
+```go
+// Allocate the top-level slice, the same as before.
+picture := make([][]uint8, YSize) // One row per unit of y.
+// Allocate one large slice to hold all the pixels.
+pixels := make([]uint8, XSize*YSize) // Has type []uint8 even though picture is [][]uint8.
+// Loop over the rows, slicing each row from the front of the remaining pixels slice.
+for i := range picture {
+    picture[i], pixels = pixels[:XSize], pixels[XSize:]
+}
+```
+
+## Maps
+
+Maps 是一种方便且强大的内建数据结构，他将一种类型的值（键）关联到另一种类型的值（值）。键可以是任意的支持相等操作的数据类型，例如整数、浮点数、复数、字符串、指针、接口（只要其中的动态类型支持相等）、结构体或数组。切片不能用作 map 的键，因为没有为其定义相等操作。与切片类似，maps 持有了对下层数据结构的引用。如果你将 map 传入一个函数并且在函数中改变了 map 的内容，调用者也会看到这个改变。
+
+Maps 可以使用常规的复合字面量语法，加上冒号分隔键值对来构建，因此在初始化期间构建他们很容易。
+
+```go
+var timeZone = map[string]int{
+    "UTC":  0*60*60,
+    "EST": -5*60*60,
+    "CST": -6*60*60,
+    "MST": -7*60*60,
+    "PST": -8*60*60,
+}
+```
+
+对 map 分配或获取值的语法看起来和对数组或切片的操作相同，只是索引不必须是整数。
+
+```go
+offset := timeZone["EST"]
+```
+
+尝试获取 map 中不存在键映射的值会返回该类型的零值。例如，如果 map 包含整数，查询一个不存在的键会返回 0。可以使用 bool 作为值的 map 来实现 set。将每个键的值都设置为 true，之后可以通过索引来简单的判断该键是否存在。
+
+```go
+attended := map[string]bool{
+    "Ann": true,
+    "Joe": true,
+    ...
+}
+
+if attended[person] { // will be false if person is not in the map
+    fmt.Println(person, "was at the meeting")
+}
+```
+
+有时您需要去区分缺失条目或是零值。究竟是是否有 UTC 的值，或者说 0 只是因为他并没有在 map 中设置？你可以使用多重赋值的方式分辨。
+
+```go
+var seconds int
+var ok bool
+seconds, ok = timeZone[tz]
+```
+
+出于一些显然的原因，这被称为 comma ok 用法。在下面的例子中，如果 tz 存在，seconds 将会被赋值而且 ok 的值为 true；如果 tz 不存在，seconds 的值将会是 0 而且 ok 的值会是 false。下面是一个将这些内容和一个错误日志组合到一起的函数：
+
+```go
+func offset(tz string) int {
+    if seconds, ok := timeZone[tz]; ok {
+        return seconds
+    }
+    log.Println("unknown time zone:", tz)
+    return 0
+}
+```
+
+如果不关心值的内容，只想测试键是否存在，您可以使用空标识符 (_) 代替值的变量。
+
+```go
+_, present := timeZone[tz]
+```
+
+要删除 map 中的条目，可以使用内建的 delete 函数，他需求的参数是 map 和要被删除的键。即使要删除键已经不在 map 中，这个操作也是安全的。
+
+```go
+delete(timeZone, "PDT")  // Now on Standard Time
+```
+
+## 打印
+
+Go 中的格式化输出采用了和 C 中的 printf 系列相似但更加丰富和通用的实现。这些函数位于 fmt 包中且拥有大写的名称：fmt.Printf，fmt.Fprintf，fmt.Sprintf 等等。字符串系列函数（Sprintf等）返回一个字符串，而非填充某个指定的 buffer。
+
+您不需要提供格式化字符串。对于每个 Printf，Fprintf 和 Sprintf 都存在另外两个与之对应的函数，例如 Print 和 Println。这些函数不接收格式化字符串，但为他们的每个参数提供默认格式。Println 会在两个参数间加入空格，而且在输出内容末尾添加换行符，Print 则是只有当两个连续的参数不是字符串时才添加空格。在这个例子中每一行都会提供同样的输出。
+
+```go
+fmt.Printf("Hello %d\n", 23)
+fmt.Fprint(os.Stdout, "Hello ", 23, "\n")
+fmt.Println("Hello", 23)
+fmt.Println(fmt.Sprint("Hello ", 23))
+```
+
+fmt.Fprint 系列的格式化输出函数接收任何实现了 io.Writer 接口的对象作为其第一个参数；os.Stdout 和 os.Stderr 是最常见的用法。
+
+从现在开始事情变得和 C 不同。首先，%d 这样的数字格式不采用符号或大小标志；相反，打印例程使用参数的类型来决定这些属性。
+
+```go
+var x uint64 = 1<<64 - 1
+fmt.Printf("%d %x; %d %x\n", x, x, int64(x), int64(x))
+```
+
+输出
+
+```text
+18446744073709551615 ffffffffffffffff; -1 -1
+```
+
+如果您只想要默认转换，例如输出十进制整数，您可以使用万能格式 %v （含义是 "value"）；输出将会是 Print 和 Println 默认产生的结果。此外，这个格式可以用来打印任何值，甚至数组、切片、结构体和 maps。这里是打印上一章节定义的时区 map 的语句。
+
+```go
+fmt.Printf("%v\n", timeZone)  // or just fmt.Println(timeZone)
+```
+
+输出是这样的：
+
+```text
+map[CST:-21600 EST:-18000 MST:-25200 PST:-28800 UTC:0]
+```
+
+对于 maps，Printf 系列函数按字典顺序对输出进行排序。
+
+在打印结构体时，使用 %+v 可以将字段值和名称共同输出，使用 %#v 则可以输出 Go 格式中全量的信息。
+
+```go
+type T struct {
+    a int
+    b float64
+    c string
+}
+t := &T{ 7, -2.35, "abc\tdef" }
+fmt.Printf("%v\n", t)
+fmt.Printf("%+v\n", t)
+fmt.Printf("%#v\n", t)
+fmt.Printf("%#v\n", timeZone)
+```
+
+输出
+
+```text
+&{7 -2.35 abc   def}
+&{a:7 b:-2.35 c:abc     def}
+&main.T{a:7, b:-2.35, c:"abc\tdef"}
+map[string]int{"CST":-21600, "EST":-18000, "MST":-25200, "PST":-28800, "UTC":0}
+```
+
+（注意 & 符号。）当输出 string 或 []byte 类型的值时，可以使用 %q 产生带引号的输出。如果可以的话，%#q 会使用反引号输出。（%q 也可以用于整数和 runes，输出一个单引号的 rune。）同样，%x 对 string、byte 数组、byte 切片和对整数有同样的效果，产生一个长十六进制字符串，如果在该格式中添加空格（% x），输出时会在字节间加入空格。
+
+另一种方便的格式时 %T，他会输出值的类型。
+
+```go
+fmt.Printf("%T\n", timeZone)
+```
+
+输出
+
+```text
+map[string]int
+```
+
+如果您想要控制自定义类型的默认输出格式，只需为该类型定义方法签名为 String() 的方法。对于一个简单的例子 T，看起来可能是这样。
+
+```go
+func (t *T) String() string {
+    return fmt.Sprintf("%d/%g/%q", t.a, t.b, t.c)
+}
+fmt.Printf("%v\n", t)
+```
+
+打印出的内容
+
+```text
+7/-2.35/"abc\tdef"
+```
+
+(如果您需要打印 T 的类型和指向 T 的指针，String 函数的接收者必须是值类型；这个例子中使用指针是因为这样执行效率更高，也更复合结构体类型的习惯。查看后续章节[指针或是值](#指针或是值)了解更多信息。)
+
+在我们的 String 方法中可以调用 Sprintf，因为打印例程是完全可重入的，而且可以通过这种方式包裹。然而，关于这种方法有一个非常重要的细节需要了解：不要使用会调用您的 String 方法的 Spintf 来构建您的 String 方法，这会导致您的 String 方法被无限调用。这种情况可能在您的 Sprintf 尝试直接将方法接收者直接作为 string 输出时发生，从而再次调用该方法。这是一个常见的但容易解决的问题，比如这个例子。
+
+```go
+type MyString string
+
+func (m MyString) String() string {
+    return fmt.Sprintf("MyString=%s", m) // Error: will recur forever.
+}
+```
+
+修复起来也很简单：将参数转换为基本的 string 类型，转换后的参数不会调用这个方法。
+
+```go
+type MyString string
+func (m MyString) String() string {
+    return fmt.Sprintf("MyString=%s", string(m)) // OK: note conversion.
+}
+```
+
+在[初始化](#初始化)部分，我们将看到另一种避免这种递归的技术。
+
+另一种打印技术是将打印例程的参数直接传递给另一个例程。Printf 的方法签名使用 ...interface() 作为最后一个参数，用来指定任意数量（以及任意类型）的参数都可以出现在 format 之后。
+
+```go
+func Printf(format string, v ...interface{}) (n int, err error) {
+```
+
+再函数 Printf 中，v 的作用类似于类型为 []interface{} 的变量，但是如果将其传递到另一个可变参数的函数中，他则可以当作常规的参数列表使用。这里是我们之前用过的 log.Println 函数的实现。他直接将参数传递到 fmt.Sprintln 中，从而进行实际的格式化工作。
+
+```go
+// Println prints to the standard logger in the manner of fmt.Println.
+func Println(v ...interface{}) {
+    std.Output(2, fmt.Sprintln(v...))  // Output takes parameters (int, string)
+}
+```
+
+我们在嵌套调用 Sprintln 时在参数 v 之后写上 ...，用来告诉编辑器将 v 作为一个参数列表对待；否则他会将 v 作为一个切片类型的参数传递。
+
+关于打印的内容比我们在这里介绍的还要多。有关详细信息，请参阅 fmt 包的 godoc 文档。
+
+顺便提一句，...参数可以指定类型，例如使用 ...int 实现的最小值函数，用来选取整数列表中的最小值：
+
+```go
+func Min(a ...int) int {
+    min := int(^uint(0) >> 1)  // largest int
+    for _, i := range a {
+        if i < min {
+            min = i
+        }
+    }
+    return min
+}
+```
+
+## Append
+
+现在我们需要解释之前缺失的碎片，关于内建函数 append 的设计。append 的方法签名和之前我们自定义的 Append 函数不同。示意一下的话，他看起来类似这样：
+
+```go
+func append(slice []T, elements ...T) []T
+```
+
+此处的 T 表示任何给定的类型。你不能在 Go 中编写一个由调用者决定 T 类型的函数。这也就是为何 append 作为内建函数的原因：他需要编译器的支持。
+
+append 做的事情是将元素加入到切片的末尾并返回结果。需要返回结果的原因和我们之前手写的 Append 一样，底层的数组可能已经被改变。这里有个而简单的例子
+
+```go
+x := []int{1,2,3}
+x = append(x, 4, 5, 6)
+fmt.Println(x)
+```
+
+输出 [1 2 3 4 5 6]。因此 append 的工作方式有点像 Printf，因为他可以接收任意数量和任意类型的参数。
+
+但如果我们只想做和我们自定义 Append 一样的事情，把一个切片添加到另一个切片之后呢？简单：在调用时使用 ...，就像我们在之前的 Output 调用时做的那样。这个片段会产生和上一个完全相同的输出。
+
+```go
+x := []int{1,2,3}
+y := []int{4,5,6}
+x = append(x, y...)
+fmt.Println(x)
+```
+
+如果缺少了 ...，这段代码会因为类型错误而无法编译，因为 y 的类型并不是 int。
+
+# 初始化
+
+尽管从表面上看它与 C 或 C++ 中的初始化没有太大区别，但 Go 中的初始化更强大。可以在初始化期间构建复杂的结构，并且可以正确处理初始化对象之间（甚至不同包之间）的排序问题。
+
+## 常量
+
+在 Go 中，常量的意思是——常量。他们是在编译时创建的，即使是在函数中被定义为局部变量也是如此，并且只能是数字、字符（rune）、字符串或是布尔值。由于编译时的限制，定义常量的表达式必须是常量表达式，可由编译器计算。例如，1<<3 是一个常量表达式，而 math.Sin(math.Pi/4) 则不是，因为对函数 math.Sin 的调用需要在运行时发生。
+
+在 Go 中，枚举常量是使用 iota 枚举器创建的。由于 iota 可以是表达式的一部分，并且表达式可以隐式重复，因此很容易构建复杂的值集。
+
+```go
+type ByteSize float64
+
+const (
+    _           = iota // ignore first value by assigning to blank identifier
+    KB ByteSize = 1 << (10 * iota)
+    MB
+    GB
+    TB
+    PB
+    EB
+    ZB
+    YB
+)
+```
+
+将类似 String 这样的方法附加到任何用户自定义类型的能力使得任何值都可以在打印时格式化输出自己。虽然最常见的用法是对结构体的应用，这种技术对于标量类型（例如浮点数表示的字节大小）也很有用。
+
+```go
+func (b ByteSize) String() string {
+    switch {
+    case b >= YB:
+        return fmt.Sprintf("%.2fYB", b/YB)
+    case b >= ZB:
+        return fmt.Sprintf("%.2fZB", b/ZB)
+    case b >= EB:
+        return fmt.Sprintf("%.2fEB", b/EB)
+    case b >= PB:
+        return fmt.Sprintf("%.2fPB", b/PB)
+    case b >= TB:
+        return fmt.Sprintf("%.2fTB", b/TB)
+    case b >= GB:
+        return fmt.Sprintf("%.2fGB", b/GB)
+    case b >= MB:
+        return fmt.Sprintf("%.2fMB", b/MB)
+    case b >= KB:
+        return fmt.Sprintf("%.2fKB", b/KB)
+    }
+    return fmt.Sprintf("%.2fB", b)
+}
+```
+
+表达式 YB 会输出为 1.00YB，而 ByteSize(1e13) 则会输出为 9.09TB。
+
+这里使用 Sprintf 来实现 ByteSize 类型的 String 方法是安全的（不会产生无限调用），并不是因为数据转换，而是因为他使用 %f 作为 Sprintf 的参数，这不是字符串格式的：Sprintf 只会在需要字符串值时调用 String 方法，而 %f 表示需要的是浮点数的值。
+
+## 变量
+
+变量可以像常量一样被初始化，但是其初始化表达式可以在运行时计算。
+
+```go
+var (
+    home   = os.Getenv("HOME")
+    user   = os.Getenv("USER")
+    gopath = os.Getenv("GOPATH")
+)
+```
+
+## init函数
+
+最后，每个源文件都可以定义自己的 无参数（niladic） init 函数，用来设置任何他们所需的状态。（实际上每个文件可以有多个 init 函数。）最后的最后：init 会在包中声明的所有变量完成初始化计算后执行，而这些变量的初始化计算则会在所有引入的包已经完成初始化后执行。
+
+除了执行不能用声明表示的初始化动作外，init 函数的一个常见用途是在程序开始前确认或修复程序状态的正确性。
+
+```go
+func init() {
+    if user == "" {
+        log.Fatal("$USER not set")
+    }
+    if home == "" {
+        home = "/home/" + user
+    }
+    if gopath == "" {
+        gopath = home + "/go"
+    }
+    // gopath may be overridden by --gopath flag on command line.
+    flag.StringVar(&gopath, "gopath", gopath, "override default GOPATH")
+}
+```
+
+# 方法
+
+## 指针或是值
+
+如同我们之前在 Bytesize 中看到的，方法可以为任何命名类型定义（除了指针或接口）；方法的接收者不必是一个结构体。
+
+在之前我们对切片的讨论中，我们写了 Append 函数。我们可以将他替换为切片的方法。为了实现这个目标，首先我们声明一个命名的类型，这样我们可以将方法绑定在上面，之后我们将该类型的值作为方法的接收者。
+
+```go
+type ByteSlice []byte
+
+func (slice ByteSlice) Append(data []byte) []byte {
+    // Body exactly the same as the Append function defined above.
+}
+```
+
+这个方法仍然需要配返回更新后的切片。我们可以通过重新定义方法，采用 ByteSlice 的指针作为接收者，来消除这种不便，调用这个方法会覆盖调用者的切片。
+
+```go
+func (p *ByteSlice) Append(data []byte) {
+    slice := *p
+    // Body as above, without the return.
+    *p = slice
+}
+```
+
+实际上，我们甚至可以做的更好。如果我们修改我们的函数，让他看起来像标准的 Write 方法，比如
+
+```go
+func (p *ByteSlice) Write(data []byte) (n int, err error) {
+    slice := *p
+    // Again as above.
+    *p = slice
+    return len(data), nil
+}
+```
+
+之后，*ByteSlice 类型满足了基础的 io.Writer 接口，这样就很方便。例如，我们可以使用 print 写入。
+
+```go
+    var b ByteSlice
+    fmt.Fprintf(&b, "This hour has %d days\n", 7)
+```
+
+我们传递 ByteSlice 的地址是因为只有 *ByteSlice 类型满足了 io.Wirter 的接口条件。使用指针或是值作为接收者的规则是这样的，值的方法可以被指针或是值调用，而指针的方法只能被指针调用。
+
+这条规则的出现是因为指针的方法可以修改其接收者，在值上调用这种方法会导致方法接收到值的复制，因此任何修改都会失效。因此，该语言不允许出现这种错误。不过，有一个方便的例外。当值本身可寻址时，Go 通过在值前自动插入 & 照顾了使用值调用指针方法的情况。在我们的例子中，变量 b 是可寻址的，因此我们可以使用 b.Write 调用他的 Write 方法。编译器会帮助我们自动重写为 (&b).Write。
+
+顺带一提，通过 Write 像字节切片写入数据的想法是 bytes.Buffer 包实现的核心。
+
+# 接口和其他类型
+
+## 接口
+
+Go 中的接口提供了一个指定对象行为的方法：如果他可以实现这个功能，那么他就可以在这里使用。我们之前已经看到了几个简单的例子；自定义打印可以通过 String 方法实现，而 Fprintf 可以向任何实现了 Write 方法的对象输出内容。Go 中的接口往往只定义了一到两个方法，而且通常会根据方法指定一个名称，例如 io.Writer 表示任何 Write 接口实现。
+
+一个类型可以实现多个接口。例如，如果一个集合实现了 sort.Interface（其中包含了 Len，Less(i, j int) bool，Swap(i, j int)），那么他就可以被 sort 包中的例程排序，同时他也可以有一个自定义的格式化器。在下面这个定制的例子中，Sequence 同时满足了这两个条件。
+
+```go
+type Sequence []int
+
+// Methods required by sort.Interface.
+func (s Sequence) Len() int {
+    return len(s)
+}
+func (s Sequence) Less(i, j int) bool {
+    return s[i] < s[j]
+}
+func (s Sequence) Swap(i, j int) {
+    s[i], s[j] = s[j], s[i]
+}
+
+// Copy returns a copy of the Sequence.
+func (s Sequence) Copy() Sequence {
+    copy := make(Sequence, 0, len(s))
+    return append(copy, s...)
+}
+
+// Method for printing - sorts the elements before printing.
+func (s Sequence) String() string {
+    s = s.Copy() // Make a copy; don't overwrite argument.
+    sort.Sort(s)
+    str := "["
+    for i, elem := range s { // Loop is O(N²); will fix that in next example.
+        if i > 0 {
+            str += " "
+        }
+        str += fmt.Sprint(elem)
+    }
+    return str + "]"
+}
+```
+
+## 转换
+
+Sequence 类型的 String 方法重复了 Sprint 输出切片的工作。（而且复杂度为 O(N²)，这很糟糕）。如果我们在调用 Sprint 之前将他转换为普通的 []int，那么我们的工作量会减少，运行速度也会提升。
+
+```go
+func (s Sequence) String() string {
+    s = s.Copy()
+    sort.Sort(s)
+    return fmt.Sprint([]int(s))
+}
+```
+
+这个方法是另一个通过转换技术在 String 方法中安全调用 Sprintf 的例子。因为这两种类型（Sequence 和 []int）在忽略名称的情况下实际上是相同的，因此这种转换是合法的。这种转换不会创建新的值，他只是暂时的将值作为一个新的类型来使用。（还有一种合法的转换，例如将整数转换为浮点数，过程中会创建新的值。）
+
+通过转换类型来使用不同的方法是一种 Go 程序中的常见用法。作为示例，我们可以使用 sort.IntSlice 将上文中的例子改变为：
+
+```go
+type Sequence []int
+
+// Method for printing - sorts the elements before printing
+func (s Sequence) String() string {
+    s = s.Copy()
+    sort.IntSlice(s).Sort()
+    return fmt.Sprint([]int(s))
+}
+```
+
+现在，不再是让 Sequence 实现多个接口（sorting 和 printing），我们通过使用将数据转换为多种类型的能力（Sequence，sort.IntSlice 和 []int），每种类型可以解决一部分工作。这种方式在实践中并不常用，但是可能会很有效。
+
+## 接口转换与类型断言
+
+[Type switch](#Type-switch) 是一种类型转换的形式：获取一个接口，对于 switch 中的每个 case，将接口“转换”为 case 对应的类型。这里是一个 fmt.Printf 如何通过类型转换将值转换为字符串的示例。如果值早已是 string，我们获取该接口持有的 string 本身的值，当值有 String 方法是，我们获取该方法的输出。
+
+```go
+type Stringer interface {
+    String() string
+}
+
+var value interface{} // Value provided by caller.
+switch str := value.(type) {
+case string:
+    return str
+case Stringer:
+    return str.String()
+}
+```
+
+第一个 case 匹配一个具体的类型；第二个 case 将接口住哪换成另一个接口。这样混合不同种类的使用是完全可行的。
+
+当只有一种我们关心的类型时呢？如果我们提前知道值是 string 类型，而且我们只想将他提取出来呢？使用只有一个 case 的 type switch 是可以的，但是*类型断言*也可以。类型断言使用一个接口值，从中提取出一个类型明确的值。该语法借鉴了 type switch，但是使用明确的类型而非 type 关键字：
+
+```go
+value.(typeName)
+```
+
+and the result is a new value with the static type typeName. That type must either be the concrete type held by the interface, or a second interface type that the value can be converted to. To extract the string we know is in the value, we could write:
+
+```go
+str := value.(string)
+```
+
+But if it turns out that the value does not contain a string, the program will crash with a run-time error. To guard against that, use the "comma, ok" idiom to test, safely, whether the value is a string:
+
+```go
+str, ok := value.(string)
+if ok {
+    fmt.Printf("string value is: %q\n", str)
+} else {
+    fmt.Printf("value is not a string\n")
+}
+```
+
+If the type assertion fails, str will still exist and be of type string, but it will have the zero value, an empty string.
+
+As an illustration of the capability, here's an if-else statement that's equivalent to the type switch that opened this section.
+
+```go
+if str, ok := value.(string); ok {
+    return str
+} else if str, ok := value.(Stringer); ok {
+    return str.String()
+}
+```
