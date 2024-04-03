@@ -55,14 +55,14 @@ tags:
   - [接口](#接口)
   - [转换](#转换)
   - [接口转换与类型断言](#接口转换与类型断言)
-  - [Generality]
-  - [Interfaces and methods]
+  - [概论](#概论)
+  - [接口与方法](#接口与方法)
 - [空标识符](#空标识符)
-  - [The blank identifier in multiple assignment]
-  - [Unused imports and variables]
-  - [Import for side effect]
-  - [Interface checks]
-- [Embedding]
+  - [多重赋值中的空标识符](#多重赋值中的空标识符)
+  - [未使用的引入和变量](#未使用的引入和变量)
+  - [为了潜在作用而引入](#为了潜在作用而引入)
+  - [接口检查](#接口检查)
+- [嵌入式](#嵌入式)
 - [Concurrency]
   - [Share by communicating]
   - [Goroutines]
@@ -1364,13 +1364,13 @@ case Stringer:
 value.(typeName)
 ```
 
-and the result is a new value with the static type typeName. That type must either be the concrete type held by the interface, or a second interface type that the value can be converted to. To extract the string we know is in the value, we could write:
+获得的结果就是一个符合指定的 typeName 类型的值。新的类型要么是接口持有的具体类型，要么是值可以转换的另一个接口类型。为了提炼我们已经知道的类型为 string 的值，我们可以：
 
 ```go
 str := value.(string)
 ```
 
-But if it turns out that the value does not contain a string, the program will crash with a run-time error. To guard against that, use the "comma, ok" idiom to test, safely, whether the value is a string:
+但是如果实际上值并非 string，程序会产生一个运行时错误并崩溃。为了防止这种情况，可以使用 "comma, ok" 方式来测试，判断值到底是否属于 string 类型：
 
 ```go
 str, ok := value.(string)
@@ -1381,9 +1381,9 @@ if ok {
 }
 ```
 
-If the type assertion fails, str will still exist and be of type string, but it will have the zero value, an empty string.
+如果类型断言失败，str 依然会是 string 类型的变量，但是他的值为零值，也就是一个空字符串。
 
-As an illustration of the capability, here's an if-else statement that's equivalent to the type switch that opened this section.
+作为补充说明，这里是一个使用类型断言和 if-else 实现的语句，达到了和本章开始时 type switch 相同的效果。
 
 ```go
 if str, ok := value.(string); ok {
@@ -1392,3 +1392,359 @@ if str, ok := value.(string); ok {
     return str.String()
 }
 ```
+
+## 概论
+
+如果一个类型的存在仅仅是为了实现某个接口，而且不会导出除了接口方法外的任何方法，那么这个类型本身也无需被导出。仅导出接口清晰的表明了该值没有超出接口范围的行为能力。这也避免了在常见方法的各个实例上重复编写文档的必要。
+
+在这种情况下，构造器应该返回接口类型的值而非实际实现类型的值。例如：在 hash 库中，crc32.NewIEEE 和 adler32.New 都返回了 hash.Hash32 接口的值。在 Go 中用 CRC-32 算法替换 Adler-32 只需要改变构造器中的调用；代码的其他部分都不会受到算法改变的影响。
+
+类似的方法允许将各种加密包中的流式密码算法与他们相关的块状加密分开。crypto/cipher 包中的 Block 接口指定了块状加密的行为，它提供单个数据块的加密。然后，与 bufio 包类比，实现该接口的 cipher 包可用于构造由 Stream 接口表示的流式加密，而无需知道块状加密的细节。
+
+crypto/cipher 中的接口看起来是这样：
+
+```go
+type Block interface {
+    BlockSize() int
+    Encrypt(dst, src []byte)
+    Decrypt(dst, src []byte)
+}
+
+type Stream interface {
+    XORKeyStream(dst, src []byte)
+}
+```
+
+这是 counter mode (CTR) 流的定义，他将块状加密转换为流式加密；请注意，关于块状加密的细节已经全部被抽象处理：
+
+```go
+// NewCTR returns a Stream that encrypts/decrypts using the given Block in
+// counter mode. The length of iv must be the same as the Block's block size.
+func NewCTR(block Block, iv []byte) Stream
+```
+
+NewCTR 不止是适用于某一种指定的加密算法或是数据源，而是可以适配任何 Block 接口的实现和任何数据流。因为他们返回的是接口类型的值，更换 CRT 加密模式是完全本地化的更改。构造器的调用必须修改，但是由于其他的代码仅仅将结果作为 Stream 看待，他们则不会受到影响。
+
+## 接口与方法
+
+由于几乎所有类型都可以绑定方法，因此所有类型也都可以用来成为接口实现。http 包就是一个很好的例子，其中定义了 Handler 接口。所有实现了 Handler 接口的对象都可以用来处理 HTTP 请求。
+
+```go
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+```
+
+ResponseWriter 自身就是一个接口，提供了需要向客户端返回响应的方法的入口。这些方法包括了基础的 Write 方法，因此 http.ResponseWriter 可以用在任何 io.Writer 可用的地方。Request 是一个包含了已经解析好的客户端请求的结构体。
+
+简单起见，让我们忽略 POSTs，假装 HTTP 请求总是 GETs；这种简化不会影响到 handlers 的代码逻辑。这里有一个 handler 实现的小例子，可以用来统计页面被访问的次数。
+
+```go
+// Simple counter server.
+type Counter struct {
+    n int
+}
+
+func (ctr *Counter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    ctr.n++
+    fmt.Fprintf(w, "counter = %d\n", ctr.n)
+}
+```
+
+（继续我们的主题，请注意 Fprintf 是如何向 http.ResponseWriter 输出内容的。）在实际的服务器中，对 ctr.n 的访问需要进行并发保护。参考 sync 和 atomic 包来获取建议。
+
+作为引用，这里是如何将这样一个服务添加到 URL 树上。
+
+```go
+import "net/http"
+...
+ctr := new(Counter)
+http.Handle("/counter", ctr)
+```
+
+但是为什么我们需要将 Counter 定义为结构体呢？使用整数就足够满足所有的需求了。（方法的接收者需要设置为指针，这样数字的增长才对调用者可见。）
+
+```go
+// Simpler counter server.
+type Counter int
+
+func (ctr *Counter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    *ctr++
+    fmt.Fprintf(w, "counter = %d\n", *ctr)
+}
+```
+
+如果您的程序有一些内部状态想要得知页面已经被访问的话？可以将 channel 绑定到服务中。
+
+```go
+// A channel that sends a notification on each visit.
+// (Probably want the channel to be buffered.)
+type Chan chan *http.Request
+
+func (ch Chan) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    ch <- req
+    fmt.Fprint(w, "notification sent")
+}
+```
+
+最后，假设我们想要在 /arg 上显示服务器启动时使用的参数。编写一个打印参数的函数很简单。
+
+
+```go
+func ArgServer() {
+    fmt.Println(os.Args)
+}
+```
+
+如何将其变为 HTTP 服务呢？我们可以将将 ArgServer 设置成某些我们不关注的类型的方法，但是有一个更清晰的实现方式。由于我们可以为除了指针和接口外的所有类型定义方法，我们也可以为函数定义方法。http 包中包含了这样的定义：
+
+```go
+// The HandlerFunc type is an adapter to allow the use of
+// ordinary functions as HTTP handlers.  If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler object that calls f.
+type HandlerFunc func(ResponseWriter, *Request)
+
+// ServeHTTP calls f(w, req).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, req *Request) {
+    f(w, req)
+}
+```
+
+HandlerFunc 是一个有 ServerHTTP 方法的类型，因此该类型的数据实现了 Handler 接口，可以处理 HTTP 请求。观察这个方法的实现：接收者是一个函数 f，而方法调用了 f。这可能看起来有点奇怪，但是本质上和用 channel 作为接收者然后在方法中向 channel 发送数据没什么区别。
+
+为了将 ArgServer 变成 HTTP 服务，首先我们改变他的方法签名。
+
+```go
+// Argument server.
+func ArgServer(w http.ResponseWriter, req *http.Request) {
+    fmt.Fprintln(w, os.Args)
+}
+```
+
+ArgServer 现在有了和 HanderFunc 相同的方法签名，所以他可以被类型转换为 HanderFunc 从而使用 HanderFunc 的方法，就像我们将 Sequence 转换为 IntSlice 从而使用 IntSlice.Sort 一样。设置的代码很简单：
+
+```go
+http.Handle("/args", http.HandlerFunc(ArgServer))
+```
+
+当有人访问页面 /args 时，此处的处理器是 HandlerFunc 类型的 ArgServer。HTTP 服务器会调用处理器的 ServeHTTP 方法，而 ArgServer 作为接收者，实际上会调用 ArgServer（通过 HandlerFunc.ServeHTTP 中的 f(w,rea)）。相关的参数结果也会随之返回。
+
+在这一章节中我们使用多种方式实现 HTTP 服务，包括结构体、整数、channel 和 函数，这一切都是因为接口只是方法的集合，几乎所有类型都可以成为接口的实现。
+
+# 空标识符
+
+在之前的 [for range 循环](#For) 和 [maps](#Maps) 的内容中，我们已经几次提到了关于空白标识符的内容。空白标识符可以被声明为任何类型的任何数据，之后该数据则会被无害的丢弃。这有点像在 Unix 中向 /dev/null 文件写入内容：他提供了一个需要变量占位符但是实际值又无关紧要的场景下的只写的值。他的用途比我们之前见到的还要更加广泛。
+
+## 多重赋值中的空标识符
+
+在 for range 循环中使用空标识符其实是某种通用解决方案的特例：在多重赋值中使用空标识符。
+
+如果在赋值语句的左侧需要多个变量，但是其中的某个变量实际上又不会被系统使用，那么使用空标识符就可以避免我们去创建一个无效的变量，也可以清晰的表明此处变量的值会被丢弃。例如，当调用一个同时返回值和错误的函数，但我们仅需要错误的函数时，可以使用空标识符丢弃无关紧要的值。
+
+```go
+if _, err := os.Stat(path); os.IsNotExist(err) {
+    fmt.Printf("%s does not exist\n", path)
+}
+```
+
+偶尔你会看到有代码通过丢弃错误的方式来忽略对他们的处理；这是一种很糟糕的实践。请确保总是检查错误的值，提供错误返回是有原因的。
+
+```go
+// Bad! This code will crash if path does not exist.
+fi, _ := os.Stat(path)
+if fi.IsDir() {
+    fmt.Printf("%s is a directory\n", path)
+}
+```
+
+## 未使用的引入和变量
+
+引入一个包或声明一个变量后不去使用是一种错误。未使用的引入会导致程序膨胀，编译速度变慢，当一个变量被初始化但没有使用时，至少他会造成计算性能的浪费，而且可能会表示某处存在更大的 bug。当一个程序处在活跃的开发阶段时，未使用的引入和变量会经常出现，如果只是未继续编译而删除他们，之后有需要重新引入或声明，这很让人懊恼。空标识符提供了对这个问题的解决方案。
+
+这个半成品程序包括两个未使用的引入（fmt 和 io）和一个未使用的变量（fd），因此他无法被编译，但是想要查看至今为止的代码是否正确。
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "log"
+    "os"
+)
+
+func main() {
+    fd, err := os.Open("test.go")
+    if err != nil {
+        log.Fatal(err)
+    }
+    // TODO: use fd.
+}
+```
+
+为了消除未使用引入的报错，可以使用空标识符从引入的包中引用一个变量。类似的，将 fd 赋值给空标识符会消除未使用变量的错误。这个版本的程序就可以编译了。
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "log"
+    "os"
+)
+
+var _ = fmt.Printf // For debugging; delete when done.
+var _ io.Reader    // For debugging; delete when done.
+
+func main() {
+    fd, err := os.Open("test.go")
+    if err != nil {
+        log.Fatal(err)
+    }
+    // TODO: use fd.
+    _ = fd
+}
+```
+
+为了方便，为了消除引入错误而进行的全局声明应该集中在 imports 代码块后并且被注解，这样既可以方便的找到他们，又可以提醒我们之后将他们清理掉。
+
+## 为了潜在作用而引入
+
+前文中提到的未使用的引入例如 fmt 或 io 最终会被使用或被移除：空赋值表示了代码仍在开发过程中。但有时，不去显式的使用一个包，而仅仅是为了他的潜在作用而引入他也是有效的。例如，[net/http/pprof](https://go.dev/pkg/net/http/pprof/) 包在他的 init 函数中注册了提供 debug 信息的 HTTP 接口。他有一个导出 API，但是大多数客户端只需要初始化 HTTP 处理然后通过 web 页面访问数据。为了只利用包的潜在作用而引入包，可以将包名重命名为空标识符：
+
+```go
+import _ "net/http/pprof"
+```
+
+这种引入形式清楚的表明了这个包是为了他的潜在作用而引入，因为我们已经没有别的使用这种包的可能性：在这个文件里，他甚至连名称都没有。（如果他有名称，而且我们未使用的话，编译器会拒绝这段源码。）
+
+## 接口检查
+
+就像我们之前在讨论[接口](#接口)时看到的，一个类型无需显示的声明他实现了某种接口。反之，一个类型只需要实现了该接口需要的方法，则他就默认实现了这个接口。在实践中，大部分的接口转换是静态的，因此他们会在编译时被检查。例如，在一个需要 io.Reader 参数的函数中传入 *os.File 不会被编译，除非 *os.File 实现了 io.Reader 接口。
+
+尽管如此，有些接口检查确实是在运行时发生的。一个例子是 [encoding/json](https://go.dev/pkg/encoding/json/) 包，其中定义了 [Marshaler](https://go.dev/pkg/encoding/json/#Marshaler) 接口。当 JSON 编码器接收到实现了该接口的值时，编码器使用该值的编码方法将其转换为 JSON，否则使用基础方法转换。编码器在运行时使用[类型断言](#接口转换与类型断言)检查此属性：
+
+```go
+m, ok := val.(json.Marshaler)
+```
+
+如果仅仅只需要了解类型是否实现了某个接口，但并不使用接口值自身，也许就是作为错误检查的一部分，可以使用空标识符来忽略类型断言的值：
+
+```go
+if _, ok := val.(json.Marshaler); ok {
+    fmt.Printf("value %v of type %T implements json.Marshaler\n", val, val)
+}
+```
+
+这个情况出现的一个地方是在实现类型的包中需要保证它实际上满足了接口。如果一个类型——例如，[json.RawMessage](https://go.dev/pkg/encoding/json/#RawMessage)——需要一个定制化的 JSON 表示，那么他应该实现 json.Marshaler 接口，但是这里没有静态类型转换使得编译器去自动检查这一点。如果这个类型的不经意间的改动无法满足了接口要求，JSON 编码器仍然会工作，但是不再使用定制化的实现方式。为了确保可以采用正确的实现，可以在这个包中进行一个全局的使用空标识符的声明：
+
+```go
+var _ json.Marshaler = (*RawMessage)(nil)
+```
+
+在这个声明中，赋值语句调用了一个从 *RawMessage 到 Marshaler 的类型转换，这需要 *RawMassage 实现 Marshaler 接口，且这个属性会在编译时被检查。如果 json.Marshaler 接口发生变化，这个包将不再编译，我们会注意到这一点，意识到这个包需要被更新。
+
+这里的空标识符表示这个声明的存在仅仅是为了做类型检查，而非创建一个变量。尽管如此，不要对每个实现接口的类型做这种检查。为了方便起见，这种声明只在代码中没有静态转换的使用使用，这其实是一种很罕见的情况。
+
+# 嵌入式
+
+Go does not provide the typical, type-driven notion of subclassing, but it does have the ability to “borrow” pieces of an implementation by embedding types within a struct or interface.
+
+Interface embedding is very simple. We've mentioned the io.Reader and io.Writer interfaces before; here are their definitions.
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+The io package also exports several other interfaces that specify objects that can implement several such methods. For instance, there is io.ReadWriter, an interface containing both Read and Write. We could specify io.ReadWriter by listing the two methods explicitly, but it's easier and more evocative to embed the two interfaces to form the new one, like this:
+
+```go
+// ReadWriter is the interface that combines the Reader and Writer interfaces.
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+This says just what it looks like: A ReadWriter can do what a Reader does and what a Writer does; it is a union of the embedded interfaces. Only interfaces can be embedded within interfaces.
+
+The same basic idea applies to structs, but with more far-reaching implications. The bufio package has two struct types, bufio.Reader and bufio.Writer, each of which of course implements the analogous interfaces from package io. And bufio also implements a buffered reader/writer, which it does by combining a reader and a writer into one struct using embedding: it lists the types within the struct but does not give them field names.
+
+```go
+// ReadWriter stores pointers to a Reader and a Writer.
+// It implements io.ReadWriter.
+type ReadWriter struct {
+    *Reader  // *bufio.Reader
+    *Writer  // *bufio.Writer
+}
+```
+
+The embedded elements are pointers to structs and of course must be initialized to point to valid structs before they can be used. The ReadWriter struct could be written as
+
+```go
+type ReadWriter struct {
+    reader *Reader
+    writer *Writer
+}
+```
+
+but then to promote the methods of the fields and to satisfy the io interfaces, we would also need to provide forwarding methods, like this:
+
+```go
+func (rw *ReadWriter) Read(p []byte) (n int, err error) {
+    return rw.reader.Read(p)
+}
+```
+
+By embedding the structs directly, we avoid this bookkeeping. The methods of embedded types come along for free, which means that bufio.ReadWriter not only has the methods of bufio.Reader and bufio.Writer, it also satisfies all three interfaces: io.Reader, io.Writer, and io.ReadWriter.
+
+There's an important way in which embedding differs from subclassing. When we embed a type, the methods of that type become methods of the outer type, but when they are invoked the receiver of the method is the inner type, not the outer one. In our example, when the Read method of a bufio.ReadWriter is invoked, it has exactly the same effect as the forwarding method written out above; the receiver is the reader field of the ReadWriter, not the ReadWriter itself.
+
+Embedding can also be a simple convenience. This example shows an embedded field alongside a regular, named field.
+
+```go
+type Job struct {
+    Command string
+    *log.Logger
+}
+```
+
+The Job type now has the Print, Printf, Println and other methods of *log.Logger. We could have given the Logger a field name, of course, but it's not necessary to do so. And now, once initialized, we can log to the Job:
+
+```go
+job.Println("starting now...")
+```
+
+The Logger is a regular field of the Job struct, so we can initialize it in the usual way inside the constructor for Job, like this,
+
+```go
+func NewJob(command string, logger *log.Logger) *Job {
+    return &Job{command, logger}
+}
+```
+
+or with a composite literal,
+
+```go
+job := &Job{command, log.New(os.Stderr, "Job: ", log.Ldate)}
+```
+
+If we need to refer to an embedded field directly, the type name of the field, ignoring the package qualifier, serves as a field name, as it did in the Read method of our ReadWriter struct. Here, if we needed to access the *log.Logger of a Job variable job, we would write job.Logger, which would be useful if we wanted to refine the methods of Logger.
+
+```go
+func (job *Job) Printf(format string, args ...interface{}) {
+    job.Logger.Printf("%q: %s", job.Command, fmt.Sprintf(format, args...))
+}
+```
+
+Embedding types introduces the problem of name conflicts but the rules to resolve them are simple. First, a field or method X hides any other item X in a more deeply nested part of the type. If log.Logger contained a field or method called Command, the Command field of Job would dominate it.
+
+Second, if the same name appears at the same nesting level, it is usually an error; it would be erroneous to embed log.Logger if the Job struct contained another field or method called Logger. However, if the duplicate name is never mentioned in the program outside the type definition, it is OK. This qualification provides some protection against changes made to types embedded from outside; there is no problem if a field is added that conflicts with another field in another subtype if neither field is ever used.
