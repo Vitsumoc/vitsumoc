@@ -63,14 +63,14 @@ tags:
   - [为了潜在作用而引入](#为了潜在作用而引入)
   - [接口检查](#接口检查)
 - [嵌入式](#嵌入式)
-- [Concurrency]
-  - [Share by communicating]
-  - [Goroutines]
-  - [Channels]
-  - [Channels of channels]
-  - [Parallelization]
-  - [A leaky buffer]
-- [Errors]
+- [并发](#并发)
+  - [通过通信共享](#通过通信共享)
+  - [Goroutines](#Goroutines)
+  - [Channels](#Channels)
+  - [Channels of channels](#Channels-of-channels)
+  - [并行处理](#并行处理)
+  - [A leaky buffer](#A-leaky-buffer)
+- [错误](#错误)
   - [Panic]
   - [Recover]
 - [A web server]
@@ -1650,9 +1650,9 @@ var _ json.Marshaler = (*RawMessage)(nil)
 
 # 嵌入式
 
-Go does not provide the typical, type-driven notion of subclassing, but it does have the ability to “borrow” pieces of an implementation by embedding types within a struct or interface.
+Go 没有提供传统的、类型驱动的子类概念，但他拥有通过 *嵌入类型* 来借用结构体或接口部分实现的能力。
 
-Interface embedding is very simple. We've mentioned the io.Reader and io.Writer interfaces before; here are their definitions.
+接口嵌入十分简单，我们之前已经提过 io.Reader 和 io.Writer 接口；这里是他们的定义。
 
 ```go
 type Reader interface {
@@ -1664,7 +1664,7 @@ type Writer interface {
 }
 ```
 
-The io package also exports several other interfaces that specify objects that can implement several such methods. For instance, there is io.ReadWriter, an interface containing both Read and Write. We could specify io.ReadWriter by listing the two methods explicitly, but it's easier and more evocative to embed the two interfaces to form the new one, like this:
+io 包还提供了其他几个接口，用来指定对象需要满足这些方法。例如，io.ReadWriter 是一个同时包括了读写的接口。我们可以通过显示的列举这两个方法的方式来指定 io.ReadWriter 接口，但是更简单且优雅的方式是直接将原先的两个接口嵌入其中，就像这样：
 
 ```go
 // ReadWriter is the interface that combines the Reader and Writer interfaces.
@@ -1674,9 +1674,9 @@ type ReadWriter interface {
 }
 ```
 
-This says just what it looks like: A ReadWriter can do what a Reader does and what a Writer does; it is a union of the embedded interfaces. Only interfaces can be embedded within interfaces.
+他的作用不言自明：ReadWriter 等同于 Reader 加上 Writer；他的能力由被嵌入接口组合而成。只有接口可以被接口嵌入。
 
-The same basic idea applies to structs, but with more far-reaching implications. The bufio package has two struct types, bufio.Reader and bufio.Writer, each of which of course implements the analogous interfaces from package io. And bufio also implements a buffered reader/writer, which it does by combining a reader and a writer into one struct using embedding: it lists the types within the struct but does not give them field names.
+这个想法同样适用于结构体，但是实现的更加深入。bufio 包有两个结构体类型，bufio.Reader 和 bufio.Writer，他们当然各自实现了 io 包中的接口。同时，bufio 包也实现了一个基于 buffer 的读写结构体，他通过嵌入的方式将 reader 和 writer 结合到一起：他包括了结构体内部的类型，但没有给他们字段名。
 
 ```go
 // ReadWriter stores pointers to a Reader and a Writer.
@@ -1687,7 +1687,7 @@ type ReadWriter struct {
 }
 ```
 
-The embedded elements are pointers to structs and of course must be initialized to point to valid structs before they can be used. The ReadWriter struct could be written as
+被嵌入的元素是已经正确初始化的结构体的指针。ReadWriter 结构体可以被写为
 
 ```go
 type ReadWriter struct {
@@ -1696,7 +1696,7 @@ type ReadWriter struct {
 }
 ```
 
-but then to promote the methods of the fields and to satisfy the io interfaces, we would also need to provide forwarding methods, like this:
+但随后为了暴露字段的方法，且需要满足接口的需求，我们还需要提供对方法的转发，就像这样：
 
 ```go
 func (rw *ReadWriter) Read(p []byte) (n int, err error) {
@@ -1704,11 +1704,11 @@ func (rw *ReadWriter) Read(p []byte) (n int, err error) {
 }
 ```
 
-By embedding the structs directly, we avoid this bookkeeping. The methods of embedded types come along for free, which means that bufio.ReadWriter not only has the methods of bufio.Reader and bufio.Writer, it also satisfies all three interfaces: io.Reader, io.Writer, and io.ReadWriter.
+通过直接嵌入结构体，我们可以避免这样的抄书工作。被嵌入类型的方法可以直接调用，这意味着 bufio.ReadWriter 不仅有 bufio.Reader 和 bufio.Writer 的方法，他其实同时满足了三个接口：io.Reader，io.Writer，io.ReadWriter。
 
-There's an important way in which embedding differs from subclassing. When we embed a type, the methods of that type become methods of the outer type, but when they are invoked the receiver of the method is the inner type, not the outer one. In our example, when the Read method of a bufio.ReadWriter is invoked, it has exactly the same effect as the forwarding method written out above; the receiver is the reader field of the ReadWriter, not the ReadWriter itself.
+嵌入和子类有一个很重要的区别。当我们嵌入一个类型时，该类型的方法会变成外层的方法，但是当方法被调用时，方法的接收者是内部类型，而非外部类型。在我们的例子中，当 bufio.ReadWriter 中的 Read 方法被调用时，他实际上的效果和我们将这个方法转发到外层相同；方法的接收者是 ReadWriter 中的 reader 字段，而非 ReadWriter 自身。
 
-Embedding can also be a simple convenience. This example shows an embedded field alongside a regular, named field.
+嵌入式也带来一些简单的小技巧。这个例子里我们同时使用了一个嵌入式字段和一个常规的命名字段。
 
 ```go
 type Job struct {
@@ -1717,13 +1717,13 @@ type Job struct {
 }
 ```
 
-The Job type now has the Print, Printf, Println and other methods of *log.Logger. We could have given the Logger a field name, of course, but it's not necessary to do so. And now, once initialized, we can log to the Job:
+现在 Job 类型就拥有了 Print， Printf， Println 和其他 *log.Logger 带来的方法。我们当然可以选择给 Logger 提供一个字段名，但这没有必要。现在，当初始化完成后，我们可以这样输出 Job：
 
 ```go
 job.Println("starting now...")
 ```
 
-The Logger is a regular field of the Job struct, so we can initialize it in the usual way inside the constructor for Job, like this,
+Logger 也是 Job 结构体中的一个字段，因此我们可以采用普通的方式在 Job 的构造函数中初始化他，例如这样，
 
 ```go
 func NewJob(command string, logger *log.Logger) *Job {
@@ -1731,13 +1731,13 @@ func NewJob(command string, logger *log.Logger) *Job {
 }
 ```
 
-or with a composite literal,
+或者采用复合字面量，
 
 ```go
 job := &Job{command, log.New(os.Stderr, "Job: ", log.Ldate)}
 ```
 
-If we need to refer to an embedded field directly, the type name of the field, ignoring the package qualifier, serves as a field name, as it did in the Read method of our ReadWriter struct. Here, if we needed to access the *log.Logger of a Job variable job, we would write job.Logger, which would be useful if we wanted to refine the methods of Logger.
+如果我们需要直接引用被嵌入的字段，可以将他的类型名称（忽略包名）直接视作字段名称，就像我们在 ReadWriter 结构体中的 Read 方法中做的那样。在这里，如果我们需要访问 Job 类变量 job 中的 *log.Logger，我们可以使用 job.Logger，这对于如果我们想要重写 Logger 中的方法时很有用。
 
 ```go
 func (job *Job) Printf(format string, args ...interface{}) {
@@ -1745,6 +1745,304 @@ func (job *Job) Printf(format string, args ...interface{}) {
 }
 ```
 
-Embedding types introduces the problem of name conflicts but the rules to resolve them are simple. First, a field or method X hides any other item X in a more deeply nested part of the type. If log.Logger contained a field or method called Command, the Command field of Job would dominate it.
+嵌入类型引入了名称冲突的问题，但解决他们的规则很简单。首先，一个名为 X 的字段或方法会将其他更深层的的名为 X 的部分隐藏。如果 log.Logger 包含一个名为 Command 的字段或方法，那么 Job 中的 Command 方法会屏蔽他。
 
-Second, if the same name appears at the same nesting level, it is usually an error; it would be erroneous to embed log.Logger if the Job struct contained another field or method called Logger. However, if the duplicate name is never mentioned in the program outside the type definition, it is OK. This qualification provides some protection against changes made to types embedded from outside; there is no problem if a field is added that conflicts with another field in another subtype if neither field is ever used.
+其次，如果相同层级中出现了相同的名称，那通常会是一个错误；如果 Job 结构体包含另一个名为 Logger 的字段或方法，则嵌入 log.Logger 是错误的。然而，如果在类型定义外的任何地方，程序都没有使用这个重复的名称，那么是没有问题的。这种限定可以防止外部嵌入的类型发生更改时带来的一些问题；如果从未使用过某个字段，即使它与另一个子类型中的字段冲突也无关紧要。
+
+# 并发
+
+## 通过通信共享
+
+并发变成是一个庞大的主题，这里仅仅介绍一些 Go 相关的重点内容。
+
+由于实现对共享变量的访问有很多微妙的细节，这导致了在很多环境中并发编程十分困难。Go 鼓励采用另一种方法，即通过同来传递共享的值，而非使用多个分离的线程来访问他。在任何时候只会有一个 goroutine 在使用这个值。通过这种设计方式，根本不会产生数据竞态问题。为了鼓励这种思维方式我们把他提炼成了一句简单的口号：
+
+> 不要通过共享内存来通信，而是通过通信来共享内存。
+
+这种设计可能会矫枉过正。例如，对于一个引用计数器，最好的方法就是在整数上加一个 mutex。但是作为一种高级方法，使用管道来控制接入还是会让编写清晰、正确的程序更加简单。
+
+一种理解这个模型的方法是，考虑一个在 CPU 上运行的典型的单线程程序。他不需要任何的同步关键字。现在运行该程序的另一个实例，他也不需要任何同步关键字。现在让他们之间进行通信，如果通信过程是同步的，那么就仍然不需要任何同步关键字。Unix 中的管道就是这个模型的完美实例。尽管 Go 的并发方法起源于 Hoare 的 通信顺序进程（CSP），但他也可以被看作一种类型安全的 Unix 管道。
+
+## Goroutines
+
+*goroutines* 被这样命名是因为所有现有的术语：线程、协程、进程等等，都无法准确表达他的内涵。goroutine 有一个简单的模型：他是一个与其他 goroutines 在同一地址空间并发执行的函数。他非常的轻量级，开销仅仅略多于堆栈空间分配。开始时仅使用一个小堆栈，因此开销很低，随后在使用时按序分配（或释放）堆存储。
+
+Goroutines 在操作系统的多个线程上多路复用，如果其中一个发生堵塞，例如在等待 I/O，其他的 goroutines 可以继续运行。这种设计隐藏了很多线程创建和管理上的复杂性。
+
+在函数或方法调用前添加 go 关键字会让这次调用运行在一个新建的 goroutine 中。当调用完成后，goroutine 静默的推出。（效果类似于在 Unix shell 中使用 & 在后台运行命令。）
+
+```go
+go list.Sort()  // run list.Sort concurrently; don't wait for it.
+```
+
+匿名函数可以方便的通过 goroutine 调用。
+
+```go
+func Announce(message string, delay time.Duration) {
+    go func() {
+        time.Sleep(delay)
+        fmt.Println(message)
+    }()  // Note the parentheses - must call the function.
+}
+```
+
+在 Go 中，匿名函数是闭包：实现确保了函数引用的变量的生命周期至少和函数一致。
+
+这些例子都不是很典型，因为函数无法发出完成信号。对此，我们需要 channels。
+
+## Channels
+
+类似于 maps，channels 同样使用 make 进行分配，获得的值同样引用了一个底层的数据结构。分配 channels 的 make 提供了一个可选的整数参数，用于设定 channel 的缓冲大小。默认值是 0，表示一个无缓冲的同步通道。
+
+```go
+ci := make(chan int)            // unbuffered channel of integers
+cj := make(chan int, 0)         // unbuffered channel of integers
+cs := make(chan *os.File, 100)  // buffered channel of pointers to Files
+```
+
+无缓冲的 channels 结合了通信（值的交换）与同步（保证两个计算(goroutines)）处在一个已知的状态。
+
+关于通道的使用有很多好的惯例，我们从下面这个开始。在这段代码中我们在后台启动了数组排序。而 channel 允许启动这的 goroutine 等待排序完成。
+
+```go
+c := make(chan int)  // Allocate a channel.
+// Start the sort in a goroutine; when it completes, signal on the channel.
+go func() {
+    list.Sort()
+    c <- 1  // Send a signal; value does not matter.
+}()
+doSomethingForAWhile()
+<-c   // Wait for sort to finish; discard sent value.
+```
+
+接收者会在收到数据之前一直阻塞。如果 channel 是无缓冲的，发送者也会在接收者接受数据前一直堵塞。如果通道是有缓冲的，发送者只会在向缓冲区满的通道再次发送数据的时候堵塞，这意味着需要等待一些接收者来领取数据。
+
+有缓冲的 channel 可以像信号量一样使用，例如用来进行吞吐量的限制。在这个例子中，输入的请求被传递到 handle，而他将一个值放入 channel、处理请求、最后从 channel 中接收一个值，为下一个使用者准备好“信号量”。channel 缓冲器的容量限制了 process 函数的并发数量。
+
+```go
+var sem = make(chan int, MaxOutstanding)
+
+func handle(r *Request) {
+    sem <- 1    // Wait for active queue to drain.
+    process(r)  // May take a long time.
+    <-sem       // Done; enable next request to run.
+}
+
+func Serve(queue chan *Request) {
+    for {
+        req := <-queue
+        go handle(req)  // Don't wait for handle to finish.
+    }
+}
+```
+
+一旦有 MaxOutstanding 数量的 handlers 同时在处理，更多的请求会由于尝试向满载的缓冲 channel 写入数据而被堵塞，直到其中某个现存的 handlers 完成计算并且从缓冲 channel 中接收数据。
+
+不过，这样的设计仍然存在一个问题：Serve 对每一个进入的请求创建新的 goroutine，即便在任何时候只有 MaxOutstanding 个请求可以运行。这样带来的结果是，当请求到来的过快时，该程序可能会消耗大量的资源。我们可以将 goroutines 的创建移入 Serve 来解决这个问题。这里有一个很明显的解决方案，但是小心，现在这里有一个 bug，我们随后会修复：
+
+```go
+func Serve(queue chan *Request) {
+    for req := range queue {
+        sem <- 1
+        go func() {
+            process(req) // Buggy; see explanation below.
+            <-sem
+        }()
+    }
+}
+```
+
+这里的 bug 是，在 Go 循环中，循环变量是在每次迭代时共享的，因此 req 变量是在所有 goroutines 中共享的，这并不符合我们的预期，我们希望每个 goroutine 中的 req 是独立的。这里有一个解决方式，将 req 的值作为参数传递给 goroutines 的闭包：
+
+```go
+func Serve(queue chan *Request) {
+    for req := range queue {
+        sem <- 1
+        go func(req *Request) {
+            process(req)
+            <-sem
+        }(req)
+    }
+}
+```
+
+对比这个版本和上一个版本的代码，可以观察闭包声明和运行中的区别。另一个解决方案是创建一个同名变量，比如在这个例子：
+
+```go
+func Serve(queue chan *Request) {
+    for req := range queue {
+        req := req // Create new instance of req for the goroutine.
+        sem <- 1
+        go func() {
+            process(req)
+            <-sem
+        }()
+    }
+}
+```
+
+这个写法也许看起来很怪
+
+```go
+req := req
+```
+
+但这是合法的，而且很符合 Go 中的习惯。这会产生一个同名的新变量，有意的在循环体中隐藏了循环变量，确保了每个 goroutine 中变量的唯一性。
+
+回到编写这个服务器的问题，另一个可以良好管理资源的解决方案是启动固定数量的 goroutines 并使他们都去读取 request channel。goroutines 的数量限制了 process 并发调用的数量。Serve 函数同时也接受一个通知其退出的 channel，在启动 goroutines 之后他阻塞直到从该通道接收到内容。
+
+```go
+func handle(queue chan *Request) {
+    for r := range queue {
+        process(r)
+    }
+}
+
+func Serve(clientRequests chan *Request, quit chan bool) {
+    // Start handlers
+    for i := 0; i < MaxOutstanding; i++ {
+        go handle(clientRequests)
+    }
+    <-quit  // Wait to be told to exit.
+}
+```
+
+## Channels of channels
+
+Go 中最重要的特性之一就是 channel 是 Go 中的一等公民，他可以像其他值一样被分配和传递。这个属性的常见用途之一是用来实现安全、并行的解复用。
+
+在上一章节的例子中，handle 是一个想象中用来处理请求的模型，但是我们没有定义他所处理的具体类型。如果该类型包含接收回复的通道，那么每个客户端都可以独立定义他们接收计算结果的路径。这里是一个对 Request 类型定义的示意。
+
+```go
+type Request struct {
+    args        []int
+    f           func([]int) int
+    resultChan  chan int
+}
+```
+
+客户端提供了计算函数，计算参数，以及在其内部的用来接收结果的 channel。
+
+```go
+func sum(a []int) (s int) {
+    for _, v := range a {
+        s += v
+    }
+    return
+}
+
+request := &Request{[]int{3, 4, 5}, sum, make(chan int)}
+// Send request
+clientRequests <- request
+// Wait for response.
+fmt.Printf("answer: %d\n", <-request.resultChan)
+```
+
+On the server side, the handler function is the only thing that changes.
+
+```go
+func handle(queue chan *Request) {
+    for req := range queue {
+        req.resultChan <- req.f(req.args)
+    }
+}
+```
+
+显然还需要很多代码工作才能让这个例子成为真正的实现，但是这些代码可以视作一个有限速的、并发的、非阻塞的 RPC 系统的框架，而且看不到任何一个 mutex。
+
+## 并行处理
+
+关于这些想法的另一个应用是在多个 CPU 核心上并行处理计算任务。如果计算任务可以被分解成多个独立执行的小块，那么他就可以被并行处理，只需为每一块分配一个 channel 来标志其完成。
+
+假设我们有一个开销很大的向量计算操作，而且对每个元素的计算是独立的，就像这个理想化的例子。
+
+```go
+type Vector []float64
+
+// Apply the operation to v[i], v[i+1] ... up to v[n-1].
+func (v Vector) DoSome(i, n int, u Vector, c chan int) {
+    for ; i < n; i++ {
+        v[i] += u.Op(v[i])
+    }
+    c <- 1    // signal that this piece is done
+}
+```
+
+我们在循环中按照 CPU 的数量独立启动每个计算任务。他们可能会按照任意顺序完成但是这不重要，我们只需要在启动所有 goroutines 后通过清空 channel 来对完成信号进行计数。
+
+```go
+const numCPU = 4 // number of CPU cores
+
+func (v Vector) DoAll(u Vector) {
+    c := make(chan int, numCPU)  // Buffering optional but sensible.
+    for i := 0; i < numCPU; i++ {
+        go v.DoSome(i*len(v)/numCPU, (i+1)*len(v)/numCPU, u, c)
+    }
+    // Drain the channel.
+    for i := 0; i < numCPU; i++ {
+        <-c    // wait for one task to complete
+    }
+    // All done.
+}
+```
+
+相比于创建一个固定值的 numCPU，我们可以在运行时获得一个更合适的值。函数 [runtime.NumCPU](https://go.dev/pkg/runtime#NumCPU) 返回运行机器的 CPU 硬件核心数量，因此我们可以
+
+```go
+var numCPU = runtime.NumCPU()
+```
+
+还有一个函数是 (runtime.GOMAXPROCS)[https://go.dev/pkg/runtime#GOMAXPROCS]，他可以报告（或设置）由用户定义的 Go 程序运行时可以使用的核心数。他的默认值是 runtime.NumCPU，但是可以被一个名称相似的环境变量修改，或是被调用这个函数并传入一个正整数修改。调用此函数并传入 0 会查询这个值。因此，如果我们想尊重用户设置的资源限制，我们可以
+
+```go
+var numCPU = runtime.GOMAXPROCS(0)
+```
+
+请注意不要混淆并发（将程序结构化为独立的执行组件）和并行（在多个 CPU 上并行计算以提高效率）的概念。虽然 Go 语言的并发特性可以让一些问题易于结构化为并行计算，但 Go 语言是一种并发语言，而不是并行语言，并不是所有并行化问题都适合 Go 语言的模型。关于这两种概念的区别，可以参考这篇[博客](https://go.dev/blog/concurrency-is-not-parallelism)中引用的演讲。
+
+## A leaky buffer
+
+并发编程的工具甚至可以让非并发的想法更容易表达。这里有一个对某个 PRC 包的抽象例子。客户端 goroutine 从某个数据源循环的接收数据，也许是通过网络。为了避免大量分配和释放 buffer 的开销，他持有了一个空闲 buffer 的列表，然后通过一个带缓冲区的 channel 来表示这个列表。如果 channel 是空的，那么就分配一个新的 buffer。一旦 buffer 的内容被填充完成，他使用 serverChan 将其发送至服务程序。
+
+```go
+var freeList = make(chan *Buffer, 100)
+var serverChan = make(chan *Buffer)
+
+func client() {
+    for {
+        var b *Buffer
+        // Grab a buffer if available; allocate if not.
+        select {
+        case b = <-freeList:
+            // Got one; nothing more to do.
+        default:
+            // None free, so allocate a new one.
+            b = new(Buffer)
+        }
+        load(b)              // Read next message from the net.
+        serverChan <- b      // Send to server.
+    }
+}
+```
+
+server 循环接收来自客户端的消息，处理，并将 buffer 返回到空闲列表。
+
+```go
+func server() {
+    for {
+        b := <-serverChan    // Wait for work.
+        process(b)
+        // Reuse buffer if there's room.
+        select {
+        case freeList <- b:
+            // Buffer on free list; nothing more to do.
+        default:
+            // Free list full, just carry on.
+        }
+    }
+}
+```
+
+客户端尝试从空闲列表中取出一个 buffer，如果没有空闲的 buffer ，那么他会分配一个新的 buffer。服务器将 b 发送到空闲列表除非 freeList 已满，这时 buffer 会被丢弃之后被垃圾回收器回收。（select 语句中的 default 条件会在其他 case 都不生效时被选中，这意味着这条 select 语句永远不会堵塞。）在带缓冲区的 channel 和垃圾回收机制的共同作用下，这个实现仅使用了几行代码就构建了一个泄露桶式的 buffer 池。
+
+# 错误
