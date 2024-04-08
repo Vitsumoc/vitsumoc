@@ -27,7 +27,7 @@ tags:
 - [分号](#分号)
 - [控制结构](#控制结构)
   - [If](#If)
-  - [重声明与重分配](#重声明与重分配)
+  - [重声明与重赋值](#重声明与重赋值)
   - [For](#For)
   - [Switch](#Switch)
   - [Type switch](#Type-switch)
@@ -71,9 +71,9 @@ tags:
   - [并行处理](#并行处理)
   - [A leaky buffer](#A-leaky-buffer)
 - [错误](#错误)
-  - [Panic]
-  - [Recover]
-- [A web server]
+  - [Panic](#Panic)
+  - [Recover](#Recover)
+- [一个WEB服务器](#一个WEB服务器)
 
 <head>
   <style>
@@ -85,7 +85,7 @@ tags:
 
 # 简介
 
-Go 是一门新语言。虽然他借鉴了现有编程语言的思想，但他也具有独特的特性，使得有效的 Go 程序与其他语言编写的程序有性质上的不同。直接将 C++ 或 Java 程序改编为 Go 程序可能无法得到一个让人满意的结果——Java 程序是使用 Java 编写的，而不是 Go。另一方面，从 Go 的角度思考问题可能会产生一个成功但完全不同的程序。换句话说，要写好Go，重要的是要理解它的属性和习惯用法。了解 Go 编程的既定约定也很重要，例如命名、格式、程序构造等，这样您编写的程序将易于其他 Go 程序员理解。
+Go 是一门新语言。虽然他借鉴了现有编程语言的思想，但他也具有独特的特性，使得有效的 Go 程序与其他语言编写的程序有性质上的不同。直接将 C++ 或 Java 程序改编为 Go 程序可能无法得到一个让人满意的结果——Java 程序是使用 Java 编写的，而不是 Go。另一方面，从 Go 的角度思考问题可能会产生一个成功但完全不同的程序。换句话说，要写好Go，重要的是要理解它的特性和习惯用法。了解 Go 编程的既定约定也很重要，例如命名、格式、程序构造等，这样您编写的程序将易于其他 Go 程序员理解。
 
 这份文档提供了编写清晰、地道的 Go 代码的建议。他补充了 [language specification](https://go.dev/ref/spec)、[the Tour of Go](https://go.dev/tour/)以及 [How to Write Go Code](https://go.dev/doc/code.html) 这几份资料，建议您在阅读本指南之前先阅读这些资料。
 
@@ -237,7 +237,7 @@ if i < f()  // wrong!
 
 # 控制结构
 
-Go 中的控制结构与 C 息息相关，但在一些重要的方面又有所不同。没有 do 或 while 循环，只有一个更通用的 for；switch 更加灵活；if 和 switch 像 for 一样可以设置初始化语句；break 和 continue 语句采用可选标签来标识需要中断或继续的内容；有一些新的控制结构例如type switch and a multiway communications multiplexer, select。语法也略有不同：没有小括号，并且主体内容必须用大括号包裹。
+Go 中的控制结构与 C 息息相关，但在一些重要的方面又有所不同。没有 do 或 while 循环，只有一个更通用的 for；switch 更加灵活；if 和 switch 像 for 一样可以设置初始化语句；break 和 continue 语句采用可选标签来标识需要中断或继续的内容；有一些新的控制结构例如type switch 和一个多路选择器 select。语法也略有不同：没有小括号，并且主体内容必须用大括号包裹。
 
 ## If
 
@@ -260,7 +260,7 @@ if err := file.Chmod(0664); err != nil {
 }
 ```
 
-在 Go 库中，你会发现当 if 语句不流入下一个语句时——即内容主题使用 break，continue，goto 或 return 结尾——不必要的 else 会被省略。
+在 Go 库中，你会发现当 if 语句不流入下一个语句时——即内容主体使用 break，continue，goto 或 return 结尾——不必要的 else 会被省略。
 
 ```go
 f, err := os.Open(name)
@@ -285,9 +285,9 @@ if err != nil {
 codeUsing(f, d)
 ```
 
-## 重声明与重分配
+## 重声明与重赋值
 
-旁白：上一节的例子展示了如何使用 := 进行短声明，他通过调用 os.Open 函数进行声明
+上一节的例子通过调用 os.Open 函数展示了如何使用 := 进行短声明
 
 ```go
 f, err := os.Open(name)
@@ -299,15 +299,15 @@ f, err := os.Open(name)
 d, err := f.Stat()
 ```
 
-这看起来是声明了 d 和 err。但请注意，这两行代码都出现了 err。这种重复是合法的：err 只被第一行代码声明，在第二行代码中只是被*重分配（re-assigned）*。这意味着调用 f.Stat 使用的是之前声明的 err，此处仅仅是给他赋予新的值。
+这看起来是声明了 d 和 err。但请注意，这两行代码都出现了 err。这种重复是合法的：err 只被第一行代码声明，在第二行代码中只是被*重赋值（re-assigned）*。这意味着调用 f.Stat 使用的是之前声明的 err，此处仅仅是给他赋予新的值。
 
-在一个 := 赋值中，已经被声明的变量 v 仍然可以被重分配，只要：
+在一个 := 赋值中，已经被声明的变量 v 仍然可以被重赋值，只要：
 
 - 本次声明和已经存在的对 v 的声明在同一个代码空间（如果 v 是在外部空间被声明的，那么本次声明会创造一个新的变量§），
-- 初始化中响应的值可以被分配给 v，而且
+- 初始化中相应的值可以被赋值给 v，而且
 - 本次声明中至少包括一个全新被声明的变量。
 
-这样的非常规设计是纯粹的实用主义，是的使用单个 err 变得很容易，例如，在一长串的 if-else 中。你会经常看到这样的用法。
+这样的非常规设计是纯粹的实用主义，使得使用单个 err 变得很容易，例如在一长串的 if-else 中。你会经常看到这样的用法。
 
 § 这里值得注意的是，在 Go 中，函数的参数和返回值的空间与函数体相同，即使它们在词法上出现在函数体的大括号之外。
 
@@ -381,7 +381,7 @@ character U+FFFD '�' starts at byte position 6
 character U+8A9E '語' starts at byte position 7
 ```
 
-最后，Go 没有逗号运算符， ++ 和 -- 是语句而不是表达式。因此如果你在 for 中运行多个变量，你应该使用多重赋值（尽管这排除了 ++ 和 --）。
+最后，Go 没有逗号运算符， ++ 和 \-\- 是语句而不是表达式。因此如果你在 for 中运行多个变量，你应该使用多重赋值（不包括 ++ 和 \-\-）。
 
 ```go
 // Reverse a
@@ -420,7 +420,7 @@ func shouldEscape(c byte) bool {
 }
 ```
 
-尽管他们在 Go 中不像在其他一些类似 C 的语言中那么常见，但 break 语句可以用来中止 switch。但有时，我们需要打破外围的循环，而非 switch，在 Go 中可以通过在循环上放置 label 并 "breaking" 该标签来完成。下面的例子演示了这两种用途。
+尽管他们在 Go 中不像在其他一些类似 C 的语言中那么常见，但 break 语句可以用来中止 switch。但有时，我们需要打破外围的循环，而非 switch，在 Go 中可以通过在循环上放置标签并 "breaking" 该标签来完成。下面的例子演示了这两种用途。
 
 ```go
 Loop:
@@ -501,7 +501,7 @@ case *int:
 
 Go 中的一个特殊特性是函数和方法可以返回多个值。这种形式可以用于改进 C 程序中的几个笨拙的惯用方法：例如通过返回 -1 来表示 EOF 或是修改一个使用指针传入的参数。
 
-在 C 语言中，write 错误通过一个负数来表示，而错误代码隐藏在 volatile 变量中。在 Go 中， Write 可以同时返回计数和错误：“你写入了一些字节，但没有完全写入，因为你的磁盘满了”。在 os 包中的 Write 方法的方法签名是：
+在 C 语言中，write 错误通过一个负数来表示，而错误代码隐藏在容易丢失的变量中。在 Go 中， Write 可以同时返回计数和错误：“你写入了一些字节，但没有完全写入，因为你的磁盘满了”。在 os 包中的 Write 方法的方法签名是：
 
 ```go
 func (file *File) Write(b []byte) (n int, err error)
@@ -558,7 +558,7 @@ func ReadFull(r Reader, buf []byte) (n int, err error) {
 
 ## Defer
 
-Go 中的 defer 语句可以在当前执行的函数返回前执行一次函数调用（ *deferred* 函数）。这是一个不寻常但有效的方案，可以用来处理类似与在任何函数执行路径下的资源关闭问题。典型的例子是解锁一个 mutex 或关闭一个文件。
+Go 中的 defer 语句可以在当前执行的函数返回前执行一次函数调用（ *deferred* 函数）。这是一个不寻常但有效的方案，可以用来处理类似于在任何函数执行路径下的资源关闭问题。典型的例子是解锁一个 mutex 或关闭一个文件。
 
 ```go
 // Contents returns the file's contents as a string.
@@ -585,10 +585,9 @@ func Contents(filename string) (string, error) {
 }
 ```
 
-Deferring 例如对 Close 函数的调用有两个好处。其一， 他确保了你不会忘记关闭这个文件，尤其是你之后再为函数添加返回路径时。其二，他意
-味着 close 的位置与 open 在一起，这比将他放在函数的末尾要清晰的多。
+通过 defer 调用 Close 函数有两个好处。其一， 他确保了你不会忘记关闭这个文件，尤其是你之后再为函数添加更多种返回路径时。其二，他意味着 close 的位置与 open 在一起，这比将他放在函数的末尾要清晰的多。
 
-deferred 函数的参数（或是 deferred 方法的接收者）是在 *defer* 执行时计算的，而非是在函数被调用时计算。除了无需担心在函数执行过程中的变量值改变外，这也意味着一个 defer 语句可以创建多个延迟执行的函数。这是一个愚蠢的例子。
+deferred 函数的参数（或是 deferred 方法的接收者）是在 *defer* 语句执行时计算的（意味着创建一个闭包），而非是在函数被调用时计算。除了无需担心在函数执行过程中的变量值改变外，这也意味着一个 defer 语句可以创建多个延迟执行的函数。这是一个不太聪明的示例。
 
 ```go
 for i := 0; i < 5; i++ {
@@ -596,7 +595,7 @@ for i := 0; i < 5; i++ {
 }
 ```
 
-Deferred 函数按照后进先出的顺序执行，因此这段代码会在函数返回时打印 4 3 2 1 0。一个更合理的例子是通过程序跟踪函数调用的简单方法。我们可以写一些类似这样的简单跟踪例程：
+Deferred 函数按照后进先出的顺序执行，因此这段代码会在函数返回时打印 4 3 2 1 0。一个更合理的例子是简单的通过程序跟踪函数调用的方法。我们可以写一些类似这样的跟踪例程：
 
 ```go
 func trace(s string)   { fmt.Println("entering:", s) }
@@ -610,7 +609,7 @@ func a() {
 }
 ```
 
-我们可以利用 deferred 函数是在 defer 运行时计算参数这一事实来做的更好。tracing 例程可以用来设置 untracing 例程的参数。下面是例子：
+我们可以利用 deferred 函数是在 defer 执行时计算参数这一事实来做的更好。tracing 例程可以用来设置 untracing 例程的参数。下面是例子：
 
 ```go
 func trace(s string) string {
@@ -655,8 +654,7 @@ leaving: b
 
 ## 通过new分配
 
-Go 中有两个分配关键字，内置函数 new 和 make。他们做不同的事情而且用于不同的类型，这可能会令人困惑，但是规则实际上很简单。让我们先从 new 开始。这是一个内建的用于分配内存的函数，但与一些其他编程语言中的同名函数不同，他并不会初始化内存，而只是将内存值置零。也就是说，new(T) 分配了一块零值的内存用来放置类型 T 并返回他的指针，一个类型为 *T 的值。在 Go 术语中，他返回了一个指向新分配的零值 T 的
-指针。
+Go 中有两个分配关键字，内置函数 new 和 make。他们做不同的事情而且用于不同的类型，这可能会令人困惑，但是规则实际上很简单。让我们先从 new 开始。这是一个内建的用于分配内存的函数，但与一些其他编程语言中的同名函数不同，他并不会初始化内存，而只是将内存值置零。也就是说，new(T) 分配了一块零值的内存用来放置类型 T 并返回他的指针，一个类型为 *T 的值。在 Go 术语中，他返回了一个指向新分配的零值 T 的指针。
 
 由于 new 返回的内存值总是 0，因此在设计您的数据结构时，将 0 值作为一个合理的初始化值就非常有帮助。这意味着数据结构的使用者可以通过 new 来创建他并立刻使用。例如 bytes.Buffer 的文档表示“零值的 Buffer 是一个可以被使用的空 buffer”。类似的，sync.Mutex 也没有显式的构造函数或是初始化方法。取而代之的是，零值的 sync.Mutex 被定义为一个未锁定的 mutex。
 
@@ -718,7 +716,7 @@ func NewFile(fd int, name string) *File {
     return &File{fd: fd, name: name}
 ```
 
-作为一个有限的情况，如果复合字面量没有包括任何字段，他会创建当前类型的零值对象。表达式 new(File) 和 &File{} 是等效的。
+作为一个特殊情况，如果复合字面量没有包括任何字段，他会创建当前类型的零值对象。表达式 new(File) 和 &File{} 是等效的。
 
 复合字面量也可以用来创建数组、切片和 maps，其中的字段标签被视为索引或 map 中的键。在这些示例中，只要 Enone、Eio、Einval 的值不同，无论他们的值如何，初始化都会生效。
 
@@ -782,9 +780,9 @@ x := Sum(&array)  // Note the explicit address-of operator
 
 ## 切片
 
-切片封装了数组，提供了一个更加通用、强大、方便的处理序列数据的接口。除了例如变换矩阵这种有显式的维度的情况外，在 Go 中大部分关于顺序数据的编程都是通过切片而非数组完成的。
+切片封装了数组，提供了一个更加通用、强大、方便的处理序列数据的接口。除了例如变换矩阵这种有显式的维度的情况外，在 Go 中大部分关于序列数据的编程都是通过切片而非数组完成的。
 
-切片持有了对其下层数组的引用，如果你将一个切片赋值给另一个，他们将会引用同一个数组。如果函数使用切片作为参数，则调用者可以看到函数对切片中元素的修改，类似于传递了下层数组的指针。因此，Read 函数可以接收切片作为参数，而非指针和计数；切片中的长度设置了要读取数据内容的上线。这里是 os 包中 File 类型的 Read 方法的方法签名：
+切片持有了对其下层数组的引用，如果你将一个切片赋值给另一个，他们将会引用同一个数组。如果函数使用切片作为参数，则调用者可以看到函数对切片中元素的修改，类似于传递了下层数组的指针。因此，Read 函数可以接收切片作为参数，而非指针和计数；切片中的长度设置了要读取数据内容的上限。这里是 os 包中 File 类型的 Read 方法的方法签名：
 
 ```go
 func (f *File) Read(buf []byte) (n int, err error)
@@ -811,7 +809,7 @@ func (f *File) Read(buf []byte) (n int, err error)
     }
 ```
 
-切片的长度可以在其底层数据限制的范围内任意修改；只要切取他自身的一部分并赋值即可。切片的容量可以通过内建函数 cap 访问，报告了切片可用的最大长度。这里是一个向切片添加数据的函数。如果数据超出了容量限制，切片会采用重新分配的内存。最终采用的结果是函数返回的切片。设计这个函数时巧妙利用了如下事实：对 nil 切片使用 len 和 cap 操作是合法的，且会返回 0。
+切片的长度可以在其底层数据限制的范围内任意修改；只要切取他自身的一部分并赋值即可。切片的容量可以通过内建函数 cap 访问，报告了切片可用的最大长度。这里是一个向切片添加数据的函数。如果数据超出了容量限制，切片会采用重新分配的内存。最终的结果是函数返回的切片。设计这个函数时巧妙利用了如下事实：对 nil 切片使用 len 和 cap 操作是合法的，且会返回 0。
 
 ```go
 func Append(slice, data []byte) []byte {
@@ -878,7 +876,7 @@ for i := range picture {
 
 ## Maps
 
-Maps 是一种方便且强大的内建数据结构，他将一种类型的值（键）关联到另一种类型的值（值）。键可以是任意的支持相等操作的数据类型，例如整数、浮点数、复数、字符串、指针、接口（只要其中的动态类型支持相等）、结构体或数组。切片不能用作 map 的键，因为没有为其定义相等操作。与切片类似，maps 持有了对下层数据结构的引用。如果你将 map 传入一个函数并且在函数中改变了 map 的内容，调用者也会看到这个改变。
+Maps 是一种方便且强大的内建数据结构，他将一种类型的值（键）关联到另一种类型的值（值）。键可以是支持相等操作的任意数据类型，例如整数、浮点数、复数、字符串、指针、接口（只要其中的动态类型支持相等）、结构体或数组。切片不能用作 map 的键，因为没有为其定义相等操作。与切片类似，maps 持有了对下层数据结构的引用。如果你将 map 传入一个函数并且在函数中改变了 map 的内容，调用者也会看到这个改变。
 
 Maps 可以使用常规的复合字面量语法，加上冒号分隔键值对来构建，因此在初始化期间构建他们很容易。
 
@@ -892,7 +890,7 @@ var timeZone = map[string]int{
 }
 ```
 
-对 map 分配或获取值的语法看起来和对数组或切片的操作相同，只是索引不必须是整数。
+对 map 分配值或获取值的语法看起来和对数组或切片的操作相同，只是索引不必须是整数。
 
 ```go
 offset := timeZone["EST"]
@@ -1068,7 +1066,7 @@ func (m MyString) String() string {
 func Printf(format string, v ...interface{}) (n int, err error) {
 ```
 
-再函数 Printf 中，v 的作用类似于类型为 []interface{} 的变量，但是如果将其传递到另一个可变参数的函数中，他则可以当作常规的参数列表使用。这里是我们之前用过的 log.Println 函数的实现。他直接将参数传递到 fmt.Sprintln 中，从而进行实际的格式化工作。
+在函数 Printf 中，v 的作用类似于类型为 []interface{} 的变量，但是如果将其传递到另一个可变参数的函数中，他则可以当作常规的参数列表使用。这里是我们之前用过的 log.Println 函数的实现。他直接将参数传递到 fmt.Sprintln 中，从而进行实际的格式化工作。
 
 ```go
 // Println prints to the standard logger in the manner of fmt.Println.
@@ -2046,3 +2044,232 @@ func server() {
 客户端尝试从空闲列表中取出一个 buffer，如果没有空闲的 buffer ，那么他会分配一个新的 buffer。服务器将 b 发送到空闲列表除非 freeList 已满，这时 buffer 会被丢弃之后被垃圾回收器回收。（select 语句中的 default 条件会在其他 case 都不生效时被选中，这意味着这条 select 语句永远不会堵塞。）在带缓冲区的 channel 和垃圾回收机制的共同作用下，这个实现仅使用了几行代码就构建了一个泄露桶式的 buffer 池。
 
 # 错误
+
+库例程必须经常向调用者返回一些错误信息。就像我们之前提过的，Go 中的多重返回让我们可以轻松的在正常的返回值旁边附带详细的错误描述。使用这个特性来提供详细的错误信息是很好的风格。例如，就像我们即将看到的，os.Open 不仅仅是在故障时返回一个空指针，他还提供了一个错误值来表述错误的内容。
+
+为了方便起见，错误被定义为类型 error，一个简单的内建接口。
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+库的作者可以在这个包装下自由的使用更丰富的模型实现该接口，让错误信息不仅包括错误本身，同时提供一些其他的内容。就像之前提过的，除了返回的 *os.File 类型的值之外，os.Open 还返回一个 error 类型的值。如果文件被成功的打开，那么这个 error 值将会是 nil，但是如果发生了错误，他将会持有一个 os.PathError：
+
+```go
+// PathError records an error and the operation and
+// file path that caused it.
+type PathError struct {
+    Op string    // "open", "unlink", etc.
+    Path string  // The associated file.
+    Err error    // Returned by the system call.
+}
+
+func (e *PathError) Error() string {
+    return e.Op + " " + e.Path + ": " + e.Err.Error()
+}
+```
+
+PathError 的 Error 方法生成的字符串类似于这样：
+
+```text
+open /etc/passwx: no such file or directory
+```
+
+像这样一个 error，囊括了有问题的文件名称、操作内容和他触发了的系统错误，即使错误打印的地方和调用处相距甚远，这样的报错依然十分有用；他比直接的打印 “no such file or directory” 能提供更多有效的信息。
+
+如果有条件的话，error 字符串应该标注他们的来源，例如添加前缀来标注是哪个操作或者包生成了这个 error。例如，在 image 包中，因为未知格式而导致的解码错误的错误字符串为 “image: unknown format”。
+
+关心精确的错误细节的调用者可以使用 type switch 或者类型断言来获得 error 的具体类型从而获取更多的细节。对于 PathErrors 来说，这可能包括了检查内部的 Err 字段用来处理可恢复的故障。
+
+```go
+for try := 0; try < 2; try++ {
+    file, err = os.Create(filename)
+    if err == nil {
+        return
+    }
+    if e, ok := err.(*os.PathError); ok && e.Err == syscall.ENOSPC {
+        deleteTempFiles()  // Recover some space.
+        continue
+    }
+    return
+}
+```
+
+这里的第二个 if 语句是一个[类型断言](接口转换与类型断言)。如果他失败了，ok 的值会是 false，e 的值会是 nil。如果他成功了，ok 的值会是 true，这表示 error 的类型确实是 *os.PathError，此时 e 会成为这个类型，这样我们检查其中的更多信息细节。
+
+## Panic
+
+常规的向调用者汇报错误的方式是添加一个 error 类型的返回值。Read 方法就是一个广为人知的典范，他返回了读取的字节数和一个 error。但是，当 error 是不可恢复类型的情况下怎么办呢？有些就是需要中止程序继续运行。
+
+为了实现这个目的，有一个内建函数 panic，他可以创建一个运行时错误从而中止程序（但也有例外，参考下一章）。此函数需要一个任意类型的信号参数——通常是字符串——用作程序终止时的打印输出。他也可以用来表明发生了某些不该发生的事，例如存在一个无限循环。
+
+```go
+// A toy implementation of cube root using Newton's method.
+func CubeRoot(x float64) float64 {
+    z := x/3   // Arbitrary initial value
+    for i := 0; i < 1e6; i++ {
+        prevz := z
+        z -= (z*z*z-x) / (3*z*z)
+        if veryClose(z, prevz) {
+            return z
+        }
+    }
+    // A million iterations has not converged; something is wrong.
+    panic(fmt.Sprintf("CubeRoot(%g) did not converge", x))
+}
+```
+
+这里只是一个例子，实际上的库函数应该避免 panic。如果问题可以被掩盖或者解决，让程序继续运行下去总比直接中断整个程序要好。一个可能的反例是初始化：可以认为，如果一个库确实无法完成自身设置，那么进行 panic 也是合理的。
+
+```go
+var user = os.Getenv("USER")
+
+func init() {
+    if user == "" {
+        panic("no value for $USER")
+    }
+}
+```
+
+## Recover
+
+当 panic 发生时，包括隐式的运行时错误例如切片越界、类型断言错误等等，他会立刻中断当前执行的函数并且开始释放当前 goroutine 的堆栈，运行沿途上的任何 defer 函数。如果这个释放过程到达了当前 goroutine 的顶部，程序则会终止。然而，可以使用内建函数 recover 来恢复对 goroutine 的控制并让其继续执行。
+
+对 recover 的调用会中止释放过程，并返回传递给 panic 的参数。由于在释放过程中唯一能够被执行的代码是位于 defer 中的代码，因此 recover 只有在 defer 函数中才有作用。
+
+recover 的一个应用是中止服务中失败的 goroutine，而非中止整个程序。
+
+```go
+func server(workChan <-chan *Work) {
+    for work := range workChan {
+        go safelyDo(work)
+    }
+}
+
+func safelyDo(work *Work) {
+    defer func() {
+        if err := recover(); err != nil {
+            log.Println("work failed:", err)
+        }
+    }()
+    do(work)
+}
+```
+
+在这个例子中，如果 do(work) 导致了 panic，错误结果将被日志记录而且报错的 goroutine 只会干净的退出而不会影响其他协程。无需再 defer 闭包中再添加任何东西，调用 cover 就完全足够。
+
+除非是直接被 defer 函数调用，否则 recover 都会返回 nil，因此 defer 中的代码可以调用那些本身也使用了 panic 和 recover 的库函数。例如，在 safelyDo 函数中的 defer 函数可以在 recover 之前调用 logging 函数，该函数的执行不会受到 panic 过程的影响。
+
+理解了 recover 的工作模式后，我们可以通过调用 panic 让 do 函数（以及他调用的任何函数）在遇到错误情况时干净的退出。我们可以利用这个概念来简化复杂软件中的错误处理。让我们看看这个理性化的 regexp 包，他通过调用一个带有本地定义错误类型的 panic 来报告解析错误。这里是关于 Error、error 方法和 Compile 函数的定义。
+
+```go
+// Error is the type of a parse error; it satisfies the error interface.
+type Error string
+func (e Error) Error() string {
+    return string(e)
+}
+
+// error is a method of *Regexp that reports parsing errors by
+// panicking with an Error.
+func (regexp *Regexp) error(err string) {
+    panic(Error(err))
+}
+
+// Compile returns a parsed representation of the regular expression.
+func Compile(str string) (regexp *Regexp, err error) {
+    regexp = new(Regexp)
+    // doParse will panic if there is a parse error.
+    defer func() {
+        if e := recover(); e != nil {
+            regexp = nil    // Clear return value.
+            err = e.(Error) // Will re-panic if not a parse error.
+        }
+    }()
+    return regexp.doParse(str), nil
+}
+```
+
+如果 doParse panic，recover 代码块会将返回值设置为nil——因为 defer 函数可以修改命名返回值的值。之后，他会在向 err 赋值的语句中通过将 e 类型断言为本地类型 Error，检查问题是否是解析错误。如果不是，那么类型断言会失败，引发一个运行时错误，从而导致堆栈继续释放，就像释放过程未曾中断这样。这种检查意味着当有一些类似于数组越界的运行时错误发生时，即使我们使用 panic 和 recover 处理了解析错误，代码仍然会失败。
+
+在错误处理机制到位后，error 方法（虽然他和内建类型 error 同名，但是由于他是一个绑定在类型上的方法，因此这个命名没有问题，使用起来也很自然）使得我们可以更简单的上报解析错误，而无需操心于手动释放解析堆栈：
+
+```go
+if pos == 0 {
+    re.error("'*' illegal at start of expression")
+}
+```
+
+虽然这个模式非常实用，但是他应该仅限在包内部使用。通过解析将内部的 panic 转化为 error 类型的值，而不是将 panic 暴露给自己的客户端。这是一个可以良好的规则。
+
+顺带一提，这种类型的用法改变了实际报错中的 panic 内容。然而，不管是原始的还是新的报错内容都会在崩溃日志中体现，因此报错的根源依然可以被找到。因此这种简单的 re-panic 机制往往就够用了——毕竟最终都是要崩溃的——但是如果你只想在崩溃日志中展示原始错误，你可以通过写一小段代码来过滤非预期的错误然后使用原始的错误来 re-panic。这是留给读者的小练习。
+
+# 一个WEB服务器
+
+让我们用一个完整的 Go 程序来收尾，一个 WEB 服务器。这其实是一个基于其他服务的 web 服务器。Google 在 chart.apis.google.com 上提供了一个服务，可以自动将数据格式化为图表和图形。但是他的交互比较麻烦，因为你要把数据作为 URL 的一部分用来查询。这个程序提供了一个更好的数据格式接口：通过输入一段文本，他调用图表服务来生成一个二维码，他可以被您的手机扫描并且转换为一个 URL，这样您就无需在手机的小键盘上输入这个 URL。
+
+这里是完整的程序，随后会有说明。
+
+```go
+package main
+
+import (
+    "flag"
+    "html/template"
+    "log"
+    "net/http"
+)
+
+var addr = flag.String("addr", ":1718", "http service address") // Q=17, R=18
+
+var templ = template.Must(template.New("qr").Parse(templateStr))
+
+func main() {
+    flag.Parse()
+    http.Handle("/", http.HandlerFunc(QR))
+    err := http.ListenAndServe(*addr, nil)
+    if err != nil {
+        log.Fatal("ListenAndServe:", err)
+    }
+}
+
+func QR(w http.ResponseWriter, req *http.Request) {
+    templ.Execute(w, req.FormValue("s"))
+}
+
+const templateStr = `
+<html>
+<head>
+<title>QR Link Generator</title>
+</head>
+<body>
+{{if .}}
+<img src="http://chart.apis.google.com/chart?chs=300x300&cht=qr&choe=UTF-8&chl={{.}}" />
+<br>
+{{.}}
+<br>
+<br>
+{{end}}
+<form action="/" name=f method="GET">
+    <input maxLength=1024 size=70 name=s value="" title="Text to QR Encode">
+    <input type=submit value="Show QR" name=qr>
+</form>
+</body>
+</html>
+`
+```
+
+main 之前的部分应该都很容易理解。flag 为我们的服务设置了一个默认的 HTTP 端口。模板变量 templ 是有趣的地方。他构建了一个服务器用来显示页面的 HTML 模板，稍后会详细介绍。
+
+main 函数中解析了 flags，使用我们之前讨论过的机制将 QR 函数绑定在服务的根路径。之后 http.ListenAndServe 被调用，启动 HTTP 服务，并且在服务运行期间阻塞主程序。
+
+QR 接受请求包含表单数据的请求，根据表单中名为 s 的数据的值来执行模板。
+
+模板包 html/template 非常强力，这个程序仅仅涉及他功能的一小部分。本质上，它通过替换从传递给 templ.Execute 的数据项派生的元素来动态重写一段 HTML 文本，在这里例子中就是表单的值。在模板文本 (template Str) 中，双括号分隔的部分表示模板操作。仅当数据项 .（点） 非空时，{%raw%}{{if .}}{%endraw%} 到 {%raw%}{{end}}{%endraw%} 之间的代码片才会执行。这意味着，当传入字符串为空时，这一部分的模板将不生效。
+
+两个 {%raw%}{{.}}{%endraw%} 表示了两个提供给模板的数据——一个位于查询字符串——另一个直接在 web 页面中。HTML 模板包自动提供适当的转移，以便文本可以安全的显示。
+
+模板中剩余部分的字符串只是当页面加载时显示的 HTML。如果这部分的解释过于简短，您也可以参考这篇关于模板包的[文档](#https://go.dev/pkg/html/template/)进行更全面的讨论。
+
+此时你已经拥有了一个仅使用几行代码创建的数据驱动的 HTML 服务。Go 就是这样，他有能力仅仅使用几行代码来实现很多事情。
