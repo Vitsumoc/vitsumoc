@@ -3,8 +3,9 @@ title: "在 Ubuntu 22.04 LTS 上使用 BBR"
 url: usingBBRonUbuntu2204
 date: 2024-04-11 12:27:40
 categories:
-- 豆知识
+- 网络工具
 tags:
+- 网络工具
 - 豆知识
 - Linux
 - VPS
@@ -14,9 +15,9 @@ tags:
 
 > 以下内容摘自[Wiki](https://en.wikipedia.org/wiki/TCP_congestion_control#TCP_BBR)
 
-Bottleneck Bandwidth and Round-trip propagation time (BBR) 是由 Google 在 2016年开发的一种拥塞控制算法 (CCA)。虽然其他的拥塞控制算法大多基于丢包机制，通过丢包来检测到拥塞并降低传输速率，但 BBR，和 TCP Vegas 相似，是基于模型的。算法利用网络传送最近一次发出的数据包达到的最大带宽和往返时间来构建网络模型。每次累积确认或选择性确认数据包的传送都会产生一个速率样本，该样本记录了数据包的发送时间和确认时间之间间隔内传送的数据量。
-
 <!-- more -->
+
+Bottleneck Bandwidth and Round-trip propagation time (BBR) 是由 Google 在 2016年开发的一种拥塞控制算法 (CCA)。虽然其他的拥塞控制算法大多基于丢包机制，通过丢包来检测到拥塞并降低传输速率，但 BBR，和 TCP Vegas 相似，是基于模型的。算法利用网络传送最近一次发出的数据包达到的最大带宽和往返时间来构建网络模型。每次累积确认或选择性确认数据包的传送都会产生一个速率样本，该样本记录了数据包的发送时间和确认时间之间间隔内传送的数据量。
 
 在 YouTube 的实际部署中，BBRv1 版本平均带来了 4% 的网络吞吐量提升，在某些国家甚至能达到 14%。BBR 算法从 Linux 4.9 版本开始就被集成到 Linux 内核的 TCP 协议栈中。它同样也适用于 QUIC 协议。
 
