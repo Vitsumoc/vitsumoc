@@ -5,4 +5,3 @@
 - 我在做这些事
   - https://vitsumoc.github.io
   - https://github.com/vitsumoc/vmq
-  - https://github.com/vitsumoc/vmq-tool
