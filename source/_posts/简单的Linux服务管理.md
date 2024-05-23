@@ -45,6 +45,7 @@ WorkingDirectory=/home/vc/ywyl/server/
 ExecStart=java -jar YongWang-1.0-SNAPSHOT.jar
 
 [Install]
+WantedBy=multi-user.target
 ```
 
 之后，需要通过命令注册服务
