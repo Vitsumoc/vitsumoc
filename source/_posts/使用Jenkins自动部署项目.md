@@ -92,6 +92,16 @@ jenkins 中很重要的部分是 `插件(plugin)`，`插件` 也是由全世界�
 - 设置目标路径 `/ywyl/server_temp`
 - 设置部署命令 `mv /home/vc/ywyl/server_temp/target/YongWang-1.0-SNAPSHOT.jar /home/vc/ywyl/server/YongWang-1.0-SNAPSHOT.jar && systemctl restart yongwang`
 
+# 总结
+
+将打包部署工作自动化以后，对于笔者而言获得了这些收益：
+
+1. 省去了打包，部署的时间
+2. 降低了项目部署中犯错的可能性
+3. 对于网络环境较差的服务器，提升了部署的成功率
+4. 能够将多个项目实例集中管理起来
+5. 让大家更爱提交代码
+
 # 参考
 
 - [jenkins](https://www.jenkins.io/)
