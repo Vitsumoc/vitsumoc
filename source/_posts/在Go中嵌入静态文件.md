@@ -1,5 +1,5 @@
 ---
-title: Go标准库：embed
+title: 在Go中嵌入静态文件
 url: Go-embed
 date: 2024-04-25 15:48:11
 categories:

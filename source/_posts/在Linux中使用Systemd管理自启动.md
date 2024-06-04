@@ -1,6 +1,6 @@
 ---
-title: 使用Systemd管理自启动
-url: linuxBoot
+title: 在Linux中使用Systemd管理自启动
+url: 在Linux中使用Systemd管理自启动
 date: 2023-12-01 14:19:42
 categories:
 - 豆知识
