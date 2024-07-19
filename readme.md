@@ -11,4 +11,4 @@
 - 和别的程序员一样，总之在寻找和自己契合的项目。
 
 - 目前我正在做：
-  - [Caddy 的文档汉化工作](https://github.com/vitsumoc/website)
+  - [Caddy 网站](https://github.com/vitsumoc/website.zh)
